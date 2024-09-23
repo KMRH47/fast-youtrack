@@ -1,0 +1,9 @@
+pystray
+Pillow
+pyperclip
+logger
+timer
+pyyaml
+pydantic
+requests
+cryptography
