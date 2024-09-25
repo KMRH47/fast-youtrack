@@ -30,5 +30,5 @@ REM Run the AutoHotkey script
 echo Running AutoHotkey script...
 start "" /b %AHK_PATH% %AHK_SCRIPT%
 
-You can change the hotkey in scripts/run.ahk
+REM You can change the hotkey in scripts/run.ahk
 echo Fast YouTrack running in background...
