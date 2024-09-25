@@ -52,8 +52,6 @@ def load_credentials() -> Optional[Credentials]:
         with open(credentials_file, 'r') as file:
             credentials_data = yaml.safe_load(file)
 
-        logging.debug(f"Credentials data loaded from YAML: {credentials_data}")
-
         if isinstance(credentials_data, dict):
             credentials = Credentials(**credentials_data)
             logging.info(
@@ -88,7 +86,6 @@ def write_passphrase(passphrase: str, filename: str = ".key"):
     try:
         with open(passphrase_file, "w") as f:
             f.write(passphrase)
-        logging.info(f"Passphrase written to {passphrase_file}")
     except Exception as e:
         logging.error(
             f"Failed to write passphrase to {passphrase_file}: {e}")
@@ -102,7 +99,6 @@ def read_passphrase(filename: str = ".key") -> Optional[str]:
     try:
         with open(passphrase_file, "r") as f:
             passphrase = f.read()
-        logging.info(f"Passphrase read from {passphrase_file}")
         return passphrase
     except Exception as e:
         logging.error(f"Failed to read passphrase from {passphrase_file}: {e}")
