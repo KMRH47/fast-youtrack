@@ -1,4 +1,3 @@
-import logging
 import tkinter as tk
 from tkinter import messagebox
 from typing import Tuple
@@ -13,32 +12,6 @@ class ToolTip:
         self.widget = widget
         self.text = text
         self.tooltip_window = None
-        self.widget.bind("<Enter>", self.show_tooltip)
-        self.widget.bind("<Leave>", self.hide_tooltip)
-
-    def show_tooltip(self, _):
-        if self.tooltip_window or not self.text:
-            return
-        # Get widget coordinates and size
-        x, y, width, height = self.widget.bbox("insert")
-        x += self.widget.winfo_rootx() + width // 2
-        y += self.widget.winfo_rooty() + height // 2
-
-        # Create a top-level window for the tooltip
-        self.tooltip_window = tw = tk.Toplevel(self.widget)
-        tw.wm_overrideredirect(True)  # Remove window borders
-        tw.geometry(f"+{x+20}+{y+20}")  # Set the tooltip location
-
-        # Create and display the tooltip label
-        label = tk.Label(tw, text=self.text, justify='left',
-                         background="#ffffff", relief='solid', borderwidth=1,
-                         font=("tahoma", "10", "normal"))
-        label.pack(ipadx=1, ipady=1)
-
-    def hide_tooltip(self, _):
-        if self.tooltip_window:
-            self.tooltip_window.destroy()  # Destroy the tooltip window
-            self.tooltip_window = None
 
 
 def prompt_for_credentials(passphrase: str) -> Tuple[str, str]:
