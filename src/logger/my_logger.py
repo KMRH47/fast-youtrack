@@ -15,8 +15,9 @@ class StreamToLogger:
         for line in buf.rstrip().splitlines():
             self.logger.log(self.log_level, line.rstrip())
 
+    # This is required for `sys.stderr` replacement
     def flush(self):
-        pass  # This is required for `sys.stderr` replacement, but does nothing.
+        pass
 
 def setup_logger(log_dir="logs", log_file="log.txt"):
     """
@@ -24,8 +25,6 @@ def setup_logger(log_dir="logs", log_file="log.txt"):
     """
     # Get the absolute path to the project root (two levels up from src/main.py)
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-    
-    # Ensure the log directory is in the project root
     log_dir = os.path.join(project_root, log_dir)
 
     if not os.path.exists(log_dir):
@@ -37,10 +36,10 @@ def setup_logger(log_dir="logs", log_file="log.txt"):
         filename=log_path,
         filemode='a',
         format='%(asctime)s - %(levelname)s - %(message)s',
-        level=logging.DEBUG  # Capture all log levels starting from DEBUG
+        level=logging.DEBUG,
+        encoding='utf-8'
     )
 
-    # Redirect stderr to log file
     sys.stderr = StreamToLogger(logging.getLogger(), logging.ERROR)
 
 
