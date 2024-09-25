@@ -32,7 +32,10 @@ try:
             youtrack_service = YouTrackService(subdomain, bearer_token)
             user_info: WorkItemResponse = youtrack_service.get_user_info()
             credentials_service.save_credentials(
-                subdomain, bearer_token, user_info.id, user_info.name)
+                subdomain=subdomain,
+                bearer_token=bearer_token,
+                author_id=user_info.id,
+                author_name=user_info.name)
         else:
             youtrack_service = YouTrackService(
                 credentials.subdomain, credentials.bearer_token)
@@ -40,7 +43,7 @@ try:
         youtrack_service.get_user_info()
 
     except Exception as e:
-        logging.error(traceback.format_exc())
+        logging.error(f'Unhandled exception\n{traceback.format_exc()}')
 
 except Exception as e:
-    logging.error(traceback.format_exc())
+    logging.error(f'Unhandled exception\n{traceback.format_exc()}')
