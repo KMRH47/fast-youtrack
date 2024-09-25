@@ -19,13 +19,11 @@ class CredentialsService:
         self.encryption_service = EncryptionService(passphrase)
 
     def get_credentials(self) -> Credentials:
-        """Get saved credentials."""
-
         encrypted_credentials = load_credentials()
 
         if not encrypted_credentials:
             return None
-
+        
         bearer_token = self.encryption_service.decrypt(
             encrypted_credentials.bearer_token)
 
@@ -37,18 +35,16 @@ class CredentialsService:
         )
 
     def save_credentials(self, subdomain: str, bearer_token: str, author_id: str, author_name: str):
-        """Save credentials."""
         encrypted_bearer_token = self.encryption_service.encrypt(bearer_token)
 
-        save_credentials(
+        save_credentials(Credentials(
             subdomain=subdomain,
             bearer_token=encrypted_bearer_token,
             author_id=author_id,
             author_name=author_name
-        )
+        ))
 
     def prompt_token_and_subdomain(self, passphrase: str) -> Tuple[str, str]:
-        """Prompt user for token and subdomain."""
         subdomain, bearer_token = prompt_for_credentials(passphrase)
 
         if not subdomain or not bearer_token:
