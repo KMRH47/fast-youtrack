@@ -1,5 +1,6 @@
 import sys
 import logging
+import traceback
 
 
 try:
@@ -39,8 +40,7 @@ try:
         youtrack_service.get_user_info()
 
     except Exception as e:
-        logging.error(f"An error occurred during execution: {e}")
+        logging.error(traceback.format_exc())
 
 except Exception as e:
-    logging.error(
-        f"Failed to import required modules or other initialization error: {e}")
+    logging.error(traceback.format_exc())
