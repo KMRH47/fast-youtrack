@@ -1,6 +1,6 @@
 import logging
 from typing import Tuple
-from repositories.credentials_storage import get_data_directory_path, load_credentials, save_credentials
+from repositories.credentials_storage import load_credentials, read_passphrase, save_credentials, write_passphrase
 from security.encryption import EncryptionService
 from gui.credentials_gui import prompt_for_credentials
 from models.credentials import Credentials
@@ -23,7 +23,7 @@ class CredentialsService:
 
         if not encrypted_credentials:
             return None
-        
+
         bearer_token = self.encryption_service.decrypt(
             encrypted_credentials.bearer_token)
 
@@ -52,3 +52,12 @@ class CredentialsService:
             exit(1)
 
         return (subdomain, bearer_token)
+
+
+def handle_passphrase(passphrase: str | None):
+    if not passphrase:
+        passphrase = read_passphrase()
+        if not passphrase:
+            raise ValueError("No passphrase supplied. Exiting...")
+    else:
+        write_passphrase(passphrase)
