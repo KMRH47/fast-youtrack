@@ -20,9 +20,9 @@ def get_credentials_file_path() -> str:
     return os.path.join(get_data_directory_path(), 'user-config.yaml')
 
 
-def save_credentials(credentials: Credentials) -> None:
+def write_credentials(credentials: Credentials) -> None:
     """
-    Saves the credentials to 'user-config.yaml' file in the 'data' directory.
+    Writes the credentials to 'user-config.yaml' file in the 'data' directory.
     """
     credentials_dir = get_data_directory_path()
 

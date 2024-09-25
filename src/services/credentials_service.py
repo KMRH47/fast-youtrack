@@ -1,6 +1,6 @@
 import logging
 from typing import Tuple
-from repositories.credentials_storage import load_credentials, read_passphrase, save_credentials, write_passphrase
+from repositories.credentials_storage import load_credentials, read_passphrase, write_credentials, write_passphrase
 from security.encryption import EncryptionService
 from gui.credentials_gui import prompt_for_credentials
 from models.credentials import Credentials
@@ -37,7 +37,7 @@ class CredentialsService:
     def save_credentials(self, subdomain: str, bearer_token: str, author_id: str, author_name: str):
         encrypted_bearer_token = self.encryption_service.encrypt(bearer_token)
 
-        save_credentials(Credentials(
+        write_credentials(Credentials(
             subdomain=subdomain,
             bearer_token=encrypted_bearer_token,
             author_id=author_id,
