@@ -1,9 +1,9 @@
-import os
-import logging
-import yaml
 from models.credentials import Credentials
 from pydantic import ValidationError
 from typing import Optional
+import os
+import logging
+import yaml
 
 
 def get_data_directory_path() -> str:
