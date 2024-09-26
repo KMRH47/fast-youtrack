@@ -2,6 +2,8 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from cryptography.exceptions import InvalidTag
+from errors.invalid_passphrase_error import InvalidPassphraseError
 import os
 import base64
 
@@ -52,8 +54,11 @@ class EncryptionService:
 
         :param encrypted_value: The encrypted value as a base64-encoded string
         """
-        aesgcm = AESGCM(self.key)
-        decoded_data = base64.b64decode(encrypted_value)
-        nonce = decoded_data[:12]
-        encrypted_value = decoded_data[12:]
-        return aesgcm.decrypt(nonce, encrypted_value, None).decode()
+        try:
+            aesgcm = AESGCM(self.key)
+            decoded_data = base64.b64decode(encrypted_value)
+            nonce = decoded_data[:12]
+            encrypted_value = decoded_data[12:]
+            return aesgcm.decrypt(nonce, encrypted_value, None).decode()
+        except InvalidTag:
+            raise InvalidPassphraseError()
