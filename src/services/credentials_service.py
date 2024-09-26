@@ -5,6 +5,8 @@ from security.encryption import EncryptionService
 from gui.credentials_gui import prompt_for_credentials
 from models.credentials import Credentials
 from errors.invalid_passphrase_error import InvalidPassphraseError
+from models.work_item_response import WorkItemResponse
+from services.youtrack_service import YouTrackService
 
 
 class CredentialsService:
@@ -35,16 +37,6 @@ class CredentialsService:
             author_name=encrypted_credentials.author_name
         )
 
-    def save_credentials(self, subdomain: str, bearer_token: str, author_id: str, author_name: str):
-        encrypted_bearer_token = self.encryption_service.encrypt(bearer_token)
-
-        write_credentials(Credentials(
-            subdomain=subdomain,
-            bearer_token=encrypted_bearer_token,
-            author_id=author_id,
-            author_name=author_name
-        ))
-
     def prompt_token_and_subdomain(self, passphrase: str) -> Tuple[str, str]:
         subdomain, bearer_token = prompt_for_credentials(passphrase)
 
@@ -53,6 +45,24 @@ class CredentialsService:
             exit(1)
 
         return (subdomain, bearer_token)
+
+    def load_or_save_credentials(self, passphrase):
+        credentials = self.get_credentials()
+        if credentials:
+            return credentials
+
+        subdomain, bearer_token = self.prompt_token_and_subdomain(
+            passphrase)
+        youtrack_service = YouTrackService(subdomain, bearer_token)
+        user_info: WorkItemResponse = youtrack_service.get_user_info()
+
+        write_credentials(Credentials(
+            subdomain=subdomain,
+            bearer_token=self.encryption_service.encrypt(bearer_token),
+            author_id=user_info.id,
+            author_name=user_info.name
+        ))
+        return self.get_credentials()
 
 
 def handle_passphrase(passphrase: str | None) -> str:
@@ -67,6 +77,6 @@ def handle_passphrase(passphrase: str | None) -> str:
         if not passphrase:
             raise InvalidPassphraseError()
         return passphrase
-    
+
     write_passphrase(passphrase)
     return passphrase
