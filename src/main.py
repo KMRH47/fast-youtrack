@@ -8,13 +8,13 @@ try:
     from services.youtrack_service import YouTrackService
     from logger.my_logger import setup_logger, log_uncaught_exceptions
     from services.credentials_service import CredentialsService, handle_passphrase
+    from errors.invalid_passphrase_error import InvalidPassphraseError
 
     setup_logger()
     sys.excepthook = log_uncaught_exceptions
 
     try:
-        passphrase = sys.argv[1] if len(sys.argv) > 1 else None
-        handle_passphrase(passphrase)
+        passphrase = handle_passphrase(sys.argv[1] if len(sys.argv) > 1 else None)
 
         credentials_service = CredentialsService(passphrase)
         credentials = credentials_service.get_credentials()
@@ -32,6 +32,8 @@ try:
             youtrack_service = YouTrackService(
                 credentials.subdomain, credentials.bearer_token)
 
+    except InvalidPassphraseError as e:
+        logging.error(e.message)
     except Exception as e:
         logging.error(f'Unhandled exception\n{traceback.format_exc()}')
 

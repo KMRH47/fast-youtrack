@@ -1,9 +1,10 @@
 import logging
 from typing import Tuple
-from repositories.credentials_storage import load_credentials, read_passphrase, write_credentials, write_passphrase
+from repositories.credentials_storage import read_credentials, read_passphrase, write_credentials, write_passphrase
 from security.encryption import EncryptionService
 from gui.credentials_gui import prompt_for_credentials
 from models.credentials import Credentials
+from errors.invalid_passphrase_error import InvalidPassphraseError
 
 
 class CredentialsService:
@@ -19,7 +20,7 @@ class CredentialsService:
         self.encryption_service = EncryptionService(passphrase)
 
     def get_credentials(self) -> Credentials:
-        encrypted_credentials = load_credentials()
+        encrypted_credentials = read_credentials()
 
         if not encrypted_credentials:
             return None
@@ -54,10 +55,18 @@ class CredentialsService:
         return (subdomain, bearer_token)
 
 
-def handle_passphrase(passphrase: str | None):
+def handle_passphrase(passphrase: str | None) -> str:
+    """
+    Handles passphrase verification or storage.
+
+    :param passphrase: The passphrase to handle
+    :raise InvalidPassphraseError: If the passphrase is invalid.
+    """
     if not passphrase:
         passphrase = read_passphrase()
         if not passphrase:
-            raise ValueError("No passphrase supplied. Exiting...")
-    else:
-        write_passphrase(passphrase)
+            raise InvalidPassphraseError()
+        return passphrase
+    
+    write_passphrase(passphrase)
+    return passphrase
