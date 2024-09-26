@@ -55,7 +55,7 @@ def read_credentials() -> Optional[Credentials]:
         if isinstance(credentials_data, dict):
             credentials = Credentials(**credentials_data)
             logging.info(
-                f"Credentials loaded and validated successfully from {credentials_file}")
+                f"Credentials loaded from {credentials_file}")
             return credentials
         else:
             logging.error(
