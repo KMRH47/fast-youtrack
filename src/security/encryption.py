@@ -1,9 +1,11 @@
+import binascii
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.exceptions import InvalidTag
 from errors.invalid_passphrase_error import InvalidPassphraseError
+from errors.invalid_token_error import InvalidTokenError
 import os
 import base64
 
@@ -62,3 +64,5 @@ class EncryptionService:
             return aesgcm.decrypt(nonce, encrypted_value, None).decode()
         except InvalidTag:
             raise InvalidPassphraseError()
+        except binascii.Error:
+            raise InvalidTokenError()
