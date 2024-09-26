@@ -37,7 +37,7 @@ def write_credentials(credentials: Credentials) -> None:
     logging.info("Credentials saved to file")
 
 
-def load_credentials() -> Optional[Credentials]:
+def read_credentials() -> Optional[Credentials]:
     """
     Loads credentials from the 'user-config.yaml' file located in the 'data' directory.
     Returns a validated Credentials object if successful, or None if validation fails.
@@ -91,11 +91,11 @@ def write_passphrase(passphrase: str, filename: str = ".key"):
             f"Failed to write passphrase to {passphrase_file}: {e}")
 
 
-def read_passphrase(filename: str = ".key") -> Optional[str]:
+def read_passphrase() -> Optional[str]:
     """
     Reads the passphrase from a file in the 'data' directory.
     """
-    passphrase_file = os.path.join(get_data_directory_path(), filename)
+    passphrase_file = os.path.join(get_data_directory_path(), ".key")
     try:
         with open(passphrase_file, "r") as f:
             passphrase = f.read()
