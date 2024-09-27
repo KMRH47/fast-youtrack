@@ -1,5 +1,11 @@
+from typing import List
 from services.http_service import HttpService
 from models.work_item_response import WorkItemResponse
+from models.user_response import UserResponse
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 class YouTrackService:
@@ -8,28 +14,28 @@ class YouTrackService:
         self.__base_url = f"https://{subdomain}.youtrack.cloud/api"
         self.__bearer_token = bearer_token
 
-    def _make_request(self, endpoint: str, fields: str) -> dict:
-        """Helper method to make API requests with common logic."""
-        url = f"{self.__base_url}/{endpoint}"
-        headers: dict[str, str] = {
-            "Authorization": f"Bearer {self.__bearer_token}",
-            "Accept": "application/json"
-        }
-        params: dict[str, str] = {"fields": fields}
-        return self.__http_service.get(url, headers=headers, params=params)
+    def _request(self, endpoint: str, fields: str) -> dict:
+        return self.__http_service.get(
+            url=f"{self.__base_url}/{endpoint}",
+            headers={
+                "Authorization": f"Bearer {self.__bearer_token}",
+                "Accept": "application/json"
+            },
+            params={"fields": fields}
+        )
 
-    def get_work_item_response(self, endpoint: str) -> WorkItemResponse:
-        """Get work item response."""
-        response: dict = self._make_request(endpoint, fields="id,name")
+    def get_work_item_types(self) -> List[WorkItemResponse]:
+        response: WorkItemResponse = self._request(
+            endpoint="admin/timeTrackingSettings/workItemTypes",
+            fields="id,name"
+        )
+
+        return [WorkItemResponse(**item) for item in response]
+
+    def get_user_info(self) -> UserResponse:
+        response: dict = self._request("users/me", fields="id,name")
+
         return WorkItemResponse(
             id=response.get("id"),
             name=response.get("name")
         )
-
-    def get_work_item_types(self) -> WorkItemResponse:
-        """Get work item types."""
-        return self.get_work_item_response("admin/timeTrackingSettings/workItemTypes")
-
-    def get_user_info(self) -> WorkItemResponse:
-        """Get user info."""
-        return self.get_work_item_response("users/me")
