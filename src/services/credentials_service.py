@@ -1,4 +1,3 @@
-import logging
 from typing import Tuple
 from repositories.credentials_storage import read_credentials, read_passphrase, write_credentials, write_passphrase
 from security.encryption import EncryptionService
