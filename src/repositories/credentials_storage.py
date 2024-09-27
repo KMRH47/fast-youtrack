@@ -5,6 +5,7 @@ import os
 import logging
 import yaml
 
+logger = logging.getLogger(__name__)
 
 def get_data_directory_path() -> str:
     """
@@ -34,7 +35,7 @@ def write_credentials(credentials: Credentials) -> None:
     with open(credentials_file, 'w') as file:
         yaml.dump(credentials.model_dump(), file)
 
-    logging.info("Credentials saved to file")
+    logger.info("Credentials saved to file")
 
 
 def read_credentials() -> Optional[Credentials]:
@@ -45,7 +46,7 @@ def read_credentials() -> Optional[Credentials]:
     credentials_file = get_credentials_file_path()
 
     if not os.path.exists(credentials_file):
-        logging.warning(f"Credentials file not found: {credentials_file}")
+        logger.warning(f"Credentials file not found: {credentials_file}")
         return None
 
     try:
@@ -54,22 +55,22 @@ def read_credentials() -> Optional[Credentials]:
 
         if isinstance(credentials_data, dict):
             credentials = Credentials(**credentials_data)
-            logging.info(
+            logger.info(
                 f"Credentials loaded from {credentials_file}")
             return credentials
         else:
-            logging.error(
+            logger.error(
                 f"Expected a dictionary for credentials but got: {type(credentials_data)}")
             return None
 
     except FileNotFoundError:
-        logging.error(f"Credentials file not found: {credentials_file}")
+        logger.error(f"Credentials file not found: {credentials_file}")
         return None
     except ValidationError as e:
-        logging.error(f"Validation error: {e}")
+        logger.error(f"Validation error: {e}")
         return None
     except yaml.YAMLError as e:
-        logging.error(f"Error parsing YAML file: {e}")
+        logger.error(f"Error parsing YAML file: {e}")
         return None
 
 
@@ -87,7 +88,7 @@ def write_passphrase(passphrase: str, filename: str = ".key"):
         with open(passphrase_file, "w") as f:
             f.write(passphrase)
     except Exception as e:
-        logging.error(
+        logger.error(
             f"Failed to write passphrase to {passphrase_file}: {e}")
 
 
@@ -101,5 +102,5 @@ def read_passphrase() -> Optional[str]:
             passphrase = f.read()
         return passphrase
     except Exception as e:
-        logging.error(f"Failed to read passphrase from {passphrase_file}: {e}")
+        logger.error(f"Failed to read passphrase from {passphrase_file}: {e}")
         return None

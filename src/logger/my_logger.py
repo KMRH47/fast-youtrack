@@ -31,13 +31,3 @@ def setup_logger(log_dir="logs", log_file="log.txt"):
 
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
-
-    sys.excepthook = log_uncaught_exceptions
-
-
-def log_uncaught_exceptions(exctype, value, tb):
-    """
-    Logs any uncaught exceptions that occur during runtime.
-    """
-    logger = logging.getLogger(__name__)
-    logger.error("Uncaught exception", exc_info=(exctype, value, tb))

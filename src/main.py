@@ -1,11 +1,14 @@
 from services.youtrack_service import YouTrackService
-from logger.my_logger import setup_logger, log_uncaught_exceptions
+from logger.my_logger import setup_logger
 from services.credentials_service import CredentialsService, handle_passphrase
 from errors.invalid_passphrase_error import InvalidPassphraseError
 from errors.invalid_token_error import InvalidTokenError
 import sys
 import logging
 import traceback
+
+
+logger = logging.getLogger(__name__)
 
 
 def main():
@@ -19,15 +22,14 @@ def main():
 
     user_info = youtrack_service.get_user_info()
 
-    logging.info(f"User info: {user_info}")
+    logger.info(f"User info: {user_info}")
 
 
 if __name__ == "__main__":
     try:
         setup_logger()
-        sys.excepthook = log_uncaught_exceptions
         main()
     except (InvalidPassphraseError, InvalidTokenError) as e:
-        logging.error(e.message)
+        logger.error(e.message)
     except Exception as e:
-        logging.error(f'Unhandled exception\n{traceback.format_exc()}')
+        logger.error(f'Unhandled exception\n{traceback.format_exc()}')
