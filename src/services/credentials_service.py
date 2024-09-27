@@ -7,6 +7,7 @@ from models.credentials import Credentials
 from errors.invalid_passphrase_error import InvalidPassphraseError
 from models.work_item_response import WorkItemResponse
 from services.youtrack_service import YouTrackService
+from errors.user_cancelled_error import UserCancelledError
 
 
 class CredentialsService:
@@ -41,8 +42,8 @@ class CredentialsService:
         subdomain, bearer_token = prompt_for_credentials(passphrase)
 
         if not subdomain or not bearer_token:
-            logging.error("User cancelled credentials input. Exiting...")
-            exit(1)
+            raise UserCancelledError(
+                "User cancelled credentials input. Exiting...")
 
         return (subdomain, bearer_token)
 
