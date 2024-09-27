@@ -20,9 +20,9 @@ def main():
     youtrack_service = YouTrackService(
         credentials.subdomain, credentials.bearer_token)
 
-    user_info = youtrack_service.get_user_info()
+    work_item_types = youtrack_service.get_work_item_types()
 
-    logger.info(f"User info: {user_info}")
+    logger.info(f"Work Item Types (test): {work_item_types}")
 
 
 if __name__ == "__main__":
