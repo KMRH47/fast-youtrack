@@ -7,100 +7,65 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
-def get_data_directory_path() -> str:
-    """
-    Returns the path to the 'data' directory.
-    """
-    return os.path.join(os.path.dirname(__file__), '../../data')
 
+class CredentialsStorage:
+    def __init__(self, subdomain: str):
+        self.credentials_path = os.path.join(
+            self.user_settings_path, subdomain, 'credentials.yaml')
+        self.user_settings_path = os.path.join(
+            os.path.dirname(__file__), '../../user-settings')
 
-def get_credentials_file_path() -> str:
-    """
-    Returns the path to the 'user-config.yaml' file in the 'data' directory.
-    """
-    return os.path.join(get_data_directory_path(), 'user-config.yaml')
+    def write_credentials(self, credentials: Credentials) -> None:
+        credentials_file = self.credentials_path()
+        os.makedirs(os.path.dirname(credentials_file), exist_ok=True)
 
+        with open(credentials_file, 'w') as file:
+            yaml.dump(credentials.model_dump(), file)
 
-def write_credentials(credentials: Credentials) -> None:
-    """
-    Writes the credentials to 'user-config.yaml' file in the 'data' directory.
-    """
-    credentials_dir = get_data_directory_path()
+        logger.info(f'Credentials written to {credentials_file}')
 
-    if not os.path.exists(credentials_dir):
-        os.makedirs(credentials_dir)
-
-    credentials_file = get_credentials_file_path()
-
-    with open(credentials_file, 'w') as file:
-        yaml.dump(credentials.model_dump(), file)
-
-    logger.info("Credentials saved to file")
-
-
-def read_credentials() -> Optional[Credentials]:
-    """
-    Loads credentials from the 'user-config.yaml' file located in the 'data' directory.
-    Returns a validated Credentials object if successful, or None if validation fails.
-    """
-    credentials_file = get_credentials_file_path()
-
-    if not os.path.exists(credentials_file):
-        logger.warning(f"Credentials file not found: {credentials_file}")
-        return None
-
-    try:
-        with open(credentials_file, 'r') as file:
-            credentials_data = yaml.safe_load(file)
-
-        if isinstance(credentials_data, dict):
-            credentials = Credentials(**credentials_data)
-            logger.info(
-                f"Credentials loaded from {credentials_file}")
-            return credentials
-        else:
-            logger.error(
-                f"Expected a dictionary for credentials but got: {type(credentials_data)}")
+    def read_credentials(self) -> Optional[Credentials]:
+        if not os.path.exists(self.credentials_path):
+            logger.warning(
+                f"Credentials file not found: {self.credentials_path}")
             return None
 
-    except FileNotFoundError:
-        logger.error(f"Credentials file not found: {credentials_file}")
-        return None
-    except ValidationError as e:
-        logger.error(f"Validation error: {e}")
-        return None
-    except yaml.YAMLError as e:
-        logger.error(f"Error parsing YAML file: {e}")
-        return None
+        try:
+            with open(self.credentials_path, 'r') as file:
+                credentials_data = yaml.safe_load(file)
 
+            if isinstance(credentials_data, dict):
+                credentials = Credentials(**credentials_data)
+                logger.info(f"Credentials loaded from {self.credentials_path}")
+                return credentials
+            else:
+                logger.error(
+                    f"Expected a dictionary for credentials but got: {type(credentials_data)}")
+                return None
 
-def write_passphrase(passphrase: str, filename: str = ".key"):
-    """
-    Writes the passphrase to a file in the 'data' directory.
-    """
-    passphrase_dir = get_data_directory_path()
+        except (FileNotFoundError, ValidationError, yaml.YAMLError) as e:
+            logger.error(f"Error reading credentials: {e}")
+            return None
 
-    if not os.path.exists(passphrase_dir):
-        os.makedirs(passphrase_dir)
+    def write_passphrase(self, passphrase: str) -> None:
+        passphrase_file = os.path.join(self.user_settings_path, '.key')
 
-    passphrase_file = os.path.join(passphrase_dir, filename)
-    try:
-        with open(passphrase_file, "w") as f:
-            f.write(passphrase)
-    except Exception as e:
-        logger.error(
-            f"Failed to write passphrase to {passphrase_file}: {e}")
+        os.makedirs(self.user_settings_path, exist_ok=True)
 
+        try:
+            with open(passphrase_file, "w") as f:
+                f.write(passphrase)
+        except Exception as e:
+            logger.error(
+                f"Failed to write passphrase to {passphrase_file}: {e}")
 
-def read_passphrase() -> Optional[str]:
-    """
-    Reads the passphrase from a file in the 'data' directory.
-    """
-    passphrase_file = os.path.join(get_data_directory_path(), ".key")
-    try:
-        with open(passphrase_file, "r") as f:
-            passphrase = f.read()
-        return passphrase
-    except Exception as e:
-        logger.error(f"Failed to read passphrase from {passphrase_file}: {e}")
-        return None
+    def read_passphrase(self) -> Optional[str]:
+        passphrase_file = os.path.join(self.user_settings_path, ".key")
+
+        try:
+            with open(passphrase_file, "r") as f:
+                return f.read()
+        except Exception as e:
+            logger.error(
+                f"Failed to read passphrase from {passphrase_file}: {e}")
+            return None

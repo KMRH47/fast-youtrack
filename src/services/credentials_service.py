@@ -1,9 +1,13 @@
-from repositories.credentials_storage import read_credentials, read_passphrase, write_credentials, write_passphrase
+import logging
 from security.encryption import EncryptionService
 from gui.credentials_gui import prompt_for_credentials
 from models.credentials import Credentials
 from errors.invalid_passphrase_error import InvalidPassphraseError
 from errors.user_cancelled_error import UserCancelledError
+from repositories.credentials_storage import CredentialsStorage
+
+
+logger = logging.getLogger(__name__)
 
 
 class CredentialsService:
@@ -11,15 +15,16 @@ class CredentialsService:
     Service class to handle credentials.
     """
 
-    def __init__(self, passphrase: str):
+    def __init__(self, credentials_storage: CredentialsStorage, passphrase: str):
         """
         Initialize the credentials service.
         :param passphrase: The passphrase provided by the user
         """
         self.encryption_service = EncryptionService(passphrase)
+        self.credentials_storage = credentials_storage
 
     def _get_credentials(self) -> Credentials:
-        encrypted_credentials = read_credentials()
+        encrypted_credentials = self.credentials_storage.read_credentials()
 
         if not encrypted_credentials:
             return None
@@ -38,10 +43,10 @@ class CredentialsService:
         if stored_credentials:
             return stored_credentials
 
-        passphrase = read_passphrase()
+        passphrase = self.credentials_storage.read_passphrase()
         prompted_credentials = prompt_for_credentials(passphrase)
 
-        write_credentials(Credentials(
+        self.credentials_storage.write_credentials(Credentials(
             subdomain=prompted_credentials.subdomain,
             bearer_token=self.encryption_service.encrypt(
                 prompted_credentials.bearer_token)
@@ -62,19 +67,14 @@ class CredentialsService:
 
         return credentials
 
-
-def handle_passphrase(passphrase: str | None) -> str:
-    """
-    Handles passphrase verification or storage.
-
-    :param passphrase: The passphrase to handle
-    :raise InvalidPassphraseError: If the passphrase is invalid.
-    """
-    if not passphrase:
-        passphrase = read_passphrase()
+    def handle_passphrase(self, passphrase: str | None) -> None:
         if not passphrase:
-            raise InvalidPassphraseError()
-        return passphrase
+            passphrase = CredentialsStorage.read_passphrase()
+            if not passphrase:
+                raise InvalidPassphraseError()
+            return passphrase
 
-    write_passphrase(passphrase)
-    return passphrase
+        logger.info(f"Passphrase provided as argument.: {passphrase}")
+
+        self.credentials_storage.write_passphrase(passphrase)
+        return passphrase

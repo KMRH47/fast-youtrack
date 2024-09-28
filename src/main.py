@@ -1,6 +1,6 @@
 from services.youtrack_service import YouTrackService
 from logger.my_logger import setup_logger
-from services.credentials_service import CredentialsService, handle_passphrase
+from services.credentials_service import CredentialsService
 from errors.invalid_passphrase_error import InvalidPassphraseError
 from errors.invalid_token_error import InvalidTokenError
 import sys
@@ -12,7 +12,10 @@ logger = logging.getLogger(__name__)
 
 
 def main():
-    passphrase = handle_passphrase(sys.argv[1] if len(sys.argv) > 1 else None)
+    passphrase = sys.argv[1] if len(sys.argv) > 1 else None
+    subdomain = sys.argv[2] if len(sys.argv) > 2 else None
+    
+    passphrase = CredentialsService.handle_passphrase(passphrase)
 
     credentials_service = CredentialsService(passphrase)
     credentials = credentials_service.handle_credentials()
