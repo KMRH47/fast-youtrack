@@ -1,4 +1,9 @@
-global KeyFile := A_WorkingDir "\..\data\.key"
+#Requires AutoHotkey v2.0
+#Include run-gui-subdomain-passphrase.ahk
+
+global BaseDir := A_WorkingDir "\..\user-settings"
+global KeyFile := BaseDir "\.key"
+
 OnExit DeleteKeyFile
 
 ; CTRL SHIFT T
@@ -10,30 +15,9 @@ OnExit DeleteKeyFile
         return
     }
 
-    passphrase := InputBoxOnTop()
+    result := ShowSubdomainsPassphraseWindow()
 
-    if (Type(passphrase) = "String" && passphrase != "") {
-        Run('pythonw "../src/main.py" "' passphrase '"')
-    }
-}
-
-InputBoxOnTop() {
-    SetTimer(OnTop, 50)
-    passphrase := InputBox("Enter Passphrase", "Please enter your passphrase for this session.").value
-    SetTimer(OnTop, 0)
-
-    return passphrase
-
-    OnTop() {
-        ib_ahk := 'ahk_class #32770 ahk_exe AutoHotkey64.exe'
-        if WinExist(ib_ahk) {
-            WinSetAlwaysOnTop(1, ib_ahk)
-        }
-    }
-}
-
-DeleteKeyFile(ExitReason, ExitCode) {
-    if FileExist(KeyFile) {
-        FileDelete(KeyFile)
+    if (result and result.HasProp("subdomain") and result.HasProp("passphrase")) {
+        Run('pythonw "../src/main.py" "' result.passphrase '" "' result.subdomain '"')
     }
 }
