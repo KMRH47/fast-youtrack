@@ -15,11 +15,9 @@ def main():
     passphrase = handle_passphrase(sys.argv[1] if len(sys.argv) > 1 else None)
 
     credentials_service = CredentialsService(passphrase)
-    credentials = credentials_service.load_or_save_credentials(passphrase)
+    credentials = credentials_service.handle_credentials()
 
-    youtrack_service = YouTrackService(
-        credentials.subdomain, credentials.bearer_token)
-
+    youtrack_service = YouTrackService(credentials)
     work_item_types = youtrack_service.get_work_item_types()
 
     logger.info(f"Work Item Types (test): {work_item_types}")

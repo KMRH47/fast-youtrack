@@ -1,23 +1,32 @@
-import tkinter as tk
+from typing import Optional
+from pydantic import ValidationError
+from models.credentials import Credentials
 from tkinter import messagebox
-from typing import Tuple
+import tkinter as tk
 
-def prompt_for_credentials(passphrase: str) -> Tuple[str, str]:
+
+def prompt_for_credentials(passphrase: str) -> Optional[Credentials]:
     """
     GUI to prompt the user for subdomain and bearer token.
-    Returns the subdomain and bearer_token as a tuple.
+    Returns a Credentials object based on the user's input.
     """
+    result = None
+
     def submit_credentials(event=None):
         nonlocal result
-        subdomain = subdomain_entry.get()
-        bearer_token = token_entry.get()
+        subdomain = subdomain_entry.get().strip()
+        bearer_token = token_entry.get().strip()
 
         if not subdomain or not bearer_token:
-            messagebox.showerror("Error", "Both subdomain and token are required!")
+            messagebox.showerror(
+                "Error", "Both subdomain and token are required!")
             return
 
-        result = (subdomain, bearer_token)
-        root.destroy()
+        try:
+            result = Credentials(subdomain, bearer_token)
+            root.destroy()
+        except ValidationError as e:
+            messagebox.showerror("Validation Error", str(e))
 
     def cancel_credentials():
         nonlocal result
@@ -45,21 +54,29 @@ def prompt_for_credentials(passphrase: str) -> Tuple[str, str]:
     passphrase_entry.pack(pady=5)
 
     # Toggle button to show/hide passphrase
-    toggle_button = tk.Button(root, text="Show", command=toggle_passphrase_visibility)
+    toggle_button = tk.Button(
+        root, text="Show", command=toggle_passphrase_visibility)
     toggle_button.pack(pady=5)
 
-    tk.Label(root, text="Enter your YouTrack subdomain (e.g., 'brunata')").pack(pady=5)
+    # Subdomain label and entry
+    tk.Label(root, text="Enter your YouTrack subdomain (e.g., 'brunata')").pack(
+        pady=5)
     subdomain_entry = tk.Entry(root)
     subdomain_entry.pack(pady=5)
     subdomain_entry.focus_set()
 
+    # Bearer token label and entry (bearer token hidden initially)
     tk.Label(root, text="Enter your YouTrack permanent token").pack(pady=5)
     token_entry = tk.Entry(root, show="*")  # Hide the token input for security
     token_entry.pack(pady=5)
 
-    tk.Button(root, text="OK", command=submit_credentials).pack(side="left", padx=10, pady=10)
-    tk.Button(root, text="Cancel", command=cancel_credentials).pack(side="right", padx=10, pady=10)
+    # Buttons to submit or cancel
+    tk.Button(root, text="OK", command=submit_credentials).pack(
+        side="left", padx=10, pady=10)
+    tk.Button(root, text="Cancel", command=cancel_credentials).pack(
+        side="right", padx=10, pady=10)
 
+    # Bind Enter key to submit action
     root.bind('<Return>', submit_credentials)
     root.mainloop()
 
