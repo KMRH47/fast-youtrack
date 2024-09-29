@@ -1,10 +1,10 @@
 #Requires AutoHotkey v2.0
-#Include run-gui-subdomain-passphrase.ahk
-#Include run-lib.ahk
+#Include ahk/run-gui-subdomain-passphrase.ahk
+#Include ahk/run-gui.ahk
 
 ; CTRL SHIFT T
 ^+t:: {
-    activeSubdomain := getActiveSubdomain() || DisplaySubdomainPicker()
+    activeSubdomain := GetActiveSubdomain() || DisplaySubdomainPicker()
     if (!activeSubdomain) {
         return
     }

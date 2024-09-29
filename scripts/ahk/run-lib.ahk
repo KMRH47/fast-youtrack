@@ -40,7 +40,7 @@ CreateKey(passphrase, subdomain) {
 /**
  * Retrieves the currently active subdomain and its corresponding passphrase.
  * @return {ActiveSubdomain|false} */
-getActiveSubdomain() {
+GetActiveSubdomain() {
     subdomains := GetSubdomains()
     for subdomain in subdomains {
         keyFilePath := UserSettingsDir "\" subdomain "\.key"
@@ -72,7 +72,7 @@ DeleteKeys(ExitReason, ExitCode) {
     }
 }
 
-getTimeStamp() {
+GetTimeStamp() {
     ms := Format("{:03d}", A_MSec)
     return FormatTime(A_Now, "yyyy-MM-dd HH:mm:ss," ms)
 }
@@ -81,7 +81,7 @@ getTimeStamp() {
 logError(err) {
     logMessage := Format(
         "{1} - ERROR - Unhandled exception`nTraceback (most recent call last):`n{2}{3}: {4}`n`n",
-        getTimeStamp(),
+        GetTimeStamp(),
         err.Stack,
         err.What,
         err.Message)
