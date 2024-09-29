@@ -1,18 +1,21 @@
 #Requires AutoHotkey v2.0
 
-/** @param {Array} comboBoxItems */
+/** @param {Array} comboBoxItems 
+ * @return {Object|false} */
 CreatePassAndListWindow(passphraseLabel, comboBoxLabel, comboBoxItems) {
     customGui := Gui("+AlwaysOnTop")
     customGui.SetFont("s10")
     customGui.OnEvent("Close", (*) => customGui.Destroy())
+    customGui.OnEvent("Escape", (*) => customGui.Destroy())
     customGui.SelectedValues := {}
 
     combobox := AddComboBox(customGui, comboBoxLabel, comboBoxItems)
     passphraseInput := AddPassphraseInput(customGui, passphraseLabel)
-
     AddSubmitButton(customGui)
 
-    return customGui
+    DisplayOnTop(customGui)
+
+    return customGui.SelectedValues ? customGui.SelectedValues : false
 }
 
 /** @param {Gui} gui

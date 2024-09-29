@@ -2,37 +2,18 @@
 #Include run-gui.ahk
 #include run-lib.ahk
 
-/** @param {Array} listBoxItems */
-ShowSubdomainsPassphraseWindow() {
+/** @return {ActiveSubdomain|false} */
+DisplaySubdomainPicker() {
 
     subdomainTitle := "Select a subdomain:"
-    subdomains := GetSubdomains(baseDir)
+    subdomains := GetSubdomains()
 
     passphraseTitle := "Enter passphrase:"
-    passphraseAndSubdomain := PromptPassphraseAndSubdomain(passphraseTitle, subdomainTitle, subdomains)
+    result := CreatePassAndListWindow(passphraseTitle, subdomainTitle, subdomains)
 
-    return passphraseAndSubdomain
-}
-
-/** @param {Array} listBoxItems */
-PromptPassphraseAndSubdomain(passphraseTitle, listBoxTitle, listBoxItems) {
-    customWindow := CreatePassAndListWindow(passphraseTitle, listBoxTitle, listBoxItems)
-    customWindow.OnEvent("Escape", (*) => customWindow.Destroy())
-    DisplayOnTop(customWindow)
-
-    return PassphraseResult(customWindow.SelectedValues.item, customWindow.SelectedValues.passphrase)
-}
-
-class PassphraseResult {
-    subdomain := ""
-    passphrase := ""
-
-    __New(subdomain, passphrase) {
-        this.subdomain := subdomain
-        this.passphrase := passphrase
+    if (!result.HasProp("item") || !result.HasProp("passphrase")) {
+        return false
     }
 
-    ToString() {
-        return "subdomain: " this.subdomain "`npassphrase: " this.passphrase
-    }
+    return ActiveSubdomain(result.item, result.passphrase)
 }

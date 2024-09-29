@@ -1,7 +1,6 @@
 from services.http_service import HttpService
 from models.work_item_response import WorkItemResponse
 from models.user_response import UserResponse
-from models.credentials import Credentials
 from typing import List
 import logging
 
@@ -10,10 +9,10 @@ logger = logging.getLogger(__name__)
 
 
 class YouTrackService:
-    def __init__(self, credentials: Credentials):
+    def __init__(self, subdomain: str, bearer_token: str):
         self.__http_service = HttpService()
-        self.__base_url = f"https://{credentials.subdomain}.youtrack.cloud/api"
-        self.__bearer_token = credentials.bearer_token
+        self.__base_url = f"https://{subdomain}.youtrack.cloud/api"
+        self.__bearer_token = bearer_token
 
     def _request(self, endpoint: str, fields: str) -> dict:
         return self.__http_service.get(

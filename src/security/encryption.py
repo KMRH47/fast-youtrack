@@ -19,7 +19,7 @@ class EncryptionService:
         """
         Initialize the encryption service.
 
-        :param passphrase: The passphrase provided by the user
+        :param passphrase: The passphrase provided by the user. Used to derive the encryption key.
         """
         self.key = self.derive_key(passphrase)
 
