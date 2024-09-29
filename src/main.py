@@ -14,14 +14,14 @@ logger = logging.getLogger(__name__)
 
 def main():
     passphrase = sys.argv[1] if len(sys.argv) > 1 else None
-    folder_name = sys.argv[2] if len(sys.argv) > 2 else None
+    subdomain = sys.argv[2] if len(sys.argv) > 2 else None
 
     token_service = BearerTokenService(
-        base_path=f"../user/{folder_name}",
+        base_path=f"../user/{subdomain}",
         passphrase=passphrase)
 
     youtrack_service = YouTrackService(
-        subdomain=folder_name,
+        subdomain=subdomain,
         bearer_token=token_service.get_bearer_token() or token_service.prompt_for_bearer_token())
 
     work_item_types = youtrack_service.get_work_item_types()
