@@ -1,3 +1,4 @@
+from errors.unauthorized_error import UnauthorizedError
 import requests
 import logging
 
@@ -16,6 +17,8 @@ class HttpService:
             return response.json()
         except requests.RequestException as e:
             logger.error(f"GET {url} - Failed: {e}")
+            if response.status_code == 401:
+                raise UnauthorizedError()
             raise
 
     def post(self, url: str, data: dict = None, headers: dict = None) -> dict:
