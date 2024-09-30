@@ -38,6 +38,6 @@ if __name__ == "__main__":
     except UserError as e:
         e.display()
     except HTTPError as e:
-        logger.error(e.message)
+        logger.error(e.response.text)
     except Exception as e:
         logger.error(f'Unhandled exception\n{traceback.format_exc()}')
