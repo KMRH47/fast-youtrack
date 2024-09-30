@@ -1,3 +1,4 @@
+from ui.youtrack_story_update_ui import display_youtrack_story_update
 from errors.user_error import UserError
 from requests import HTTPError
 from services.youtrack_service import YouTrackService
@@ -26,9 +27,12 @@ def main():
         subdomain=subdomain,
         bearer_token=token_service.get_bearer_token() or token_service.prompt_for_bearer_token())
 
-    work_item_types = youtrack_service.get_work_item_types()
+    #work_item_types =  youtrack_service.get_work_item_types()
+    #display_youtrack_story_update(available_states=[item.name for item in work_item_types])
+    test_list = ['testing', 'haha', 'okay']
+    display_youtrack_story_update(available_states=test_list)
 
-    logger.info(f"Work Item Types (test): {work_item_types}")
+    # logger.info(f"Work Item Types (test): {work_item_types}")
 
 
 if __name__ == "__main__":
