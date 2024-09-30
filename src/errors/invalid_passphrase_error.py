@@ -1,5 +1,6 @@
-class InvalidPassphraseError(Exception):
-    """Exception raised for invalid passphrases."""
-    def __init__(self, message="The provided passphrase is invalid."):
-        self.message = message
-        super().__init__(self.message)
+from errors.user_error import UserError
+
+
+class InvalidPassphraseError(UserError):
+    def __init__(self):
+        super().__init__("Invalid passphrase. Please delete the associated '.key' file and try again.")

@@ -1,5 +1,6 @@
-class InvalidTokenError(Exception):
-    """Exception raised for invalid tokens."""
-    def __init__(self, message="The provided token is invalid."):
-        self.message = message
-        super().__init__(self.message)
+from errors.user_error import UserError
+
+
+class InvalidTokenError(UserError):
+    def __init__(self):
+        super().__init__("Invalid token. Please delete the associated '.token' file and try again.")
