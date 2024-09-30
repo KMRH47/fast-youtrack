@@ -4,7 +4,7 @@ from typing import Optional
 
 def display_bearer_token_prompt() -> Optional[str]:
     """
-    GUI to prompt the user for a YouTrack bearer token.
+    UI to prompt the user for a YouTrack bearer token.
     Returns the token as a string based on the user's input.
     """
     token = None

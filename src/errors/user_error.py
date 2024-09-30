@@ -1,4 +1,4 @@
-from gui.error_gui import display_error_dialog
+from ui.error_ui import display_error_dialog
 
 
 class UserError(Exception):

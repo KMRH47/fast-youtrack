@@ -11,7 +11,7 @@ def display_error_dialog(message: str) -> None:
     label = tk.Label(error_window, text=message, font=("Arial", 16))
     label.pack(padx=20, pady=20)
 
-    close_button = tk.Button(error_window, text="OK",
+    close_button = tk .Button(error_window, text="OK",
                              command=error_window.destroy)
     close_button.pack(pady=10)
 
