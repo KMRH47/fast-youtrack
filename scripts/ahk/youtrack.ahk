@@ -1,22 +1,42 @@
 #Requires AutoHotkey v2.0
+#include utils.ahk
+#Include gui.ahk
 
 global UserSettingsDir := A_WorkingDir "\..\user"
 global LogDir := A_WorkingDir "\..\logs"
 
 OnExit DeleteKeys
 
-/** @param {String} baseDir
- *  Get subdomains based on folder names within baseDir */
-GetSubdomains() {
-    subdomains := []
+/** @return {ActiveSubdomain|false} */
+DisplaySubdomainPicker() {
 
-    loop files, UserSettingsDir "\*", "D" {
-        subdomain := A_LoopFileName
-        if (subdomain) {
-            subdomains.Push(subdomain)
+    subdomainTitle := "Select a subdomain:"
+    subdomains := GetFolderNames(UserSettingsDir)
+
+    passphraseTitle := "Enter passphrase:"
+    result := CreatePassAndListWindow(passphraseTitle, subdomainTitle, subdomains)
+
+    if (!result.HasProp("item") || !result.HasProp("passphrase")) {
+        return false
+    }
+
+    return ActiveSubdomain(result.item, result.passphrase)
+}
+
+/**
+ * Retrieves the currently active subdomain and its corresponding passphrase.
+ * @return {ActiveSubdomain|false} */
+GetActiveSubdomain() {
+    subdomains := GetFolderNames(UserSettingsDir)
+    for subdomain in subdomains {
+        keyFilePath := UserSettingsDir "\" subdomain "\.key"
+        if FileExist(keyFilePath) {
+            passphrase := FileRead(keyFilePath)
+            return ActiveSubdomain(subdomain, passphrase)
         }
     }
-    return subdomains
+
+    return false
 }
 
 /**
@@ -38,54 +58,22 @@ CreateKey(passphrase, subdomain) {
 }
 
 /**
- * Retrieves the currently active subdomain and its corresponding passphrase.
- * @return {ActiveSubdomain|false} */
-GetActiveSubdomain() {
-    subdomains := GetSubdomains()
-    for subdomain in subdomains {
-        keyFilePath := UserSettingsDir "\" subdomain "\.key"
-        if FileExist(keyFilePath) {
-            passphrase := FileRead(keyFilePath)
-            return ActiveSubdomain(subdomain, passphrase)
-        }
-    }
-
-    return false
-}
-
-/**
  * Deletes all ".key" files in subdomain directories upon script exit.
  * @param {String} ExitReason
  * @param {Number} ExitCode
  */
 DeleteKeys(ExitReason, ExitCode) {
-    subdomains := GetSubdomains()
+    subdomains := GetFolderNames(UserSettingsDir)
     for subdomain in subdomains {
         keyFilePath := UserSettingsDir "\" subdomain "\.key"
         if FileExist(keyFilePath) {
             try {
                 FileDelete(keyFilePath)
             } catch as err {
-                logError(err)
+                LogError(err, LogDir "\log.txt")
             }
         }
     }
-}
-
-GetTimeStamp() {
-    ms := Format("{:03d}", A_MSec)
-    return FormatTime(A_Now, "yyyy-MM-dd HH:mm:ss," ms)
-}
-
-/** @param {Error} err */
-logError(err) {
-    logMessage := Format(
-        "{1} - ERROR - Unhandled exception`nTraceback (most recent call last):`n{2}{3}: {4}`n`n",
-        GetTimeStamp(),
-        err.Stack,
-        err.What,
-        err.Message)
-    FileAppend(logMessage, LogDir "\log.txt")
 }
 
 class ActiveSubdomain {

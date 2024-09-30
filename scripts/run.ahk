@@ -1,6 +1,5 @@
 #Requires AutoHotkey v2.0
-#Include ahk/run-gui-subdomain-passphrase.ahk
-#Include ahk/run-gui.ahk
+#Include ahk/youtrack.ahk
 
 ; CTRL SHIFT T
 ^+t:: {
