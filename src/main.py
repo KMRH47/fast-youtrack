@@ -1,6 +1,6 @@
 from models.story_update import StoryState, StoryUpdate
 from utils.clipboard import get_selected_number
-from ui.youtrack_story_update_ui import display_update_youtrack_story_ui
+from ui.update_youtrack_story_ui import display_update_youtrack_story_ui
 from errors.user_error import UserError
 from requests import HTTPError
 from services.youtrack_service import YouTrackService
