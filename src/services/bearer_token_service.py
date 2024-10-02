@@ -1,8 +1,8 @@
-import logging
 from security.encryption import EncryptionService
 from errors.user_cancelled_error import UserCancelledInputError
 from repositories.bearer_token_repository import TokenRepository
 from ui.token_ui import display_bearer_token_prompt
+import logging
 
 
 logger = logging.getLogger(__name__)
