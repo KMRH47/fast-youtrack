@@ -7,3 +7,4 @@ pyyaml
 pydantic
 requests
 cryptography
+pyautogui
