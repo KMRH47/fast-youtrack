@@ -39,3 +39,13 @@ class YouTrackService:
             id=response.get("id"),
             name=response.get("name")
         )
+
+    def update_issue(self, issue_id: str, issue_update_request: dict):
+        self.__http_service.post(
+            url=f"{self.__base_url}/issues/{issue_id}/execute",
+            headers={
+                "Authorization": f"Bearer {self.__bearer_token}",
+                "Content-Type": "application/json"
+            },
+            json=issue_update_request
+        )
