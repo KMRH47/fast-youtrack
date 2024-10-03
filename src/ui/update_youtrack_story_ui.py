@@ -1,6 +1,6 @@
 import re
 from models.story_update import StoryState, StoryUpdate
-from tkinter import Entry, ttk
+from tkinter import ttk
 from typing import Callable
 import time
 import logging
