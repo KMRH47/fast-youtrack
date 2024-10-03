@@ -17,16 +17,17 @@ class BearerTokenService:
         :param subdomain: The YouTrack subdomain provided by the user.
         """
 
-        self.file_manager = FileManager(base_dir, ".token")
-        self.encryption_service = EncryptionService(passphrase)
+        self.__file_manager = FileManager(base_dir)
+        self.__encryption_service = EncryptionService(passphrase)
+        self.file_name = ".token"
 
     def get_bearer_token(self) -> str | None:
-        encrypted_bearer_token = self.file_manager.read_data()
+        encrypted_bearer_token = self.__file_manager.read_data(self.file_name)
 
         if not encrypted_bearer_token:
             return None
 
-        return self.encryption_service.decrypt(encrypted_bearer_token)
+        return self.__encryption_service.decrypt(encrypted_bearer_token)
 
     def prompt_for_bearer_token(self) -> str:
         """
@@ -38,7 +39,7 @@ class BearerTokenService:
         if not bearer_token:
             raise UserCancelledInputError("User cancelled input. Exiting...")
 
-        encrypted_bearer_token = self.encryption_service.encrypt(bearer_token)
-        self.file_manager.write_data(encrypted_bearer_token)
+        encrypted_bearer_token = self.__encryption_service.encrypt(bearer_token)
+        self.__file_manager.write_data(encrypted_bearer_token, self.file_name)
 
         return bearer_token

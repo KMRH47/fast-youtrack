@@ -26,21 +26,19 @@ def main():
 
     youtrack_service = YouTrackService(
         subdomain=subdomain,
-        bearer_token=token_service.get_bearer_token() or token_service.prompt_for_bearer_token())
-    
-    youtrack_service
+        bearer_token=token_service.get_bearer_token(
+        ) or token_service.prompt_for_bearer_token(),
+        base_dir=f"../user")
 
     work_item_types = youtrack_service.get_work_item_types()
 
     issue_update = prompt_for_issue_update_request_ui(
         initial_request=IssueUpdateRequest(id="AGI-"),
         available_states=[work_item.name for work_item in work_item_types])
-    
+
     user_info = youtrack_service.get_user_info()
 
     logger.info(f"User info: {user_info}")
-    
-
     logger.info(f"Issue update: {issue_update}")
 
 
