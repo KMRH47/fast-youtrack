@@ -1,6 +1,5 @@
-from models.story_update import StoryState, StoryUpdate
-from utils.clipboard import get_selected_number
-from ui.update_youtrack_story_ui import display_update_youtrack_story_ui
+from models.issue_update_request import IssueUpdateRequest
+from ui.update_youtrack_issue_ui import prompt_for_issue_update_request_ui
 from errors.user_error import UserError
 from requests import HTTPError
 from services.youtrack_service import YouTrackService
@@ -12,14 +11,6 @@ import traceback
 
 
 logger = logging.getLogger(__name__)
-
-
-def update_youtrack_story_test(story_update: StoryUpdate) -> None:
-    try:
-        logger.info("Updating YouTrack story")
-        logger.info(f"Story update: {story_update}")
-    except Exception as e:
-        logger.error(f"Exception occurred: {e}")
 
 
 def main():
@@ -38,12 +29,13 @@ def main():
         bearer_token=token_service.get_bearer_token() or token_service.prompt_for_bearer_token())
 
     work_item_types = youtrack_service.get_work_item_types()
-    story_update = StoryUpdate(
-        issue_id=f"AGI-{get_selected_number() or ''}",
-        state=StoryState(available_states=[item.name for item in work_item_types]))
 
-    display_update_youtrack_story_ui(story_update,
-                                     on_ok_clicked=lambda story_update: update_youtrack_story_test(story_update))
+    issue_update = prompt_for_issue_update_request_ui(
+        IssueUpdateRequest(
+            id="AGI-"
+        ))
+
+    logger.info(f"Issue update: {issue_update}")
 
 
 if __name__ == "__main__":
