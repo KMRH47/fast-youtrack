@@ -1,5 +1,5 @@
-from typing import Optional
-from models.issue_update_request import IssueState, IssueUpdateRequest
+from typing import List, Optional
+from models.issue_update_request import IssueUpdateRequest
 from tkinter import ttk
 import re
 import time
@@ -10,7 +10,9 @@ import tkinter as tk
 logger = logging.getLogger(__name__)
 
 
-def prompt_for_issue_update_request_ui(initial_update_request: IssueUpdateRequest) -> Optional[IssueUpdateRequest]:
+def prompt_for_issue_update_request_ui(
+        initial_request: IssueUpdateRequest,
+        available_states: List[str]) -> Optional[IssueUpdateRequest]:
 
     issue_update_request: Optional[IssueUpdateRequest] = None
 
@@ -22,7 +24,7 @@ def prompt_for_issue_update_request_ui(initial_update_request: IssueUpdateReques
 
     def get_available_states():
         active_state = selected_state_var.get()
-        return [state for state in initial_update_request.state.available_states if state != active_state]
+        return [state for state in available_states if state != active_state]
 
     def on_state_change(event):
         state_combobox['values'] = get_available_states()
@@ -71,31 +73,31 @@ def prompt_for_issue_update_request_ui(initial_update_request: IssueUpdateReques
     # Issue ID
     tk.Label(root, text="Issue ID:").pack(anchor='w', padx=10, pady=5)
     issue_id_entry = tk.Entry(root)
-    issue_id_entry.insert(0, initial_update_request.id)
+    issue_id_entry.insert(0, initial_request.id)
     issue_id_entry.pack(anchor='w', padx=10, fill='x', expand=True)
     issue_id_entry.focus_force()
 
     # Enter Time
     tk.Label(root, text="Enter Time (e.g., 1h30m):").pack(anchor='w', padx=10)
     time_entry = tk.Entry(root)
-    time_entry.insert(0, initial_update_request.time)
+    time_entry.insert(0, initial_request.time)
     time_entry.pack(anchor='w', padx=10, fill='x', expand=True)
 
     # Description
     tk.Label(root, text="Description:").pack(anchor='w', padx=10)
     description_entry = tk.Entry(root)
-    description_entry.insert(0, initial_update_request.description)
+    description_entry.insert(0, initial_request.description)
     description_entry.pack(anchor='w', padx=10, pady=5, fill='x', expand=True)
 
     # Type
     tk.Label(root, text="Type:").pack(anchor='w', padx=10)
     type_entry = tk.Entry(root)
-    type_entry.insert(0, initial_update_request.type)
+    type_entry.insert(0, initial_request.type)
     type_entry.pack(anchor='w', padx=10, pady=5, fill='x', expand=True)
 
     # State ComboBox
     tk.Label(root, text="Current State:").pack(anchor='w', padx=10)
-    current_state = initial_update_request.state.current or ""
+    current_state = initial_request.state or ""
     selected_state_var = tk.StringVar(value=current_state)
     state_combobox = ttk.Combobox(
         root, values=get_available_states(), textvariable=selected_state_var)
@@ -118,14 +120,11 @@ def prompt_for_issue_update_request_ui(initial_update_request: IssueUpdateReques
     def on_ok_click():
         nonlocal issue_update_request
         issue_update_request = IssueUpdateRequest(
-            id="asdasdasdasad",
+            id=issue_id_entry.get(),
             time=time_entry.get(),
             description=description_entry.get(),
             type=type_entry.get(),
-            state=IssueState(
-                current=selected_state_var.get(),
-                available_states=get_available_states()
-            )
+            state=selected_state_var.get()
         )
         root.destroy()
 

@@ -31,9 +31,9 @@ def main():
     work_item_types = youtrack_service.get_work_item_types()
 
     issue_update = prompt_for_issue_update_request_ui(
-        IssueUpdateRequest(
-            id="AGI-"
-        ))
+        initial_request=IssueUpdateRequest(id="AGI-"),
+        available_states=[work_item.name for work_item in work_item_types])
+    
 
     logger.info(f"Issue update: {issue_update}")
 
