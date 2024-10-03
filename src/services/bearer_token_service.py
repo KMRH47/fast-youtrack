@@ -20,7 +20,7 @@ class BearerTokenService:
         self.token_repository = TokenRepository(base_path)
         self.encryption_service = EncryptionService(passphrase)
 
-    def get_bearer_token(self) -> str:
+    def get_bearer_token(self) -> str | None:
         encrypted_bearer_token = self.token_repository.read_token()
 
         if not encrypted_bearer_token:
