@@ -55,6 +55,7 @@ def prompt_for_issue_update_request_ui(
 
     root = tk.Tk()
     root.title("Update YouTrack Issue")
+    root.attributes('-topmost', True)
 
     window_width = 300
     window_height = 325
