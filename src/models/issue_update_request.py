@@ -1,12 +1,17 @@
 from pydantic import BaseModel
+from typing import Optional
 
+class Duration(BaseModel):
+    minutes: int
+
+class Author(BaseModel):
+    id: str
+
+class IssueType(BaseModel):
+    id: str
 
 class IssueUpdateRequest(BaseModel):
-    id: str = ""
-    time: str = ""
-    description: str = ""
-    type: str = ""
-    state: str = ""
-
-    def __iter__(self):
-        return iter((self.id, self.time, self.description, self.type, self.state))
+    duration: Duration
+    author: Author
+    text: str
+    type: Optional[IssueType] = None

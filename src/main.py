@@ -1,5 +1,5 @@
-from models.issue_update_request import IssueUpdateRequest
-from ui.update_youtrack_issue_ui import prompt_for_issue_update_request_ui
+from models.issue_update import IssueUpdate
+from ui.update_youtrack_issue_ui import IssueUpdateRequestUI
 from errors.user_error import UserError
 from requests import HTTPError
 from services.youtrack_service import YouTrackService
@@ -30,16 +30,14 @@ def main():
         ) or token_service.prompt_for_bearer_token(),
         base_dir=f"../user")
 
-    work_item_types = youtrack_service.get_work_item_types()
+    issue_update_ui = IssueUpdateRequestUI(youtrack_service)
 
-    issue_update = prompt_for_issue_update_request_ui(
-        initial_request=IssueUpdateRequest(id="AGI-"),
-        available_states=[work_item.name for work_item in work_item_types])
+    issue_update = issue_update_ui.prompt(IssueUpdate(id="AGI-"))
 
     user_info = youtrack_service.get_user_info()
 
     logger.info(f"User info: {user_info}")
-    logger.info(f"Issue update: {issue_update}")
+    logger.info(f"issue_update info: {issue_update}")
 
 
 if __name__ == "__main__":
