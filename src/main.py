@@ -20,15 +20,17 @@ def main():
     if (not passphrase) or (not subdomain):
         raise ValueError("Passphrase and subdomain are required.")
 
+    base_dir = f"../user/{subdomain}"
+
     token_service = BearerTokenService(
-        base_dir=f"../user/{subdomain}",
+        base_dir=base_dir,
         passphrase=passphrase)
 
     youtrack_service = YouTrackService(
         subdomain=subdomain,
         bearer_token=token_service.get_bearer_token(
         ) or token_service.prompt_for_bearer_token(),
-        base_dir=f"../user")
+        base_dir=base_dir)
 
     issue_update_ui = IssueUpdateRequestUI(youtrack_service)
 
