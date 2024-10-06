@@ -44,12 +44,7 @@ class YouTrackService:
         response: dict = self._request(
             "users/me", fields="id,name,login,email")
 
-        user_response = UserResponse(
-            id=response.get("id"),
-            name=response.get("name"),
-            login=response.get("login"),
-            email=response.get("email")
-        )
+        user_response = UserResponse(**response)
 
         self.__file_manager.write_json(
             {"user": user_response.model_dump()}, "config")
