@@ -26,10 +26,12 @@ def main():
         base_dir=base_dir,
         passphrase=passphrase)
 
+    bearer_token = token_service.get_bearer_token() or \
+        token_service.prompt_for_bearer_token()
+
     youtrack_service = YouTrackService(
         subdomain=subdomain,
-        bearer_token=token_service.get_bearer_token(
-        ) or token_service.prompt_for_bearer_token(),
+        bearer_token=bearer_token,
         base_dir=base_dir)
 
     issue_update_ui = IssueUpdateRequestUI(youtrack_service)
@@ -52,3 +54,5 @@ if __name__ == "__main__":
         logger.error(e.response.text)
     except Exception as e:
         logger.error(f'Unhandled exception\n{traceback.format_exc()}')
+    finally:
+        logging.shutdown()

@@ -19,93 +19,97 @@ class IssueUpdateRequestUI:
         self.__issue_update_request = None
 
     def prompt(self, initial_request: IssueUpdate) -> Optional[IssueUpdate]:
-        self.root = tk.Tk()
-        self.root.title("Update YouTrack Issue")
-        self.root.attributes('-topmost', True)
+        try:
+            self.root = tk.Tk()
+            self.root.title("Update YouTrack Issue")
+            self.root.attributes('-topmost', True)
 
-        window_width = 300
-        window_height = 325
-        position_right = int(
-            self.root.winfo_screenwidth() / 2 - window_width / 2)
-        position_down = int(
-            self.root.winfo_screenheight() / 2 - window_height / 2)
-        self.root.geometry(
-            f"{window_width}x{window_height}+{position_right}+{position_down}")
-        self.root.resizable(False, False)
+            window_width = 300
+            window_height = 325
+            position_right = int(
+                self.root.winfo_screenwidth() / 2 - window_width / 2)
+            position_down = int(
+                self.root.winfo_screenheight() / 2 - window_height / 2)
+            self.root.geometry(
+                f"{window_width}x{window_height}+{position_right}+{position_down}")
+            self.root.resizable(False, False)
 
-        self.__start_time = time.time()
+            self.__start_time = time.time()
 
-        # Bind "Escape" key to close the window
-        self.root.bind("<Escape>", self.__on_escape)
-        self.root.bind("<Return>", self.__on_return)
+            # Bind "Escape" key to close the window
+            self.root.bind("<Escape>", self.__on_escape)
+            self.root.bind("<Return>", self.__on_return)
 
-        # Issue ID
-        tk.Label(self.root, text="Issue ID:").pack(anchor='w', padx=10, pady=5)
-        self.issue_id_entry = tk.Entry(self.root)
-        self.issue_id_entry.insert(0, initial_request.id)
-        self.issue_id_entry.pack(anchor='w', padx=10, fill='x', expand=True)
-        self.issue_id_entry.focus_force()
+            # Issue ID
+            tk.Label(self.root, text="Issue ID:").pack(anchor='w', padx=10, pady=5)
+            self.issue_id_entry = tk.Entry(self.root)
+            self.issue_id_entry.insert(0, initial_request.id)
+            self.issue_id_entry.pack(anchor='w', padx=10, fill='x', expand=True)
+            self.issue_id_entry.focus_force()
 
-        # Enter Time
-        tk.Label(self.root, text="Enter Time (e.g., 1h30m):").pack(
-            anchor='w', padx=10)
-        self.time_entry = tk.Entry(self.root)
-        self.time_entry.insert(0, initial_request.time)
-        self.time_entry.pack(anchor='w', padx=10, fill='x', expand=True)
+            # Enter Time
+            tk.Label(self.root, text="Enter Time (e.g., 1h30m):").pack(
+                anchor='w', padx=10)
+            self.time_entry = tk.Entry(self.root)
+            self.time_entry.insert(0, initial_request.time)
+            self.time_entry.pack(anchor='w', padx=10, fill='x', expand=True)
 
-        # Description
-        tk.Label(self.root, text="Description:").pack(anchor='w', padx=10)
-        self.description_entry = tk.Entry(self.root)
-        self.description_entry.insert(0, initial_request.description)
-        self.description_entry.pack(
-            anchor='w', padx=10, pady=5, fill='x', expand=True)
+            # Description
+            tk.Label(self.root, text="Description:").pack(anchor='w', padx=10)
+            self.description_entry = tk.Entry(self.root)
+            self.description_entry.insert(0, initial_request.description)
+            self.description_entry.pack(
+                anchor='w', padx=10, pady=5, fill='x', expand=True)
 
-        # Type
-        tk.Label(self.root, text="Type:").pack(anchor='w', padx=10)
-        self.type_entry = tk.Entry(self.root)
-        self.type_entry.insert(0, initial_request.type)
-        self.type_entry.pack(anchor='w', padx=10, pady=5,
-                             fill='x', expand=True)
+            # Type
+            tk.Label(self.root, text="Type:").pack(anchor='w', padx=10)
+            self.type_entry = tk.Entry(self.root)
+            self.type_entry.insert(0, initial_request.type)
+            self.type_entry.pack(anchor='w', padx=10, pady=5,
+                                 fill='x', expand=True)
 
-        # Issue State ComboBox
-        tk.Label(self.root, text="Current State:").pack(anchor='w', padx=10)
-        current_issue_state = initial_request.state or ""
-        self.selected_issue_state_var = tk.StringVar(value=current_issue_state)
-        self.issue_state_combobox = ttk.Combobox(
-            self.root, values=self.__get_available_issue_states(), textvariable=self.selected_issue_state_var)
-        self.issue_state_combobox.pack(
-            anchor='w', padx=10, pady=5, fill='x', expand=True)
-        self.issue_state_combobox.bind(
-            '<<ComboboxSelected>>', self.__on_issue_state_change)
-        self.issue_state_combobox.bind(
-            '<KeyRelease>', self.__on_issue_state_change)
+            # Issue State ComboBox
+            tk.Label(self.root, text="Current State:").pack(anchor='w', padx=10)
+            current_issue_state = initial_request.state or ""
+            self.selected_issue_state_var = tk.StringVar(value=current_issue_state)
+            self.issue_state_combobox = ttk.Combobox(
+                self.root, values=self.__get_available_issue_states(), textvariable=self.selected_issue_state_var)
+            self.issue_state_combobox.pack(
+                anchor='w', padx=10, pady=5, fill='x', expand=True)
+            self.issue_state_combobox.bind(
+                '<<ComboboxSelected>>', self.__on_issue_state_change)
+            self.issue_state_combobox.bind(
+                '<KeyRelease>', self.__on_issue_state_change)
 
-        # Elapsed Time
-        self.elapsed_time_label = tk.Label(
-            self.root, text="Elapsed Time: 00:00:00")
-        self.elapsed_time_label.pack(padx=10, fill='x', pady=5)
-        self.elapsed_time_label.config(anchor='center')
+            # Elapsed Time
+            self.elapsed_time_label = tk.Label(
+                self.root, text="Elapsed Time: 00:00:00")
+            self.elapsed_time_label.pack(padx=10, fill='x', pady=5)
+            self.elapsed_time_label.config(anchor='center')
 
-        # OK Button
-        ok_button = tk.Button(self.root, text="OK",
-                              command=self.__on_ok_click, width=10)
-        ok_button.pack(pady=5)
+            # OK Button
+            ok_button = tk.Button(self.root, text="OK",
+                                  command=self.__on_ok_click, width=10)
+            ok_button.pack(pady=5)
 
-        # Bind Control-BackSpace for deleting words
-        self.issue_id_entry.bind(
-            '<Control-BackSpace>', lambda event: self.__delete_word(event, ['-']))
-        self.time_entry.bind(
-            '<Control-BackSpace>', lambda event: self.__delete_word(event, ['d', 'h', 'm', 's']))
-        self.description_entry.bind(
-            '<Control-BackSpace>', lambda event: self.__delete_word(event, []))
-        self.type_entry.bind('<Control-BackSpace>',
-                             lambda event: self.__delete_word(event, []))
+            # Bind Control-BackSpace for deleting words
+            self.issue_id_entry.bind(
+                '<Control-BackSpace>', lambda event: self.__delete_word(event, ['-']))
+            self.time_entry.bind(
+                '<Control-BackSpace>', lambda event: self.__delete_word(event, ['d', 'h', 'm', 's']))
+            self.description_entry.bind(
+                '<Control-BackSpace>', lambda event: self.__delete_word(event, []))
+            self.type_entry.bind('<Control-BackSpace>',
+                                 lambda event: self.__delete_word(event, []))
 
-        # Start updating elapsed time
-        self.__update_elapsed_time()
+            # Start updating elapsed time
+            self.__update_elapsed_time()
 
-        self.root.mainloop()
-        return self.__issue_update_request
+            self.root.mainloop()
+            return self.__issue_update_request
+        except Exception as e:
+            self.root.destroy()
+            raise e
 
     def __on_escape(self, event=None):
         self.root.destroy()
