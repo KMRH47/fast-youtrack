@@ -50,7 +50,7 @@ class FileManager:
             with open(file_path, 'r', encoding='utf-8') as file:
                 content = json.load(file)
                 self.config_cache[file_name] = content
-                logger.info(f"Read content from {file_path}: {content}")
+                logger.info(f"Read content from {file_path}")
                 return content
         except FileNotFoundError:
             logger.info(f"File {file_path} not found. Returning empty dict.")

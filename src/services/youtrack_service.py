@@ -1,9 +1,16 @@
+import logging
+
+from typing import List, Literal, Optional
+
+from repositories.file_manager import FileManager
 from services.http_service import HttpService
 from models.work_item_response import WorkItemResponse
 from models.user_response import UserResponse
-from typing import List, Literal
-from repositories.file_manager import FileManager
-import logging
+from models.issue_update_request import IssueUpdateRequest
+from models.project_response import ProjectResponse
+from models.work_item_base import YoutrackResponseField
+from models.issue import Issue
+from constants.youtrack_queries import issue_query
 
 
 logger = logging.getLogger(__name__)
@@ -16,24 +23,22 @@ class YouTrackService:
         self.__bearer_token = bearer_token
         self.__file_manager = FileManager(base_dir)
 
-    def _request(self, endpoint: str, fields: str, method: Literal['get', 'post'] = 'get', json: dict = None) -> dict:
+    def _request(self, endpoint: str, fields: str | None = None, method: Literal['get', 'post'] = 'get', json: Optional[dict] = None) -> dict:
         http_method = getattr(self.__http_service, method)
 
-        params_or_data = {
-            "params": {"fields": fields} if method == 'get' else None,
-            "data": json if method == 'post' else None
-        }
-        kwargs = {
+        request_body = {
             "url": f"{self.__base_url}/{endpoint}",
             "headers": {
                 "Authorization": f"Bearer {self.__bearer_token}",
                 "Accept": "application/json"
             }
         }
-        kwargs.update(
-            {k: v for k, v in params_or_data.items() if v is not None})
+        if method == 'get' and fields:
+            request_body["params"] = {"fields": fields}
+        elif method == 'post' and json:
+            request_body["data"] = json
 
-        return http_method(**kwargs)
+        return http_method(**request_body)
 
     def get_user_info(self) -> UserResponse:
         config = self.__file_manager.read_json("config")
@@ -43,7 +48,6 @@ class YouTrackService:
 
         response: dict = self._request(
             "users/me", fields="id,name,login,email")
-
         user_response = UserResponse(**response)
 
         self.__file_manager.write_json(
@@ -61,30 +65,119 @@ class YouTrackService:
             endpoint="admin/timeTrackingSettings/workItemTypes",
             fields="id,name"
         )
-
         work_item_responses = [WorkItemResponse(**item) for item in response]
+        work_item_types = [item.model_dump() for item in work_item_responses]
 
         self.__file_manager.write_json(
-            {"workItemTypes": [item.model_dump()
-                               for item in work_item_responses]}, "config"
+            {"workItemTypes": work_item_types}, "config"
         )
 
         return work_item_responses
 
-    def update_issue(self, issue_id: str, issue_update_request: dict):
+    def get_custom_field_values(self, project_id: str, field_name: YoutrackResponseField) -> List[WorkItemResponse]:
+        # Read the config to see if field values are already cached
+        config = self.__file_manager.read_json("config")
+        cache_key = f"{field_name}Values"
 
-        self.__request(
-            endpoint=f"issues/{issue_id}",
-            fields="id,summary,description",
+        logger.info(
+            f"Fetching field values for {field_name} in project {project_id}")
+        if cache_key in config:
+            return [WorkItemResponse(**item) for item in config[cache_key]]
+
+        # Fetch all custom fields for the given project to find the target field's bundle
+        custom_fields = self._request(
+            endpoint=f"admin/projects/{project_id}/customFields",
+            fields="id,field(id,name),bundle(id)"
+        )
+
+        logger.info(
+            f"Found {len(custom_fields)} custom fields for project {project_id}")
+
+        # Find the bundle ID associated with the given field name
+        bundle_id = None
+        for field in custom_fields:
+            if field["field"]["name"].lower() == field_name.lower():
+                bundle_id = field["bundle"]["id"]
+                break
+
+        if not bundle_id:
+            logger.error(
+                f"Field {field_name} not found for project {project_id}")
+            raise ValueError(f"Field {field_name} not found.")
+
+        # Fetch all possible values from the bundle
+        response = self._request(
+            endpoint=f"admin/customFieldSettings/bundles/{self._get_bundle_type(field_name)}/{bundle_id}",
+            fields="values(id,name)"
+        )
+
+        # Convert to WorkItemResponse objects
+        field_value_responses = [WorkItemResponse(
+            **value) for value in response['values']]
+        field_values = [item.model_dump() for item in field_value_responses]
+
+        # Cache the field values in the config file
+        self.__file_manager.write_json(
+            {cache_key: field_values},
+            "config"
+        )
+
+        return field_value_responses
+
+    def update_issue(self, issue_id: str, issue_update_request: IssueUpdateRequest) -> None:
+        self._request(
+            endpoint=f"issues/{issue_id}/timeTracking/workItems",
             method="post",
-            json=issue_update_request
+            json=issue_update_request.model_dump(exclude_none=True)
         )
+        logger.info(f"Successfully updated issue {issue_id}")
 
-        self.__http_service.post(
-            url=f"{self.__base_url}/issues/{issue_id}/timeTracking/workItems",
-            headers={
-                "Authorization": f"Bearer {self.__bearer_token}",
-                "Content-Type": "application/json"
-            },
-            json=issue_update_request
+    def get_all_projects(self) -> List[ProjectResponse]:
+        config = self.__file_manager.read_json("config")
+
+        if "projects" in config:
+            return [ProjectResponse(**item) for item in config["projects"]]
+
+        logger.info("Projects not found in cache. Fetching from YouTrack.")
+        response: dict = self._request(
+            endpoint="admin/projects",
+            fields="id,name,shortName"
         )
+        project_responses = [ProjectResponse(**item) for item in response]
+
+        logger.info(f"Found {len(project_responses)} projects")
+        self.__file_manager.write_json({"projects": response}, "config")
+        return project_responses
+
+    def get_issue(self, issue_id: str) -> Issue:
+        try:
+            config = self.__file_manager.read_json("config")
+
+            if 'issues' not in config:
+                config['issues'] = {}
+
+            if issue_id in config['issues']:
+                cached_issue: Issue = config['issues'].get(issue_id)
+                response = self._request(
+                    endpoint=f"issues/{issue_id}",
+                    fields="updated"
+                    )
+                updated: int = response["updated"]
+
+                if updated == cached_issue['updated']:
+                    logger.info(f"Using cached issue: {issue_id}")
+                    return Issue(**cached_issue)
+
+
+            issue_data: dict = self._request(
+                endpoint=f"issues/{issue_id}",
+                fields=issue_query)
+
+            config['issues'][issue_id] = issue_data
+
+            self.__file_manager.write_json(config, "config")
+
+            return Issue(**issue_data)
+        except Exception as e:
+            logger.error(e)
+            raise e

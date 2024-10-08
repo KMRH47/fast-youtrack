@@ -1,3 +1,4 @@
+import random
 import re
 import time
 import logging
@@ -8,6 +9,10 @@ from tkinter import ttk
 
 from models.issue_update import IssueUpdate
 from services.youtrack_service import YouTrackService
+from models.issue_update_request import Author, Duration, IssueUpdateRequest
+from errors.user_cancelled_error import UserCancelledError
+from models.issue import Issue
+from ui.issue_view import IssueView
 
 
 logger = logging.getLogger(__name__)
@@ -16,9 +21,11 @@ logger = logging.getLogger(__name__)
 class IssueUpdateRequestUI:
     def __init__(self, youtrack_service: YouTrackService):
         self.__youtrack_service = youtrack_service
-        self.__issue_update_request = None
+        self.__issue_update_request: IssueUpdateRequest | None = None
+        self.__issue: Issue | None = None
+        self.__issue_view: IssueView | None = None
 
-    def prompt(self, initial_request: IssueUpdate) -> Optional[IssueUpdate]:
+    def prompt(self, initial_request: IssueUpdate) -> Optional[IssueUpdateRequest]:
         try:
             self.root = tk.Tk()
             self.root.title("Update YouTrack Issue")
@@ -37,15 +44,27 @@ class IssueUpdateRequestUI:
             self.__start_time = time.time()
 
             # Bind "Escape" key to close the window
-            self.root.bind("<Escape>", self.__on_escape)
-            self.root.bind("<Return>", self.__on_return)
+            self.root.bind("<Escape>", self._on_cancel)
+            self.root.bind("<Return>", self._on_submit)
 
             # Issue ID
-            tk.Label(self.root, text="Issue ID:").pack(anchor='w', padx=10, pady=5)
-            self.issue_id_entry = tk.Entry(self.root)
-            self.issue_id_entry.insert(0, initial_request.id)
-            self.issue_id_entry.pack(anchor='w', padx=10, fill='x', expand=True)
+            self.debounce_id = None
+            tk.Label(self.root, text="Issue ID:").pack(
+                anchor='w', padx=10, pady=5)
+
+            # Create a StringVar to monitor changes
+            self.issue_id_var = tk.StringVar()
+            self.issue_id_var.set(initial_request.id)
+
+            self.issue_id_entry = tk.Entry(
+                self.root, textvariable=self.issue_id_var)
+            self.issue_id_entry.pack(
+                anchor='w', padx=10, fill='x', expand=True)
+            self.issue_id_entry.icursor(tk.END)
             self.issue_id_entry.focus_force()
+
+            # Bind the change of the variable with a debounced function
+            self.issue_id_var.trace_add('write', self._on_issue_id_changed)
 
             # Enter Time
             tk.Label(self.root, text="Enter Time (e.g., 1h30m):").pack(
@@ -69,17 +88,19 @@ class IssueUpdateRequestUI:
                                  fill='x', expand=True)
 
             # Issue State ComboBox
-            tk.Label(self.root, text="Current State:").pack(anchor='w', padx=10)
+            tk.Label(self.root, text="Current State:").pack(
+                anchor='w', padx=10)
             current_issue_state = initial_request.state or ""
-            self.selected_issue_state_var = tk.StringVar(value=current_issue_state)
+            self.selected_issue_state_var = tk.StringVar(
+                value=current_issue_state)
             self.issue_state_combobox = ttk.Combobox(
-                self.root, values=self.__get_available_issue_states(), textvariable=self.selected_issue_state_var)
+                self.root, values=self._get_available_issue_states(), textvariable=self.selected_issue_state_var)
             self.issue_state_combobox.pack(
                 anchor='w', padx=10, pady=5, fill='x', expand=True)
             self.issue_state_combobox.bind(
-                '<<ComboboxSelected>>', self.__on_issue_state_change)
+                '<<ComboboxSelected>>', self._on_issue_state_change)
             self.issue_state_combobox.bind(
-                '<KeyRelease>', self.__on_issue_state_change)
+                '<KeyRelease>', self._on_issue_state_change)
 
             # Elapsed Time
             self.elapsed_time_label = tk.Label(
@@ -89,48 +110,82 @@ class IssueUpdateRequestUI:
 
             # OK Button
             ok_button = tk.Button(self.root, text="OK",
-                                  command=self.__on_ok_click, width=10)
+                                  command=self._on_submit, width=10)
             ok_button.pack(pady=5)
 
             # Bind Control-BackSpace for deleting words
             self.issue_id_entry.bind(
-                '<Control-BackSpace>', lambda event: self.__delete_word(event, ['-']))
+                '<Control-BackSpace>', lambda event: self._delete_word(event, ['-']))
             self.time_entry.bind(
-                '<Control-BackSpace>', lambda event: self.__delete_word(event, ['d', 'h', 'm', 's']))
+                '<Control-BackSpace>', lambda event: self._delete_word(event, ['d', 'h', 'm']))
             self.description_entry.bind(
-                '<Control-BackSpace>', lambda event: self.__delete_word(event, []))
+                '<Control-BackSpace>', lambda event: self._delete_word(event, []))
             self.type_entry.bind('<Control-BackSpace>',
-                                 lambda event: self.__delete_word(event, []))
+                                 lambda event: self._delete_word(event, []))
+
+            self.__issue_view = IssueView(self.root, self.root)
 
             # Start updating elapsed time
-            self.__update_elapsed_time()
+            self._update_elapsed_time()
 
+            logger.info(f"Prompting for issue update request...")
             self.root.mainloop()
+
+            if self.__issue_update_request is None:
+                raise UserCancelledError()
+
             return self.__issue_update_request
+        except UserCancelledError as e:
+            raise e
         except Exception as e:
             self.root.destroy()
             raise e
 
-    def __on_escape(self, event=None):
+    def _on_issue_id_changed(self, *args):
+        logger.info("Issue ID changed. Debouncing...")
+        if self.debounce_id is not None:
+            self.root.after_cancel(self.debounce_id)
+
+        def debounce():
+            issue_id = self.issue_id_var.get()
+            logger.info(f"Debounced issue ID: {issue_id}")
+
+            if not valid_issue_id(issue_id):
+                logger.warning(f"Issue ID is invalid: {issue_id}")
+                return
+
+            self.__issue = self.__youtrack_service.get_issue(issue_id)
+
+            logger.info("Issue states:")
+            if self.__issue_view:
+                logger.info(f"Updating with new issue... issue: {self.__issue}")
+                self.__issue_view.update_issue(self.__issue)
+            else:
+                self.__issue_view = IssueView(self.__issue, self.root)
+
+        logger.info("Debouncing...")
+        self.debounce_id = self.root.after(random.randint(253, 333), debounce)
+
+    def _on_cancel(self, event=None):
         self.root.destroy()
 
-    def __on_return(self, event=None):
-        self.__on_ok_click()
+    def _get_available_issue_states(self):
+        issue_id = self.issue_id_var.get()
 
-    def __get_available_issue_states(self):
-        available_issue_states = self.__youtrack_service.get_work_item_types()
-        active_issue_state = self.selected_issue_state_var.get()
-        return [issue_state.name for issue_state in available_issue_states if issue_state != active_issue_state]
+        self.__issue = self.__youtrack_service.get_issue(issue_id)
+        project_id = self.__issue.project.id
 
-    def __on_issue_state_change(self, event):
-        if not self.__is_issue_state_valid():
+        return ['test']
+
+    def _on_issue_state_change(self, event):
+        if not self._is_issue_update_valid():
             self._apply_error_style(self.issue_state_combobox)
         else:
             self._reset_style(self.issue_state_combobox)
-        self.issue_state_combobox['values'] = self.__get_available_issue_states(
+        self.issue_state_combobox['values'] = self._get_available_issue_states(
         )
 
-    def __delete_word(self, event, stopping_chars: List[str]):
+    def _delete_word(self, event, stopping_chars: List[str]):
         entry: tk.Entry = event.widget
         cursor_pos = entry.index(tk.INSERT)
 
@@ -164,27 +219,68 @@ class IssueUpdateRequestUI:
         """Reset the style of a widget to default."""
         widget.config(style='TCombobox')
 
-    def __is_issue_state_valid(self):
+    def _is_issue_update_valid(self):
         current_issue_state = self.selected_issue_state_var.get()
-        return current_issue_state in self.__get_available_issue_states()
 
-    def __update_elapsed_time(self):
+        valid_issue_state = (
+            current_issue_state is None or current_issue_state == "" or
+            current_issue_state in self._get_available_issue_states()
+        )
+
+        time_entry_text = self.time_entry.get()
+        duration_minutes = self._convert_time_to_minutes(time_entry_text)
+        valid_duration = duration_minutes is not None
+
+        return valid_issue_state and valid_duration
+
+    def _update_elapsed_time(self):
         elapsed = int(time.time() - self.__start_time)
         hours, remainder = divmod(elapsed, 3600)
         minutes, seconds = divmod(remainder, 60)
         time_string = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
         self.elapsed_time_label.config(text=f"Elapsed Time: {time_string}")
-        self.root.after(1000, self.__update_elapsed_time)
+        self.root.after(1000, self._update_elapsed_time)
 
-    def __on_ok_click(self):
-        if not self.__is_issue_state_valid():
-            return
+    def _convert_time_to_minutes(self, time_str: str) -> int | None:
+        def extract_time(unit: str) -> int:
+            match = re.search(rf"(\d+){unit}", time_str.strip())
+            return int(match.group(1)) if match else 0
 
-        self.__issue_update_request = IssueUpdate(
-            id=self.issue_id_entry.get(),
-            time=self.time_entry.get(),
-            description=self.description_entry.get(),
-            type=self.type_entry.get(),
-            state=self.selected_issue_state_var.get()
-        )
-        self.root.destroy()
+        days_in_minutes = extract_time('d') * 24 * 60
+        hours_in_minutes = extract_time('h') * 60
+
+        total_minutes = days_in_minutes + hours_in_minutes + extract_time('m')
+
+        return total_minutes if total_minutes > 0 else None
+
+    def _on_submit(self):
+        try:
+            if not self._is_issue_update_valid():
+                logger.error("Invalid issue update request.")
+                return
+
+            logger.info("Valid issue update request.")
+
+            # Convert time entry to minutes using the function
+            duration_minutes = self._convert_time_to_minutes(
+                self.time_entry.get())
+
+            # Create the IssueUpdateRequest with optional duration and other fields
+            self.__issue_update_request = IssueUpdateRequest(
+                author=Author(id=self.__youtrack_service.get_user_info().id),
+                duration=Duration(
+                    minutes=duration_minutes) if duration_minutes is not None else None,
+                type=issue_type,
+                text=self.description_entry.get() or None
+            )
+
+            logger.info(f"issue_update_request: {self.__issue_update_request}")
+            self.root.destroy()
+        except Exception as e:
+            logger.error(e)
+            self.root.destroy()
+            raise e
+
+
+def valid_issue_id(issue_id: str) -> bool:
+    return re.match(r"^[A-Za-z]+-\d+$", issue_id)

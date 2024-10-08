@@ -1,5 +1,5 @@
 from security.encryption import EncryptionService
-from errors.user_cancelled_error import UserCancelledInputError
+from errors.user_cancelled_error import UserCancelledError
 from repositories.file_manager import FileManager
 from ui.token_ui import display_bearer_token_prompt
 import logging
@@ -37,7 +37,7 @@ class BearerTokenService:
         bearer_token = display_bearer_token_prompt()
 
         if not bearer_token:
-            raise UserCancelledInputError("User cancelled input. Exiting...")
+            raise UserCancelledError("User cancelled input. Exiting...")
 
         encrypted_bearer_token = self.__encryption_service.encrypt(bearer_token)
         self.__file_manager.write_data(encrypted_bearer_token, self.file_name)

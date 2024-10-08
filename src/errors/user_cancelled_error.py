@@ -1,2 +1,2 @@
-class UserCancelledInputError(Exception):
+class UserCancelledError(Exception):
     pass

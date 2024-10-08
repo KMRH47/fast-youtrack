@@ -16,10 +16,10 @@ def setup_logger(log_dir="logs", log_file="log.txt"):
     log_path = os.path.join(log_dir, log_file)
 
     logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
 
     file_handler = logging.FileHandler(log_path, encoding='utf-8')
-    file_handler.setLevel(logging.DEBUG)
+    file_handler.setLevel(logging.INFO)
 
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.ERROR)
