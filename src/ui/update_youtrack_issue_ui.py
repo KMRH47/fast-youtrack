@@ -41,6 +41,8 @@ class IssueUpdateRequestUI:
                 f"{window_width}x{window_height}+{position_right}+{position_down}")
             self.root.resizable(False, False)
 
+            self.__issue_view = IssueView(self.root, self.root)
+
             self.__start_time = time.time()
 
             # Bind "Escape" key to close the window
@@ -54,6 +56,10 @@ class IssueUpdateRequestUI:
 
             # Create a StringVar to monitor changes
             self.issue_id_var = tk.StringVar()
+
+            # Bind the change of the variable with a debounced function
+            self.issue_id_var.trace_add(['write'], self._on_issue_id_changed)
+
             self.issue_id_var.set(initial_request.id)
 
             self.issue_id_entry = tk.Entry(
@@ -62,9 +68,6 @@ class IssueUpdateRequestUI:
                 anchor='w', padx=10, fill='x', expand=True)
             self.issue_id_entry.icursor(tk.END)
             self.issue_id_entry.focus_force()
-
-            # Bind the change of the variable with a debounced function
-            self.issue_id_var.trace_add('write', self._on_issue_id_changed)
 
             # Enter Time
             tk.Label(self.root, text="Enter Time (e.g., 1h30m):").pack(
@@ -123,8 +126,6 @@ class IssueUpdateRequestUI:
             self.type_entry.bind('<Control-BackSpace>',
                                  lambda event: self._delete_word(event, []))
 
-            self.__issue_view = IssueView(self.root, self.root)
-
             # Start updating elapsed time
             self._update_elapsed_time()
 
@@ -158,10 +159,11 @@ class IssueUpdateRequestUI:
 
             logger.info("Issue states:")
             if self.__issue_view:
-                logger.info(f"Updating with new issue... issue: {self.__issue}")
+                logger.info(
+                    f"Updating with new issue... issue: {self.__issue}")
                 self.__issue_view.update_issue(self.__issue)
             else:
-                self.__issue_view = IssueView(self.__issue, self.root)
+                self.__issue_view = IssueView(self.root, self.__issue)
 
         logger.info("Debouncing...")
         self.debounce_id = self.root.after(random.randint(253, 333), debounce)

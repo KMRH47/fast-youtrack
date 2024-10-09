@@ -7,17 +7,15 @@ logger = logging.getLogger(__name__)
 
 
 class IssueView:
-    def __init__(self, root: tk.Tk, update_ui_window: tk.Toplevel):
-        self.root = root
-        self.update_ui_window = update_ui_window
-        self.window = None
-        self.issue = None
+    def __init__(self, parent_ui: tk.Tk, issue: Issue | None = None):
+        self.parent_ui = parent_ui
+        self.issue = issue
         self._initialize_window()
         self._bind_window_movement()
 
     def _initialize_window(self):
         """Initialize the Toplevel window for displaying issue details."""
-        self.window = tk.Toplevel(self.root)
+        self.window = tk.Toplevel(self.parent_ui)
         self.window.wm_attributes('-topmost', True)
 
         # Bind to the FocusIn event to redirect focus back to the main window
@@ -27,18 +25,18 @@ class IssueView:
         self._update_window_position()
 
         # Ensure it doesn't steal focus or behave erratically
-        self.window.transient(self.update_ui_window)
+        self.window.transient(self.parent_ui)
         self.window.withdraw()  # Hide initially
         self.window.deiconify()  # Ensure the window is shown
         self.window.update_idletasks()
 
     def _on_focus_in(self, event):
         """Redirect focus back to the main application window when IssueView gains focus."""
-        self.root.focus_force()
+        self.parent_ui.focus_force()
 
     def _bind_window_movement(self):
         """Bind the Update UI window's movement to follow the IssueView."""
-        self.update_ui_window.bind("<Configure>", self._on_update_ui_moved)
+        self.parent_ui.bind("<Configure>", self._on_update_ui_moved)
 
     def _on_update_ui_moved(self, event):
         """Move the IssueView window when the Update UI window is moved."""
@@ -46,8 +44,8 @@ class IssueView:
 
     def _update_window_position(self):
         """Position the IssueView next to the Update UI window."""
-        x = self.update_ui_window.winfo_x() + self.update_ui_window.winfo_width() + 10
-        y = self.update_ui_window.winfo_y()
+        x = self.parent_ui.winfo_x() + self.parent_ui.winfo_width() + 10
+        y = self.parent_ui.winfo_y()
         self.window.geometry(f"+{x}+{y}")
 
     def update_issue(self, issue: Issue):
