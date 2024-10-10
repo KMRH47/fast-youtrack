@@ -44,3 +44,14 @@ issue_query = (
     "allUsersGroup,icon,teamForProject(name,shortName);@tags:id,name,color(@color);@color:id,background,"
     "foreground;@markdownEmbeddings:key,settings,widget(id);@textRange:startOffset,endOffset"
 )
+
+bundle_query = (
+    "id,"
+    "name,"
+    "description,"
+    "localizedName,"
+    "isResolved,"
+    "color(id,background,foreground),"
+    "buildIntegration,"
+    "buildLink"
+)
