@@ -11,7 +11,8 @@ from models.issue_update import IssueUpdate
 from services.youtrack_service import YouTrackService
 from models.issue_update_request import Author, Duration, IssueUpdateRequest
 from errors.user_cancelled_error import UserCancelledError
-from models.issue import Issue
+from models.general_responses import Issue, StateBundleElement
+from models.issue_states import BundleEnums
 from ui.issue_view import IssueView
 
 
@@ -20,30 +21,29 @@ logger = logging.getLogger(__name__)
 
 class IssueUpdateRequestUI:
     def __init__(self, youtrack_service: YouTrackService):
+        self.root = tk.Tk()
+        self.root.title("Update YouTrack Issue")
+        self.root.attributes('-topmost', True)
         self.__youtrack_service = youtrack_service
         self.__issue_update_request: IssueUpdateRequest | None = None
         self.__issue: Issue | None = None
-        self.__issue_view: IssueView | None = None
+        self.__start_time = time.time()
+
+        # Window size and position
+        window_width = 300
+        window_height = 325
+        position_right = int(
+            self.root.winfo_screenwidth() / 2 - window_width / 2)
+        position_down = int(
+            self.root.winfo_screenheight() / 2 - window_height / 2)
+        self.root.geometry(
+            f"{window_width}x{window_height}+{position_right}+{position_down}")
+        self.root.resizable(False, False)
 
     def prompt(self, initial_request: IssueUpdate) -> Optional[IssueUpdateRequest]:
         try:
-            self.root = tk.Tk()
-            self.root.title("Update YouTrack Issue")
-            self.root.attributes('-topmost', True)
-
-            window_width = 300
-            window_height = 325
-            position_right = int(
-                self.root.winfo_screenwidth() / 2 - window_width / 2)
-            position_down = int(
-                self.root.winfo_screenheight() / 2 - window_height / 2)
-            self.root.geometry(
-                f"{window_width}x{window_height}+{position_right}+{position_down}")
-            self.root.resizable(False, False)
-
-            self.__issue_view = IssueView(self.root, self.root)
-
-            self.__start_time = time.time()
+            self.__issue = self.__youtrack_service.get_issue(
+                initial_request.id)
 
             # Bind "Escape" key to close the window
             self.root.bind("<Escape>", self._on_cancel)
@@ -93,7 +93,8 @@ class IssueUpdateRequestUI:
             # Issue State ComboBox
             tk.Label(self.root, text="Current State:").pack(
                 anchor='w', padx=10)
-            current_issue_state = initial_request.state or ""
+            current_issue_state = initial_request.state or self._get_issue_state()
+            logger.info(f"Current Issue State: {current_issue_state}")
             self.selected_issue_state_var = tk.StringVar(
                 value=current_issue_state)
             self.issue_state_combobox = ttk.Combobox(
@@ -126,10 +127,10 @@ class IssueUpdateRequestUI:
             self.type_entry.bind('<Control-BackSpace>',
                                  lambda event: self._delete_word(event, []))
 
-            # Start updating elapsed time
-            self._update_elapsed_time()
-
             logger.info(f"Prompting for issue update request...")
+
+            self.__issue_view = IssueView(self.root, self.__issue)
+            self._update_elapsed_time()
             self.root.mainloop()
 
             if self.__issue_update_request is None:
@@ -155,8 +156,6 @@ class IssueUpdateRequestUI:
                 logger.warning(f"Issue ID is invalid: {issue_id}")
                 return
 
-            self.__issue = self.__youtrack_service.get_issue(issue_id)
-
             logger.info("Issue states:")
             if self.__issue_view:
                 logger.info(
@@ -171,13 +170,17 @@ class IssueUpdateRequestUI:
     def _on_cancel(self, event=None):
         self.root.destroy()
 
+    def _get_issue_state(self) -> str:
+        for field in self.__issue.fields:
+            if field.projectCustomField and field.projectCustomField.bundle:
+                if field.projectCustomField.bundle.id == BundleEnums.state:
+                    return field.value.name
+
     def _get_available_issue_states(self):
-        issue_id = self.issue_id_var.get()
+        issue_states: list[StateBundleElement] = self.__youtrack_service.get_bundle(
+            BundleEnums.state)
 
-        self.__issue = self.__youtrack_service.get_issue(issue_id)
-        project_id = self.__issue.project.id
-
-        return ['test']
+        return [state.name for state in issue_states if state.name]
 
     def _on_issue_state_change(self, event):
         if not self._is_issue_update_valid():

@@ -1,3 +1,4 @@
+from enum import Enum
 import logging
 
 from typing import List, Literal, Optional
@@ -8,9 +9,8 @@ from models.work_item_response import WorkItemResponse
 from models.user_response import UserResponse
 from models.issue_update_request import IssueUpdateRequest
 from models.project_response import ProjectResponse
-from models.work_item_base import YoutrackResponseField
-from models.issue import Issue
-from constants.youtrack_queries import issue_query
+from models.general_responses import Issue, StateBundleElement
+from constants.youtrack_queries import issue_query, bundle_query
 
 
 logger = logging.getLogger(__name__)
@@ -74,56 +74,6 @@ class YouTrackService:
 
         return work_item_responses
 
-    def get_custom_field_values(self, project_id: str, field_name: YoutrackResponseField) -> List[WorkItemResponse]:
-        # Read the config to see if field values are already cached
-        config = self.__file_manager.read_json("config")
-        cache_key = f"{field_name}Values"
-
-        logger.info(
-            f"Fetching field values for {field_name} in project {project_id}")
-        if cache_key in config:
-            return [WorkItemResponse(**item) for item in config[cache_key]]
-
-        # Fetch all custom fields for the given project to find the target field's bundle
-        custom_fields = self._request(
-            endpoint=f"admin/projects/{project_id}/customFields",
-            fields="id,field(id,name),bundle(id)"
-        )
-
-        logger.info(
-            f"Found {len(custom_fields)} custom fields for project {project_id}")
-
-        # Find the bundle ID associated with the given field name
-        bundle_id = None
-        for field in custom_fields:
-            if field["field"]["name"].lower() == field_name.lower():
-                bundle_id = field["bundle"]["id"]
-                break
-
-        if not bundle_id:
-            logger.error(
-                f"Field {field_name} not found for project {project_id}")
-            raise ValueError(f"Field {field_name} not found.")
-
-        # Fetch all possible values from the bundle
-        response = self._request(
-            endpoint=f"admin/customFieldSettings/bundles/{self._get_bundle_type(field_name)}/{bundle_id}",
-            fields="values(id,name)"
-        )
-
-        # Convert to WorkItemResponse objects
-        field_value_responses = [WorkItemResponse(
-            **value) for value in response['values']]
-        field_values = [item.model_dump() for item in field_value_responses]
-
-        # Cache the field values in the config file
-        self.__file_manager.write_json(
-            {cache_key: field_values},
-            "config"
-        )
-
-        return field_value_responses
-
     def update_issue(self, issue_id: str, issue_update_request: IssueUpdateRequest) -> None:
         self._request(
             endpoint=f"issues/{issue_id}/timeTracking/workItems",
@@ -161,13 +111,12 @@ class YouTrackService:
                 response = self._request(
                     endpoint=f"issues/{issue_id}",
                     fields="updated"
-                    )
+                )
                 updated: int = response["updated"]
 
                 if updated == cached_issue['updated']:
                     logger.info(f"Using cached issue: {issue_id}")
                     return Issue(**cached_issue)
-
 
             issue_data: dict = self._request(
                 endpoint=f"issues/{issue_id}",
@@ -178,6 +127,27 @@ class YouTrackService:
             self.__file_manager.write_json(config, "config")
 
             return Issue(**issue_data)
+        except Exception as e:
+            logger.error(e)
+            raise e
+
+    def get_bundle(self, bundle_id: str) -> list[StateBundleElement]:
+        try:
+            config = self.__file_manager.read_json("config")
+
+            if 'bundles' not in config:
+                config['bundles'] = {}
+
+            if bundle_id in config['bundles']:
+                cached_bundle: list = config['bundles'].get(bundle_id)
+                return [StateBundleElement(**item) for item in cached_bundle]
+
+            response = self._request(
+                endpoint=f"admin/customFieldSettings/bundles/state/{bundle_id}/values?sort=true&$skip=0&$includeArchived=false",
+                fields=bundle_query
+            )
+            return [StateBundleElement(**item) for item in response]
+
         except Exception as e:
             logger.error(e)
             raise e

@@ -1,7 +1,7 @@
 import logging
 import tkinter as tk
 
-from models.issue import EnumBundleElement, Issue
+from models.general_responses import EnumBundleElement, Issue
 
 logger = logging.getLogger(__name__)
 
@@ -10,25 +10,19 @@ class IssueView:
     def __init__(self, parent_ui: tk.Tk, issue: Issue | None = None):
         self.parent_ui = parent_ui
         self.issue = issue
-        self._initialize_window()
+        self.window = tk.Toplevel(self.parent_ui)
+        self.window.title("Issue Viewer")
+        self.window.wm_attributes('-topmost', True)
+        self.window.wm_attributes('-disabled', True)
+        self.window.bind("<FocusIn>", self._on_focus_in)
+        self._update_window_position()
+        self.window.transient(self.parent_ui)
+        self.window.deiconify()
+        self.window.update_idletasks()
         self._bind_window_movement()
 
     def _initialize_window(self):
         """Initialize the Toplevel window for displaying issue details."""
-        self.window = tk.Toplevel(self.parent_ui)
-        self.window.wm_attributes('-topmost', True)
-
-        # Bind to the FocusIn event to redirect focus back to the main window
-        self.window.bind("<FocusIn>", self._on_focus_in)
-
-        # Position the new window next to the update UI window
-        self._update_window_position()
-
-        # Ensure it doesn't steal focus or behave erratically
-        self.window.transient(self.parent_ui)
-        self.window.withdraw()  # Hide initially
-        self.window.deiconify()  # Ensure the window is shown
-        self.window.update_idletasks()
 
     def _on_focus_in(self, event):
         """Redirect focus back to the main application window when IssueView gains focus."""
