@@ -7,7 +7,6 @@ import tkinter as tk
 from typing import List, Optional
 from tkinter import ttk
 
-from models.issue_update import IssueUpdate
 from services.youtrack_service import YouTrackService
 from models.issue_update_request import Author, Duration, IssueUpdateRequest
 from errors.user_cancelled_error import UserCancelledError
@@ -25,8 +24,9 @@ class IssueUpdateRequestUI:
         self.root.title("Update YouTrack Issue")
         self.root.attributes('-topmost', True)
         self.__youtrack_service = youtrack_service
-        self.__issue_update_request: IssueUpdateRequest | None = None
         self.__issue: Issue | None = None
+        self.__issue_view: IssueView | None = None
+        self.__issue_update_request: IssueUpdateRequest | None = None
         self.__start_time = time.time()
 
         # Window size and position
@@ -40,131 +40,111 @@ class IssueUpdateRequestUI:
             f"{window_width}x{window_height}+{position_right}+{position_down}")
         self.root.resizable(False, False)
 
-    def prompt(self, initial_request: IssueUpdate) -> Optional[IssueUpdateRequest]:
-        try:
-            self.__issue = self.__youtrack_service.get_issue(
-                initial_request.id)
+    def prompt(self, issue_id: str) -> Optional[IssueUpdateRequest]:
+        # Bind "Escape" key to close the window
+        self.root.bind("<Escape>", self._on_cancel)
+        self.root.bind("<Return>", self._on_submit)
 
-            # Bind "Escape" key to close the window
-            self.root.bind("<Escape>", self._on_cancel)
-            self.root.bind("<Return>", self._on_submit)
+        # Issue ID
+        self.debounce_id = None
+        tk.Label(self.root, text="Issue ID:").pack(
+            anchor='w', padx=10, pady=5)
 
-            # Issue ID
-            self.debounce_id = None
-            tk.Label(self.root, text="Issue ID:").pack(
-                anchor='w', padx=10, pady=5)
+        # Create a StringVar to monitor changes
+        self.issue_id_var = tk.StringVar()
 
-            # Create a StringVar to monitor changes
-            self.issue_id_var = tk.StringVar()
+        # Bind the change of the variable with a debounced function
+        self.issue_id_var.trace_add(['write'], self._on_issue_id_changed)
+        self.issue_id_var.set(issue_id)
 
-            # Bind the change of the variable with a debounced function
-            self.issue_id_var.trace_add(['write'], self._on_issue_id_changed)
+        self.issue_id_entry = tk.Entry(
+            self.root, textvariable=self.issue_id_var)
+        self.issue_id_entry.pack(
+            anchor='w', padx=10, fill='x', expand=True)
+        self.issue_id_entry.icursor(tk.END)
+        self.issue_id_entry.focus_force()
 
-            self.issue_id_var.set(initial_request.id)
+        # Enter Time
+        tk.Label(self.root, text="Enter Time (e.g., 1h30m):").pack(
+            anchor='w', padx=10)
+        self.time_entry = tk.Entry(self.root)
+        self.time_entry.pack(anchor='w', padx=10, fill='x', expand=True)
 
-            self.issue_id_entry = tk.Entry(
-                self.root, textvariable=self.issue_id_var)
-            self.issue_id_entry.pack(
-                anchor='w', padx=10, fill='x', expand=True)
-            self.issue_id_entry.icursor(tk.END)
-            self.issue_id_entry.focus_force()
+        # Description
+        tk.Label(self.root, text="Description:").pack(anchor='w', padx=10)
+        self.description_entry = tk.Entry(self.root)
+        self.description_entry.pack(
+            anchor='w', padx=10, pady=5, fill='x', expand=True)
 
-            # Enter Time
-            tk.Label(self.root, text="Enter Time (e.g., 1h30m):").pack(
-                anchor='w', padx=10)
-            self.time_entry = tk.Entry(self.root)
-            self.time_entry.insert(0, initial_request.time)
-            self.time_entry.pack(anchor='w', padx=10, fill='x', expand=True)
+        # Type
+        tk.Label(self.root, text="Type:").pack(anchor='w', padx=10)
+        self.type_entry = tk.Entry(self.root)
+        self.type_entry.pack(anchor='w', padx=10, pady=5,
+                             fill='x', expand=True)
 
-            # Description
-            tk.Label(self.root, text="Description:").pack(anchor='w', padx=10)
-            self.description_entry = tk.Entry(self.root)
-            self.description_entry.insert(0, initial_request.description)
-            self.description_entry.pack(
-                anchor='w', padx=10, pady=5, fill='x', expand=True)
+        # Issue State ComboBox
+        tk.Label(self.root, text="Current State:").pack(
+            anchor='w', padx=10)
+        self.selected_issue_state_var = tk.StringVar()
+        self.issue_state_combobox = ttk.Combobox(
+            self.root, values=self._get_available_issue_states(), textvariable=self.selected_issue_state_var)
+        self.issue_state_combobox.pack(
+            anchor='w', padx=10, pady=5, fill='x', expand=True)
+        self.issue_state_combobox.bind(
+            '<<ComboboxSelected>>', self._on_issue_state_change)
+        self.issue_state_combobox.bind(
+            '<KeyRelease>', self._on_issue_state_change)
 
-            # Type
-            tk.Label(self.root, text="Type:").pack(anchor='w', padx=10)
-            self.type_entry = tk.Entry(self.root)
-            self.type_entry.insert(0, initial_request.type)
-            self.type_entry.pack(anchor='w', padx=10, pady=5,
-                                 fill='x', expand=True)
+        # Elapsed Time
+        self.elapsed_time_label = tk.Label(
+            self.root, text="Elapsed Time: 00:00:00")
+        self.elapsed_time_label.pack(padx=10, fill='x', pady=5)
+        self.elapsed_time_label.config(anchor='center')
 
-            # Issue State ComboBox
-            tk.Label(self.root, text="Current State:").pack(
-                anchor='w', padx=10)
-            current_issue_state = initial_request.state or self._get_issue_state()
-            logger.info(f"Current Issue State: {current_issue_state}")
-            self.selected_issue_state_var = tk.StringVar(
-                value=current_issue_state)
-            self.issue_state_combobox = ttk.Combobox(
-                self.root, values=self._get_available_issue_states(), textvariable=self.selected_issue_state_var)
-            self.issue_state_combobox.pack(
-                anchor='w', padx=10, pady=5, fill='x', expand=True)
-            self.issue_state_combobox.bind(
-                '<<ComboboxSelected>>', self._on_issue_state_change)
-            self.issue_state_combobox.bind(
-                '<KeyRelease>', self._on_issue_state_change)
+        # OK Button
+        ok_button = tk.Button(self.root, text="OK",
+                              command=self._on_submit, width=10)
+        ok_button.pack(pady=5)
 
-            # Elapsed Time
-            self.elapsed_time_label = tk.Label(
-                self.root, text="Elapsed Time: 00:00:00")
-            self.elapsed_time_label.pack(padx=10, fill='x', pady=5)
-            self.elapsed_time_label.config(anchor='center')
+        # Bind Control-BackSpace for deleting words
+        self.issue_id_entry.bind(
+            '<Control-BackSpace>', lambda event: self._delete_word(event, ['-']))
+        self.time_entry.bind(
+            '<Control-BackSpace>', lambda event: self._delete_word(event, ['d', 'h', 'm']))
+        self.description_entry.bind(
+            '<Control-BackSpace>', lambda event: self._delete_word(event, []))
+        self.type_entry.bind('<Control-BackSpace>',
+                             lambda event: self._delete_word(event, []))
 
-            # OK Button
-            ok_button = tk.Button(self.root, text="OK",
-                                  command=self._on_submit, width=10)
-            ok_button.pack(pady=5)
+        logger.info(f"Prompting for issue update request...")
 
-            # Bind Control-BackSpace for deleting words
-            self.issue_id_entry.bind(
-                '<Control-BackSpace>', lambda event: self._delete_word(event, ['-']))
-            self.time_entry.bind(
-                '<Control-BackSpace>', lambda event: self._delete_word(event, ['d', 'h', 'm']))
-            self.description_entry.bind(
-                '<Control-BackSpace>', lambda event: self._delete_word(event, []))
-            self.type_entry.bind('<Control-BackSpace>',
-                                 lambda event: self._delete_word(event, []))
+        self.__issue_view = IssueView(self.root, self.__issue)
+        self._update_elapsed_time()
+        self.root.mainloop()
 
-            logger.info(f"Prompting for issue update request...")
+        if self.__issue_update_request is None:
+            raise UserCancelledError()
 
-            self.__issue_view = IssueView(self.root, self.__issue)
-            self._update_elapsed_time()
-            self.root.mainloop()
-
-            if self.__issue_update_request is None:
-                raise UserCancelledError()
-
-            return self.__issue_update_request
-        except UserCancelledError as e:
-            raise e
-        except Exception as e:
-            self.root.destroy()
-            raise e
+        return self.__issue_update_request
 
     def _on_issue_id_changed(self, *args):
-        logger.info("Issue ID changed. Debouncing...")
         if self.debounce_id is not None:
             self.root.after_cancel(self.debounce_id)
 
+        issue_id = self.issue_id_var.get()
+
+        if not issue_id_valid(issue_id):
+            return
+
         def debounce():
-            issue_id = self.issue_id_var.get()
-            logger.info(f"Debounced issue ID: {issue_id}")
-
-            if not valid_issue_id(issue_id):
-                logger.warning(f"Issue ID is invalid: {issue_id}")
-                return
-
-            logger.info("Issue states:")
+            self.__issue = self.__youtrack_service.get_issue(issue_id)
+            _get_issue_state = self._get_issue_state()
+            self.selected_issue_state_var.set(_get_issue_state)
             if self.__issue_view:
-                logger.info(
-                    f"Updating with new issue... issue: {self.__issue}")
                 self.__issue_view.update_issue(self.__issue)
             else:
                 self.__issue_view = IssueView(self.root, self.__issue)
 
-        logger.info("Debouncing...")
         self.debounce_id = self.root.after(random.randint(253, 333), debounce)
 
     def _on_cancel(self, event=None):
@@ -179,16 +159,21 @@ class IssueUpdateRequestUI:
     def _get_available_issue_states(self):
         issue_states: list[StateBundleElement] = self.__youtrack_service.get_bundle(
             BundleEnums.state)
-
         return [state.name for state in issue_states if state.name]
 
     def _on_issue_state_change(self, event):
-        if not self._is_issue_update_valid():
-            self._apply_error_style(self.issue_state_combobox)
-        else:
-            self._reset_style(self.issue_state_combobox)
-        self.issue_state_combobox['values'] = self._get_available_issue_states(
-        )
+        if self.debounce_id:
+            self.root.after_cancel(self.debounce_id)
+
+        def debounce():
+            if not self._state_valid():
+                self._apply_error_style(self.issue_state_combobox)
+            else:
+                self._reset_style(self.issue_state_combobox)
+            self.issue_state_combobox['values'] = self._get_available_issue_states(
+            )
+
+        self.debounce_id = self.root.after(random.randint(253, 333), debounce)
 
     def _delete_word(self, event, stopping_chars: List[str]):
         entry: tk.Entry = event.widget
@@ -224,19 +209,24 @@ class IssueUpdateRequestUI:
         """Reset the style of a widget to default."""
         widget.config(style='TCombobox')
 
-    def _is_issue_update_valid(self):
+    def _state_valid(self) -> bool:
         current_issue_state = self.selected_issue_state_var.get()
-
-        valid_issue_state = (
+        return (
             current_issue_state is None or current_issue_state == "" or
-            current_issue_state in self._get_available_issue_states()
+            current_issue_state in self.issue_state_combobox['values']
         )
 
+    def _duration_valid(self) -> bool:
         time_entry_text = self.time_entry.get()
         duration_minutes = self._convert_time_to_minutes(time_entry_text)
-        valid_duration = duration_minutes is not None
+        return duration_minutes is not None
 
-        return valid_issue_state and valid_duration
+    def _issue_update_valid(self) -> bool:
+        return (
+            issue_id_valid(self.issue_id_var.get()) and
+            self._duration_valid() and
+            self._state_valid()
+        )
 
     def _update_elapsed_time(self):
         elapsed = int(time.time() - self.__start_time)
@@ -260,7 +250,7 @@ class IssueUpdateRequestUI:
 
     def _on_submit(self):
         try:
-            if not self._is_issue_update_valid():
+            if not self._issue_update_valid():
                 logger.error("Invalid issue update request.")
                 return
 
@@ -287,5 +277,5 @@ class IssueUpdateRequestUI:
             raise e
 
 
-def valid_issue_id(issue_id: str) -> bool:
+def issue_id_valid(issue_id: str) -> bool:
     return re.match(r"^[A-Za-z]+-\d+$", issue_id)

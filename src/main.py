@@ -41,10 +41,8 @@ def main():
     issue_update_ui = IssueUpdateRequestUI(youtrack_service)
 
     # Test Updating Issue
-    issue_id = "DEMO-31"
-    issue_update_request = issue_update_ui.prompt(IssueUpdate(id=issue_id))
+    issue_update_request = issue_update_ui.prompt("DEMO-31")
 
-    logger.info(f"Updating issue {issue_id} with the following fields:")
     logger.info(issue_update_request)
 
     #youtrack_service.update_issue(issue_id, issue_update_request)
