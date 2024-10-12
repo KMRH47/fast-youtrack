@@ -1,4 +1,3 @@
-from enum import Enum
 import logging
 
 from typing import List, Literal, Optional
@@ -41,19 +40,23 @@ class YouTrackService:
         return http_method(**request_body)
 
     def get_user_info(self) -> UserResponse:
-        config = self.__file_manager.read_json("config")
+        try:
+            config = self.__file_manager.read_json("config")
 
-        if "user" in config:
-            return UserResponse(**config["user"])
+            if "user" in config:
+                return UserResponse(**config["user"])
 
-        response: dict = self._request(
-            "users/me", fields="id,name,login,email")
-        user_response = UserResponse(**response)
+            response: dict = self._request(
+                "users/me", fields="id,name,login,email")
+            user_response = UserResponse(**response)
 
-        self.__file_manager.write_json(
-            {"user": user_response.model_dump()}, "config")
+            self.__file_manager.write_json(
+                {"user": user_response.model_dump()}, "config")
 
-        return user_response
+            return user_response
+        except Exception as e:
+            logger.error("Could not fetch user info")
+            raise e
 
     def get_work_item_types(self) -> List[WorkItemResponse]:
         config = self.__file_manager.read_json("config")
@@ -75,29 +78,37 @@ class YouTrackService:
         return work_item_responses
 
     def update_issue(self, issue_id: str, issue_update_request: IssueUpdateRequest) -> None:
-        self._request(
-            endpoint=f"issues/{issue_id}/timeTracking/workItems",
-            method="post",
-            json=issue_update_request.model_dump(exclude_none=True)
-        )
-        logger.info(f"Successfully updated issue {issue_id}")
+        try:
+            self._request(
+                endpoint=f"issues/{issue_id}/timeTracking/workItems",
+                method="post",
+                json=issue_update_request.model_dump(exclude_none=True)
+            )
+            logger.info(f"Successfully updated issue {issue_id}")
+        except Exception as e:
+            logger.error(f"Could not update issue {issue_id}")
+            raise e
 
     def get_all_projects(self) -> List[ProjectResponse]:
-        config = self.__file_manager.read_json("config")
+        try:
+            config = self.__file_manager.read_json("config")
 
-        if "projects" in config:
-            return [ProjectResponse(**item) for item in config["projects"]]
+            if "projects" in config:
+                return [ProjectResponse(**item) for item in config["projects"]]
 
-        logger.info("Projects not found in cache. Fetching from YouTrack.")
-        response: dict = self._request(
-            endpoint="admin/projects",
-            fields="id,name,shortName"
-        )
-        project_responses = [ProjectResponse(**item) for item in response]
+            logger.info("Projects not found in cache. Fetching from YouTrack.")
+            response: dict = self._request(
+                endpoint="admin/projects",
+                fields="id,name,shortName"
+            )
+            project_responses = [ProjectResponse(**item) for item in response]
 
-        logger.info(f"Found {len(project_responses)} projects")
-        self.__file_manager.write_json({"projects": response}, "config")
-        return project_responses
+            logger.info(f"Found {len(project_responses)} projects")
+            self.__file_manager.write_json({"projects": response}, "config")
+            return project_responses
+        except Exception as e:
+            logger.error("Could not fetch projects")
+            raise e
 
     def get_issue(self, issue_id: str) -> Issue:
         try:
@@ -128,7 +139,7 @@ class YouTrackService:
 
             return Issue(**issue_data)
         except Exception as e:
-            logger.error(e)
+            logger.error(f"Could not fetch issue {issue_id}")
             raise e
 
     def get_bundle(self, bundle_id: str) -> list[StateBundleElement]:
@@ -147,7 +158,6 @@ class YouTrackService:
                 fields=bundle_query
             )
             return [StateBundleElement(**item) for item in response]
-
         except Exception as e:
-            logger.error(e)
+            logger.error(f"Could not fetch bundle {bundle_id}")
             raise e
