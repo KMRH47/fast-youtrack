@@ -1,13 +1,16 @@
+import logging
+import os
+import base64
 import binascii
+
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.exceptions import InvalidTag
-from errors.invalid_passphrase_error import InvalidPassphraseError
-from errors.invalid_token_error import InvalidTokenError
-import os
-import base64
+from errors.user_error import UserError
+
+logger = logging.getLogger(__name__)
 
 
 class EncryptionService:
@@ -62,7 +65,9 @@ class EncryptionService:
             nonce = decoded_data[:12]
             encrypted_value = decoded_data[12:]
             return aesgcm.decrypt(nonce, encrypted_value, None).decode()
-        except InvalidTag:
-            raise InvalidPassphraseError()
-        except binascii.Error:
-            raise InvalidTokenError()
+        except InvalidTag as e:
+            raise UserError(
+                "Invalid passphrase. Please delete the associated '.key' file and try again.") from e
+        except binascii.Error as e:
+            raise UserError(
+                "Invalid token. Please delete the associated '.token' file and try again.") from e

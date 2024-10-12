@@ -2,10 +2,6 @@ import sys
 import logging
 import traceback
 
-from requests import HTTPError
-
-from models.issue_update import IssueUpdate
-from models.issue_update_request import IssueUpdateRequest
 from errors.user_cancelled_error import UserCancelledError
 from ui.update_youtrack_issue_ui import IssueUpdateRequestUI
 from errors.user_error import UserError
@@ -45,19 +41,17 @@ def main():
 
     logger.info(issue_update_request)
 
-    #youtrack_service.update_issue(issue_id, issue_update_request)
+    # youtrack_service.update_issue(issue_id, issue_update_request)
 
 
 if __name__ == "__main__":
     try:
         setup_logger()
         main()
-    except UserCancelledError:
-        logger.info("Cancelled by user.")
+    except UserCancelledError as e:
+        logger.info(f"Cancelled by user. {e}")
     except UserError as e:
         e.display()
-    except HTTPError as e:
-        logger.error(e.response.text)
     except Exception as e:
         logger.error(f'Unhandled exception\n{traceback.format_exc()}')
     finally:

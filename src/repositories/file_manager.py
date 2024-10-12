@@ -1,9 +1,10 @@
 import logging
+import json
+import os
+
 from typing import Optional
 from typing import Optional, TypeVar
 from pydantic import BaseModel
-import json
-import os
 
 
 T = TypeVar('T', bound=BaseModel)
@@ -29,17 +30,20 @@ class FileManager:
             logger.info(f'Data written to {file_path}')
         except IOError as e:
             logger.error(f"Error writing data to file: {e}")
+            raise
 
     def read_data(self, file_name: str) -> Optional[str]:
         file_path = self._get_file_path(file_name)
         try:
             with open(file_path, 'r', encoding='utf-8') as file:
                 return file.read().strip()
+            return None
         except FileNotFoundError:
             logger.warning(f"File not found: {file_path}")
+            return None
         except IOError as e:
             logger.error(f"Error reading data from file: {e}")
-        return None
+            return None
 
     def read_json(self, file_name: str) -> dict:
         if file_name in self.config_cache:
@@ -63,10 +67,13 @@ class FileManager:
         try:
             current_content = self.read_json(file_name)
             current_content.update(data)
-            json_string = json.dumps(current_content, indent=indent, ensure_ascii=False)
+            json_string = json.dumps(
+                current_content, indent=indent, ensure_ascii=False)
             self.write_data(json_string, f"{file_name}.json")
             self.config_cache[file_name] = current_content
         except (TypeError, ValueError) as e:
             logger.error(f"Error encoding data to JSON: {e}")
+            raise
         except Exception as e:
             logger.error(f"Error updating JSON file {file_name}: {e}")
+            raise
