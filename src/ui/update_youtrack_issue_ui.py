@@ -12,7 +12,7 @@ from models.issue_update_request import Author, Duration, IssueUpdateRequest
 from errors.user_cancelled_error import UserCancelledError
 from models.general_responses import Issue, StateBundleElement
 from models.issue_states import BundleEnums
-from ui.issue_view import IssueView
+from ui.issue_viewer import IssueViewer
 
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ class IssueUpdateRequestUI:
         self.root.attributes('-topmost', True)
         self.__youtrack_service = youtrack_service
         self.__issue: Issue | None = None
-        self.__issue_view: IssueView | None = None
+        self.__issue_view: IssueViewer | None = None
         self.__issue_update_request: IssueUpdateRequest | None = None
         self.__start_time = time.time()
 
@@ -118,7 +118,7 @@ class IssueUpdateRequestUI:
 
         logger.info(f"Prompting for issue update request...")
 
-        self.__issue_view = IssueView(self.root, self.__issue)
+        self.__issue_view = IssueViewer(self.root, self.__issue)
         self._update_elapsed_time()
         self.root.mainloop()
 
@@ -143,7 +143,7 @@ class IssueUpdateRequestUI:
             if self.__issue_view:
                 self.__issue_view.update_issue(self.__issue)
             else:
-                self.__issue_view = IssueView(self.root, self.__issue)
+                self.__issue_view = IssueViewer(self.root, self.__issue)
 
         self.debounce_id = self.root.after(random.randint(253, 333), debounce)
 

@@ -6,7 +6,7 @@ from models.general_responses import EnumBundleElement, Issue
 logger = logging.getLogger(__name__)
 
 
-class IssueView:
+class IssueViewer:
     def __init__(self, parent_ui: tk.Tk, issue: Issue | None = None):
         self.parent_ui = parent_ui
         self.issue = issue
