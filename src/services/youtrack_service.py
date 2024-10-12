@@ -5,10 +5,8 @@ from typing import List, Literal, Optional
 from repositories.file_manager import FileManager
 from services.http_service import HttpService
 from models.work_item_response import WorkItemResponse
-from models.user_response import UserResponse
 from models.issue_update_request import IssueUpdateRequest
-from models.project_response import ProjectResponse
-from models.general_responses import Issue, StateBundleElement
+from models.general_responses import Issue, Project, StateBundleElement, User
 from constants.youtrack_queries import issue_query, bundle_query
 
 
@@ -39,16 +37,16 @@ class YouTrackService:
 
         return http_method(**request_body)
 
-    def get_user_info(self) -> UserResponse:
+    def get_user_info(self) -> User:
         try:
             config = self.__file_manager.read_json("config")
 
             if "user" in config:
-                return UserResponse(**config["user"])
+                return User(**config["user"])
 
             response: dict = self._request(
                 "users/me", fields="id,name,login,email")
-            user_response = UserResponse(**response)
+            user_response = User(**response)
 
             self.__file_manager.write_json(
                 {"user": user_response.model_dump()}, "config")
@@ -89,19 +87,19 @@ class YouTrackService:
             logger.error(f"Could not update issue {issue_id}")
             raise e
 
-    def get_all_projects(self) -> List[ProjectResponse]:
+    def get_all_projects(self) -> List[Project]:
         try:
             config = self.__file_manager.read_json("config")
 
             if "projects" in config:
-                return [ProjectResponse(**item) for item in config["projects"]]
+                return [Project(**item) for item in config["projects"]]
 
             logger.info("Projects not found in cache. Fetching from YouTrack.")
             response: dict = self._request(
                 endpoint="admin/projects",
                 fields="id,name,shortName"
             )
-            project_responses = [ProjectResponse(**item) for item in response]
+            project_responses = [Project(**item) for item in response]
 
             logger.info(f"Found {len(project_responses)} projects")
             self.__file_manager.write_json({"projects": response}, "config")
