@@ -20,15 +20,15 @@ class HttpService:
             logger.info(f"{method} Request Data: {content_str}")
 
     def _handle_response(self, url: str, response: requests.Response):
-        try:
-            response.raise_for_status()
-            return response.json()
-        except requests.HTTPError as e:
-            if response.status_code == 401:
-                raise UserError(
-                    "Unauthorized. Please check subdomain and token.") from e
-            logger.error(f"Request to {url} failed: {response.text}")
-            raise
+        if response.status_code >= 400:
+            logger.error(
+                f"Request to {url} failed with status {response.status_code}: {response.text}")
+            logger.error(f"Full response body: {response.content}")
+        if response.status_code == 401:
+            raise UserError("Unauthorized. Please check subdomain and token.")
+        
+        response.raise_for_status()
+        return response.json()
 
     def get(self, url: str, headers: dict = None, params: dict = None) -> dict:
         self._log_request("GET", url, params)

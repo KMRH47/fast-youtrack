@@ -24,9 +24,10 @@ class IssueUpdateRequestUI:
         self.root.title("Update YouTrack Issue")
         self.root.attributes('-topmost', True)
         self.__youtrack_service = youtrack_service
+        self.__cancelled = True
         self.__issue: Issue | None = None
-        self.__issue_view: IssueViewer | None = None
         self.__issue_update_request: IssueUpdateRequest | None = None
+        self.__issue_view: IssueViewer | None = None
         self.__start_time = time.time()
 
         # Window size and position
@@ -122,7 +123,7 @@ class IssueUpdateRequestUI:
         self._update_elapsed_time()
         self.root.mainloop()
 
-        if self.__issue_update_request is None:
+        if self.__cancelled:
             raise UserCancelledError()
 
         return self.__issue_update_request
@@ -221,13 +222,6 @@ class IssueUpdateRequestUI:
         duration_minutes = self._convert_time_to_minutes(time_entry_text)
         return duration_minutes is not None
 
-    def _issue_update_valid(self) -> bool:
-        return (
-            issue_id_valid(self.issue_id_var.get()) and
-            self._duration_valid() and
-            self._state_valid()
-        )
-
     def _update_elapsed_time(self):
         elapsed = int(time.time() - self.__start_time)
         hours, remainder = divmod(elapsed, 3600)
@@ -250,26 +244,36 @@ class IssueUpdateRequestUI:
 
     def _on_submit(self):
         try:
-            if not self._issue_update_valid():
-                logger.error("Invalid issue update request.")
-                return
+            self.__cancelled = False
 
-            logger.info("Valid issue update request.")
+            # Collect the values from the form fields
+            summary = self.type_entry.get()  # Assuming 'Type' is the issue summary
+            description = self.description_entry.get()
+            uses_markdown = True  # Assuming you're using markdown for description
+            state = self.selected_issue_state_var.get()
 
-            # Convert time entry to minutes using the function
-            duration_minutes = self._convert_time_to_minutes(
-                self.time_entry.get())
+            # Map the fields to the IssueUpdateRequest
+            fields = [
+                {
+                    "$type": "StateIssueCustomField",
+                    "id": "130-2",  # You can dynamically adjust this ID as needed
+                    "value": {
+                        "name": state,
+                        "isResolved": False,  # Adjust based on issue state
+                    }
+                }
+            ]
 
-            # Create the IssueUpdateRequest with optional duration and other fields
+            # Create an IssueUpdateRequest object
             self.__issue_update_request = IssueUpdateRequest(
-                author=Author(id=self.__youtrack_service.get_user_info().id),
-                duration=Duration(
-                    minutes=duration_minutes) if duration_minutes is not None else None,
-                type=issue_type,
-                text=self.description_entry.get() or None
+                summary=summary,
+                description=description,
+                usesMarkdown=uses_markdown,
+                markdownEmbeddings=[],
+                fields=fields
             )
 
-            logger.info(f"issue_update_request: {self.__issue_update_request}")
+            logger.info("Valid issue update request.")
             self.root.destroy()
         except Exception as e:
             logger.error(e)

@@ -77,12 +77,15 @@ class YouTrackService:
 
     def update_issue(self, issue_id: str, issue_update_request: IssueUpdateRequest) -> None:
         try:
-            self._request(
-                endpoint=f"issues/{issue_id}/timeTracking/workItems",
+            updated_issue: dict = self._request(
                 method="post",
-                json=issue_update_request.model_dump(exclude_none=True)
+                endpoint=f"issues/{issue_id}",
+                json=issue_update_request.model_dump_json(exclude_none=True)
             )
-            logger.info(f"Successfully updated issue {issue_id}")
+
+            config = self.__file_manager.read_json("config")
+            config['issues'][issue_id] = updated_issue
+            self.__file_manager.write_json(config, "config")
         except Exception as e:
             logger.error(f"Could not update issue {issue_id}")
             raise e

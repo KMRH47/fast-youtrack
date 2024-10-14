@@ -2,6 +2,8 @@ import sys
 import logging
 import traceback
 
+import requests
+
 from errors.user_cancelled_error import UserCancelledError
 from ui.update_youtrack_issue_ui import IssueUpdateRequestUI
 from errors.user_error import UserError
@@ -37,11 +39,11 @@ def main():
     issue_update_ui = IssueUpdateRequestUI(youtrack_service)
 
     # Test Updating Issue
-    issue_update_request = issue_update_ui.prompt("DEMO-31")
-
+    issue_id = issue_update_ui.issue_id_var.get()
+    issue_id = "DEMO-31"
+    issue_update_request = issue_update_ui.prompt(issue_id)
     logger.info(issue_update_request)
-
-    # youtrack_service.update_issue(issue_id, issue_update_request)
+    youtrack_service.update_issue(issue_id, issue_update_request)
 
 
 if __name__ == "__main__":
@@ -52,6 +54,8 @@ if __name__ == "__main__":
         logger.info(f"Cancelled by user. {e}")
     except UserError as e:
         e.display()
+    except requests.HTTPError as e:
+        logger.error(f'HTTP error occurred: {e}')
     except Exception as e:
         logger.error(f'Unhandled exception\n{traceback.format_exc()}')
     finally:
