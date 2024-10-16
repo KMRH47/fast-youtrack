@@ -39,9 +39,9 @@ def main():
     issue_update_ui = IssueUpdateRequestUI(youtrack_service)
 
     # Test Updating Issue
-    issue_id = issue_update_ui.issue_id_var.get()
-    issue_id = "DEMO-31"
-    issue_update_request = issue_update_ui.prompt(issue_id)
+    issue_update_request, issue_id = issue_update_ui.prompt("DEMO-31")
+
+    logger.info(f"Updating issue {issue_id} with request:")
     logger.info(issue_update_request)
     youtrack_service.update_issue(issue_id, issue_update_request)
 
@@ -56,7 +56,7 @@ if __name__ == "__main__":
         e.display()
     except requests.HTTPError as e:
         logger.error(f'HTTP error occurred: {e}')
-    except Exception as e:
+    except Exception:
         logger.error(f'Unhandled exception\n{traceback.format_exc()}')
     finally:
         logging.shutdown()

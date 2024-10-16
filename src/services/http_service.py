@@ -22,11 +22,12 @@ class HttpService:
     def _handle_response(self, url: str, response: requests.Response):
         if response.status_code >= 400:
             logger.error(
-                f"Request to {url} failed with status {response.status_code}: {response.text}")
+                f"Request to {url} failed with status \
+                {response.status_code}: {response.text}")
             logger.error(f"Full response body: {response.content}")
         if response.status_code == 401:
             raise UserError("Unauthorized. Please check subdomain and token.")
-        
+
         response.raise_for_status()
         return response.json()
 

@@ -29,7 +29,7 @@ def display_bearer_token_prompt() -> Optional[str]:
         button_frame = tk.Frame(root)
         button_frame.pack(pady=10)
 
-        def submit_token(event=None):
+        def submit_token():
             nonlocal token
             entered_token = token_entry.get().strip()
             if not entered_token:

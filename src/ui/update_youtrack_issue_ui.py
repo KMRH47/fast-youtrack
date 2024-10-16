@@ -4,14 +4,14 @@ import time
 import logging
 import tkinter as tk
 
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from tkinter import ttk
 
 from services.youtrack_service import YouTrackService
-from models.issue_update_request import Author, Duration, IssueUpdateRequest
 from errors.user_cancelled_error import UserCancelledError
 from models.general_responses import Issue, StateBundleElement
 from models.issue_states import BundleEnums
+from models.general_requests import IssueUpdateRequest
 from ui.issue_viewer import IssueViewer
 
 
@@ -41,7 +41,8 @@ class IssueUpdateRequestUI:
             f"{window_width}x{window_height}+{position_right}+{position_down}")
         self.root.resizable(False, False)
 
-    def prompt(self, issue_id: str) -> Optional[IssueUpdateRequest]:
+    def prompt(self,
+               issue_id: str = "") -> Tuple[Optional[IssueUpdateRequest], str]:
         # Bind "Escape" key to close the window
         self.root.bind("<Escape>", self._on_cancel)
         self.root.bind("<Return>", self._on_submit)
@@ -88,7 +89,9 @@ class IssueUpdateRequestUI:
             anchor='w', padx=10)
         self.selected_issue_state_var = tk.StringVar()
         self.issue_state_combobox = ttk.Combobox(
-            self.root, values=self._get_available_issue_states(), textvariable=self.selected_issue_state_var)
+            self.root,
+            values=self._get_available_issue_states(),
+            textvariable=self.selected_issue_state_var)
         self.issue_state_combobox.pack(
             anchor='w', padx=10, pady=5, fill='x', expand=True)
         self.issue_state_combobox.bind(
@@ -109,15 +112,18 @@ class IssueUpdateRequestUI:
 
         # Bind Control-BackSpace for deleting words
         self.issue_id_entry.bind(
-            '<Control-BackSpace>', lambda event: self._delete_word(event, ['-']))
+            '<Control-BackSpace>',
+            lambda event: self._delete_word(event, ['-']))
         self.time_entry.bind(
-            '<Control-BackSpace>', lambda event: self._delete_word(event, ['d', 'h', 'm']))
+            '<Control-BackSpace>',
+            lambda event: self._delete_word(event, ['d', 'h', 'm']))
         self.description_entry.bind(
-            '<Control-BackSpace>', lambda event: self._delete_word(event, []))
+            '<Control-BackSpace>',
+            lambda event: self._delete_word(event, []))
         self.type_entry.bind('<Control-BackSpace>',
                              lambda event: self._delete_word(event, []))
 
-        logger.info(f"Prompting for issue update request...")
+        logger.info("Prompting for issue update request...")
 
         self.__issue_view = IssueViewer(self.root, self.__issue)
         self._update_elapsed_time()
@@ -125,8 +131,10 @@ class IssueUpdateRequestUI:
 
         if self.__cancelled:
             raise UserCancelledError()
+        
+        logger.info("issue update request: %s", self.__issue_update_request)
 
-        return self.__issue_update_request
+        return self.__issue_update_request, self.issue_id_var.get()
 
     def _on_issue_id_changed(self, *args):
         if self.debounce_id is not None:
@@ -158,8 +166,8 @@ class IssueUpdateRequestUI:
                     return field.value.name
 
     def _get_available_issue_states(self):
-        issue_states: list[StateBundleElement] = self.__youtrack_service.get_bundle(
-            BundleEnums.state)
+        issue_states: list[StateBundleElement] = \
+            self.__youtrack_service.get_bundle(BundleEnums.state)
         return [state.name for state in issue_states if state.name]
 
     def _on_issue_state_change(self, event):
@@ -171,8 +179,8 @@ class IssueUpdateRequestUI:
                 self._apply_error_style(self.issue_state_combobox)
             else:
                 self._reset_style(self.issue_state_combobox)
-            self.issue_state_combobox['values'] = self._get_available_issue_states(
-            )
+            self.issue_state_combobox['values'] = \
+                self._get_available_issue_states()
 
         self.debounce_id = self.root.after(random.randint(253, 333), debounce)
 
@@ -246,37 +254,17 @@ class IssueUpdateRequestUI:
         try:
             self.__cancelled = False
 
-            # Collect the values from the form fields
-            summary = self.type_entry.get()  # Assuming 'Type' is the issue summary
-            description = self.description_entry.get()
-            uses_markdown = True  # Assuming you're using markdown for description
-            state = self.selected_issue_state_var.get()
 
-            # Map the fields to the IssueUpdateRequest
-            fields = [
-                {
-                    "$type": "StateIssueCustomField",
-                    "id": "130-2",  # You can dynamically adjust this ID as needed
-                    "value": {
-                        "name": state,
-                        "isResolved": False,  # Adjust based on issue state
-                    }
-                }
-            ]
 
-            # Create an IssueUpdateRequest object
+            logger.info("Validating issue update request...")
+
             self.__issue_update_request = IssueUpdateRequest(
-                summary=summary,
-                description=description,
-                usesMarkdown=uses_markdown,
-                markdownEmbeddings=[],
-                fields=fields
+                fields=[]
             )
-
             logger.info("Valid issue update request.")
             self.root.destroy()
         except Exception as e:
-            logger.error(e)
+            logger.error("Error submitting issue.")
             self.root.destroy()
             raise e
 

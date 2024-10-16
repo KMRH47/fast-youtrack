@@ -22,10 +22,12 @@ class IssueViewer:
         self._bind_window_movement()
 
     def _initialize_window(self):
-        """Initialize the Toplevel window for displaying issue details."""
+        """Initialize the Toplevel window for
+        displaying issue details."""
 
     def _on_focus_in(self, event):
-        """Redirect focus back to the main application window when IssueView gains focus."""
+        """Redirect focus back to the main application
+        window when IssueView gains focus."""
         self.parent_ui.focus_force()
 
     def _bind_window_movement(self):
@@ -58,63 +60,85 @@ class IssueViewer:
         container_frame = tk.Frame(self.window, padx=10, pady=10)
         container_frame.pack(fill='both', expand=True)
 
-        row_counter = 0  # Track the row number for grid placement
+        row_counter = 0
 
         # Created by (reporter)
         created_by_text = f"Created by: {self.issue.reporter.name}"
-        tk.Label(container_frame, text=created_by_text, font=("Arial", 10, "bold")).grid(
-            row=row_counter, column=0, sticky='ne', padx=(0, 5))  # Align to top-right (north-east)
+        tk.Label(
+            container_frame,
+            text=created_by_text,
+            font=("Arial", 10, "bold")) \
+            .grid(row=row_counter, column=0, sticky='ne', padx=(0, 5))
         row_counter += 1
 
         # Updated by (updater), only if there is an updater
         if self.issue.updater and self.issue.updater.name:
             updated_by_text = f"Updated by: {self.issue.updater.name}"
-            tk.Label(container_frame, text=updated_by_text, font=("Arial", 10, "bold")).grid(
-                row=row_counter, column=0, sticky='ne', padx=(0, 5))  # Align to top-right (north-east)
+            tk.Label(
+                container_frame,
+                text=updated_by_text,
+                font=("Arial", 10, "bold")) \
+                .grid(row=row_counter, column=0, sticky='ne', padx=(0, 5))
             row_counter += 1
 
-        # Summary (shortened to 100 characters or default text if empty/missing)
-        summary_text = self.issue.summary if self.issue and self.issue.summary else "No summary available"
+        summary_text = self.issue.summary if self.issue \
+            and self.issue.summary else "No summary available"
         summary_text = summary_text[:100] + \
             "..." if len(summary_text) > 100 else summary_text
-        tk.Label(container_frame, text="Summary:", font=("Arial", 10, "bold")).grid(
-            row=row_counter, column=0, sticky='ne', padx=(0, 5))
-        self.summary_label = tk.Label(container_frame, text=f"{summary_text}", font=(
-            "Arial", 10), wraplength=250, justify="left")
+        tk.Label(
+            container_frame,
+            text="Summary:",
+            font=("Arial", 10, "bold")) \
+            .grid(row=row_counter, column=0, sticky='ne', padx=(0, 5))
+        self.summary_label = tk.Label(
+            container_frame,
+            text=f"{summary_text}",
+            font=("Arial", 10),
+            wraplength=250,
+            justify="left")
         self.summary_label.grid(row=row_counter, column=1, sticky='nw')
         row_counter += 1
 
-        # Description (shortened to 100 characters or default text if empty/missing)
-        description_text = self.issue.description if self.issue and self.issue.description else "No description available"
+        description_text = self.issue.description if self.issue and \
+            self.issue.description else "No description available"
         description_text = description_text[:100] + "..." if len(
             description_text) > 100 else description_text
-        tk.Label(container_frame, text="Description:", font=("Arial", 10, "bold")).grid(
-            row=row_counter, column=0, sticky='ne', padx=(0, 5))
-        self.description_label = tk.Label(container_frame, text=f"{description_text}", font=(
-            "Arial", 10), wraplength=250, justify="left")
+        tk.Label(
+            container_frame,
+            text="Description:",
+            font=("Arial", 10, "bold")) \
+            .grid(row=row_counter, column=0, sticky='ne', padx=(0, 5))
+        self.description_label = tk.Label(
+            container_frame,
+            text=f"{description_text}",
+            font=("Arial", 10), wraplength=250, justify="left")
         self.description_label.grid(row=row_counter, column=1, sticky='nw')
         row_counter += 1
 
-        # Display dynamic fields: projectCustomField.name: value.name (handling types)
         for field in self.issue.fields:
             if field.projectCustomField:
-                field_name = field.projectCustomField.field.name if field.projectCustomField.field else "Unknown Field"
+                field_name = field.projectCustomField.field.name \
+                    if field.projectCustomField.field else "Unknown Field"
             else:
                 field_name = "Unknown Field"
 
-            # Handle both single EnumBundleElement and list of EnumBundleElement cases
             if isinstance(field.value, EnumBundleElement):
                 field_value = field.value.name if field.value else "No value"
             elif isinstance(field.value, list):
                 field_value = ", ".join(
-                    [element.name for element in field.value if element.name]) if field.value else "No value"
+                    [element.name for element in field.value if element.name])\
+                    if field.value else "No value"
             else:
                 field_value = "No value"
 
-            # Create label for the field
-            tk.Label(container_frame, text=f"{field_name}:", font=("Arial", 10, "bold")).grid(
-                row=row_counter, column=0, sticky='ne', padx=(0, 5))
-            self.field_value_label = tk.Label(container_frame, text=f"{field_value}", font=(
-                "Arial", 10), wraplength=250, justify="left")
+            tk.Label(
+                container_frame,
+                text=f"{field_name}:",
+                font=("Arial", 10, "bold")) \
+                .grid(row=row_counter, column=0, sticky='ne', padx=(0, 5))
+            self.field_value_label = tk.Label(
+                container_frame,
+                text=f"{field_value}",
+                font=("Arial", 10), wraplength=250, justify="left")
             self.field_value_label.grid(row=row_counter, column=1, sticky='nw')
             row_counter += 1

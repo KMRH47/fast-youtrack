@@ -1,14 +1,14 @@
 from dataclasses import Field
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
 
 
 class IssueUpdateRequest(BaseModel):
-    summary: str
-    description: str
-    usesMarkdown: bool
-    markdownEmbeddings: List
-    fields: List[Field]
+    summary: Optional[str]
+    description: Optional[str]
+    usesMarkdown: Optional[bool]
+    markdownEmbeddings: List = []
+    fields: Optional[List[Field]] = None
 
     class Config:
-        extra = "forbid"
+        arbitrary_types_allowed = True

@@ -46,7 +46,8 @@ class EnumBundleElement(WorkItem):
 
 class CustomField(WorkItem):
     projectCustomField: Optional[ProjectCustomField] = None
-    value: Optional[Union[EnumBundleElement, List[EnumBundleElement], None]] = None
+    value: Optional[Union[EnumBundleElement,
+                          List[EnumBundleElement], None]] = None
 
 
 class IssueWatchers(WorkItem):

@@ -8,4 +8,6 @@ class WorkItem(BaseModel):
     type_: Optional[str] = Field(None, alias='$type')
 
 
-YoutrackResponseField = Literal["State", "Priority", "Type", "Assignee", "Fix versions", "Affected versions"]
+YoutrackResponseField = Literal["State", "Priority",
+                                "Type", "Assignee",
+                                "Fix versions", "Affected versions"]

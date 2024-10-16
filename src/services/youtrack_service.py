@@ -5,9 +5,9 @@ from typing import List, Literal, Optional
 from repositories.file_manager import FileManager
 from services.http_service import HttpService
 from models.work_item_response import WorkItemResponse
-from models.issue_update_request import IssueUpdateRequest
 from models.general_responses import Issue, Project, StateBundleElement, User
 from constants.youtrack_queries import issue_query, bundle_query
+from models.general_requests import IssueUpdateRequest
 
 
 logger = logging.getLogger(__name__)
@@ -20,7 +20,11 @@ class YouTrackService:
         self.__bearer_token = bearer_token
         self.__file_manager = FileManager(base_dir)
 
-    def _request(self, endpoint: str, fields: str | None = None, method: Literal['get', 'post'] = 'get', json: Optional[dict] = None) -> dict:
+    def _request(self,
+                 endpoint: str,
+                 fields: str | None = None,
+                 method: Literal['get', 'post'] = 'get',
+                 json: Optional[dict] = None) -> dict:
         http_method = getattr(self.__http_service, method)
 
         request_body = {
@@ -60,7 +64,8 @@ class YouTrackService:
         config = self.__file_manager.read_json("config")
 
         if "workItemTypes" in config:
-            return [WorkItemResponse(**item) for item in config["workItemTypes"]]
+            return [WorkItemResponse(**item) for item in
+                    config["workItemTypes"]]
 
         response: List[dict] = self._request(
             endpoint="admin/timeTrackingSettings/workItemTypes",
@@ -75,7 +80,9 @@ class YouTrackService:
 
         return work_item_responses
 
-    def update_issue(self, issue_id: str, issue_update_request: IssueUpdateRequest) -> None:
+    def update_issue(self,
+                     issue_id: str,
+                     issue_update_request: IssueUpdateRequest) -> None:
         try:
             updated_issue: dict = self._request(
                 method="post",

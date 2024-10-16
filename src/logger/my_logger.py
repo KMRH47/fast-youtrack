@@ -4,7 +4,8 @@ import os
 
 def setup_logger(log_dir="logs", log_file="log.txt"):
     """
-    Sets up logger configuration. Ensures log directory exists and logs to a file in the project root.
+    Sets up logger configuration.
+    Ensures log directory exists and logs to a file in the project root.
     """
     project_root = os.path.abspath(os.path.join(
         os.path.dirname(__file__), '..', '..'))

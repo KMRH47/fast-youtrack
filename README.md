@@ -2,9 +2,9 @@
 Speed up your workflow with YouTrack
 
 ## Getting Started
-Run `run.sh`
+Run `run.bat`
 
 📁 ./
 ```shell
-./run.sh
+./run.bat
 ```

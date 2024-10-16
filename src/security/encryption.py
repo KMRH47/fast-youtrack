@@ -22,7 +22,8 @@ class EncryptionService:
         """
         Initialize the encryption service.
 
-        :param passphrase: The passphrase provided by the user. Used to derive the encryption key.
+        :param passphrase: The passphrase provided by the user.
+        Used to derive the encryption key.
         """
         self.key = self.derive_key(passphrase)
 
@@ -67,7 +68,9 @@ class EncryptionService:
             return aesgcm.decrypt(nonce, encrypted_value, None).decode()
         except InvalidTag as e:
             raise UserError(
-                "Invalid passphrase. Please delete the associated '.key' file and try again.") from e
+                "Invalid passphrase. Please delete the associated \
+                  '.key' file and try again.") from e
         except binascii.Error as e:
             raise UserError(
-                "Invalid token. Please delete the associated '.token' file and try again.") from e
+                "Invalid token. Please delete the associated \
+                  '.token' file and try again.") from e

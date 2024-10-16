@@ -13,7 +13,9 @@ class BearerTokenService:
         """
         Initialize the TokenService.
 
-        :param passphrase: The passphrase provided by the user. Used to derive the encryption key.
+        :param passphrase: The passphrase provided by the user.
+        Used to derive the encryption key.
+
         :param subdomain: The YouTrack subdomain provided by the user.
         """
 
@@ -31,7 +33,8 @@ class BearerTokenService:
 
     def prompt_for_bearer_token(self) -> str:
         """
-        Opens a prompt for the user to input their YouTrack subdomain and bearer token.
+        Opens a prompt for the user to input their
+        YouTrack subdomain and bearer token.
         """
 
         bearer_token = display_bearer_token_prompt()
@@ -39,7 +42,8 @@ class BearerTokenService:
         if not bearer_token:
             raise UserCancelledError("User cancelled input. Exiting...")
 
-        encrypted_bearer_token = self.__encryption_service.encrypt(bearer_token)
+        encrypted_bearer_token = self.__encryption_service.encrypt(
+            bearer_token)
         self.__file_manager.write_data(encrypted_bearer_token, self.file_name)
 
         return bearer_token
