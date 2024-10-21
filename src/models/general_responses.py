@@ -275,7 +275,7 @@ class BuildProjectCustomField(WorkItem):
 
 
 class MultiBuildIssueCustomField(WorkItem):
-    value: Optional[List] = None
+    value: Optional[List] = None    
     projectCustomField: Optional[BuildProjectCustomField] = None
     isUpdatable: Optional[bool] = None
     searchResults: Optional[List] = None

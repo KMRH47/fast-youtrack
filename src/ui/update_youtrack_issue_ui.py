@@ -12,7 +12,7 @@ from errors.user_cancelled_error import UserCancelledError
 from models.general_responses import Issue, StateBundleElement
 from models.issue_states import BundleEnums
 from models.general_requests import IssueUpdateRequest
-from ui.issue_viewer import IssueViewer
+from ui.issue_viewer import IssueView
 
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ class IssueUpdateRequestUI:
         self.__cancelled = True
         self.__issue: Issue | None = None
         self.__issue_update_request: IssueUpdateRequest | None = None
-        self.__issue_view: IssueViewer | None = None
+        self.__issue_viewer: IssueView | None = None
         self.__start_time = time.time()
 
         # Window size and position
@@ -125,7 +125,9 @@ class IssueUpdateRequestUI:
 
         logger.info("Prompting for issue update request...")
 
-        self.__issue_view = IssueViewer(self.root, self.__issue)
+        self.__issue_viewer = IssueView(self.root)
+        self.__issue_viewer.show()
+
         self._update_elapsed_time()
         self.root.mainloop()
 
@@ -149,10 +151,8 @@ class IssueUpdateRequestUI:
             self.__issue = self.__youtrack_service.get_issue(issue_id)
             _get_issue_state = self._get_issue_state()
             self.selected_issue_state_var.set(_get_issue_state)
-            if self.__issue_view:
-                self.__issue_view.update_issue(self.__issue)
-            else:
-                self.__issue_view = IssueViewer(self.root, self.__issue)
+            if self.__issue_viewer:
+                self.__issue_viewer.update_issue(self.__issue)
 
         self.debounce_id = self.root.after(random.randint(253, 333), debounce)
 
@@ -253,20 +253,46 @@ class IssueUpdateRequestUI:
     def _on_submit(self):
         try:
             self.__cancelled = False
-
-
-
+    
             logger.info("Validating issue update request...")
-
+    
+            # Create the base update request using the issue response
             self.__issue_update_request = IssueUpdateRequest(
-                fields=[]
+                summary=self.__issue.summary,  # Use the current summary from the issue response
+                description=self.__issue.description,  # Use the current description from the issue response
+                fields=[],  # We will populate this with updated fields later
+                markdownEmbeddings=[],  # UI data for markdown embeddings (assuming this is UI input)
+                usesMarkdown=True  # UI input (assuming this is a toggle or similar in the UI)
             )
+    
+            # Handling the fields: use the response data to keep fields in sync
+            for field in self.__issue.fields:
+                # Here we could have logic to check if fields were updated in the UI
+                updated_field_value = self.get_field_value_from_ui(field.id)  # This is a placeholder method
+    
+                if updated_field_value:
+                    # Override the field value from the UI
+                    field.value.name = updated_field_value
+    
+                # Append the field to the update request's fields
+                self.__issue_update_request.fields.append(field)
+    
             logger.info("Valid issue update request.")
             self.root.destroy()
+    
         except Exception as e:
-            logger.error("Error submitting issue.")
+            logger.error(f"Error submitting issue: {e}")
             self.root.destroy()
             raise e
+
+
+    def get_field_value_from_ui(self, field_id):
+        # Example logic to get the value of a field from the UI by field id
+        if field_id == '130-2':  # Let's say this is the field for state
+            return self.ui_state_input.get()  # Fetch the value from a UI field
+        # Add additional field checks as necessary
+        return None  # Return None if no update is found in the UI for the field
+
 
 
 def issue_id_valid(issue_id: str) -> bool:
