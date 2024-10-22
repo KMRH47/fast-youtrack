@@ -36,14 +36,12 @@ def main():
         bearer_token=bearer_token,
         base_dir=base_dir)
 
-    issue_update_ui = IssueUpdateRequestUI(youtrack_service)
+    update_request = IssueUpdateRequestUI(youtrack_service).show("DEMO-31")
 
     # Test Updating Issue
-    issue_update_request, issue_id = issue_update_ui.prompt("DEMO-31")
-
-    logger.info(f"Updating issue {issue_id} with request:")
-    logger.info(issue_update_request)
-    youtrack_service.update_issue(issue_id, issue_update_request)
+    #logger.info(f"Updating issue {issue_id} with request:")
+    #logger.info(issue_update_request)
+    #youtrack_service.update_issue(issue_id, issue_update_request)
 
 
 if __name__ == "__main__":

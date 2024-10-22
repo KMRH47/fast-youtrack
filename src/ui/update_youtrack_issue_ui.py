@@ -12,6 +12,8 @@ from errors.user_cancelled_error import UserCancelledError
 from models.general_responses import Issue, StateBundleElement
 from models.issue_states import BundleEnums
 from models.general_requests import IssueUpdateRequest
+from ui.custom.custom_window import CustomWindow, CustomWindowConfig
+from ui.timer_view import TimerView
 from ui.issue_viewer import IssueView
 
 
@@ -20,76 +22,22 @@ logger = logging.getLogger(__name__)
 
 class IssueUpdateRequestUI:
     def __init__(self, youtrack_service: YouTrackService):
-        self.root = tk.Tk()
-        self.root.title("Update YouTrack Issue")
-        self.root.attributes('-topmost', True)
+        self.__window = CustomWindow(
+            config=CustomWindowConfig(width=300, height=325, title="Update YouTrack Issue", topmost=True))
         self.__youtrack_service = youtrack_service
         self.__cancelled = True
         self.__issue: Issue | None = None
         self.__issue_update_request: IssueUpdateRequest | None = None
-        self.__issue_viewer: IssueView | None = None
-        self.__start_time = time.time()
+        self.__issue_viewer = IssueView(self.__window)
+        self.__timer_view = TimerView(self.__window)
 
-        # Window size and position
-        window_width = 300
-        window_height = 325
-        position_right = int(
-            self.root.winfo_screenwidth() / 2 - window_width / 2)
-        position_down = int(
-            self.root.winfo_screenheight() / 2 - window_height / 2)
-        self.root.geometry(
-            f"{window_width}x{window_height}+{position_right}+{position_down}")
-        self.root.resizable(False, False)
-
-    def prompt(self,
-               issue_id: str = "") -> Tuple[Optional[IssueUpdateRequest], str]:
-        # Bind "Escape" key to close the window
-        self.root.bind("<Escape>", self._on_cancel)
-        self.root.bind("<Return>", self._on_submit)
-
-        # Issue ID
-        self.debounce_id = None
-        tk.Label(self.root, text="Issue ID:").pack(
-            anchor='w', padx=10, pady=5)
-
-        # Create a StringVar to monitor changes
-        self.issue_id_var = tk.StringVar()
-
-        # Bind the change of the variable with a debounced function
-        self.issue_id_var.trace_add(['write'], self._on_issue_id_changed)
-        self.issue_id_var.set(issue_id)
-
-        self.issue_id_entry = tk.Entry(
-            self.root, textvariable=self.issue_id_var)
-        self.issue_id_entry.pack(
-            anchor='w', padx=10, fill='x', expand=True)
-        self.issue_id_entry.icursor(tk.END)
-        self.issue_id_entry.focus_force()
-
-        # Enter Time
-        tk.Label(self.root, text="Enter Time (e.g., 1h30m):").pack(
-            anchor='w', padx=10)
-        self.time_entry = tk.Entry(self.root)
-        self.time_entry.pack(anchor='w', padx=10, fill='x', expand=True)
-
-        # Description
-        tk.Label(self.root, text="Description:").pack(anchor='w', padx=10)
-        self.description_entry = tk.Entry(self.root)
-        self.description_entry.pack(
-            anchor='w', padx=10, pady=5, fill='x', expand=True)
-
-        # Type
-        tk.Label(self.root, text="Type:").pack(anchor='w', padx=10)
-        self.type_entry = tk.Entry(self.root)
-        self.type_entry.pack(anchor='w', padx=10, pady=5,
-                             fill='x', expand=True)
-
+    def show(self, issue_id: str = "") -> Tuple[Optional[IssueUpdateRequest], str]:
         # Issue State ComboBox
-        tk.Label(self.root, text="Current State:").pack(
+        tk.Label(self.__window, text="Current State:").pack(
             anchor='w', padx=10)
         self.selected_issue_state_var = tk.StringVar()
         self.issue_state_combobox = ttk.Combobox(
-            self.root,
+            self.__window,
             values=self._get_available_issue_states(),
             textvariable=self.selected_issue_state_var)
         self.issue_state_combobox.pack(
@@ -99,48 +47,34 @@ class IssueUpdateRequestUI:
         self.issue_state_combobox.bind(
             '<KeyRelease>', self._on_issue_state_change)
 
-        # Elapsed Time
-        self.elapsed_time_label = tk.Label(
-            self.root, text="Elapsed Time: 00:00:00")
-        self.elapsed_time_label.pack(padx=10, fill='x', pady=5)
-        self.elapsed_time_label.config(anchor='center')
-
         # OK Button
-        ok_button = tk.Button(self.root, text="OK",
+        ok_button = tk.Button(self.__window, text="OK",
                               command=self._on_submit, width=10)
         ok_button.pack(pady=5)
 
-        # Bind Control-BackSpace for deleting words
-        self.issue_id_entry.bind(
-            '<Control-BackSpace>',
-            lambda event: self._delete_word(event, ['-']))
-        self.time_entry.bind(
-            '<Control-BackSpace>',
-            lambda event: self._delete_word(event, ['d', 'h', 'm']))
-        self.description_entry.bind(
-            '<Control-BackSpace>',
-            lambda event: self._delete_word(event, []))
-        self.type_entry.bind('<Control-BackSpace>',
-                             lambda event: self._delete_word(event, []))
-
         logger.info("Prompting for issue update request...")
 
-        self.__issue_viewer = IssueView(self.root)
-        self.__issue_viewer.show()
+        # Test Attach
+# Test Attach
+        timer_view = self.__timer_view.show()  # Now timer_view is a TimerView object
+        issue_view = self.__issue_viewer.show()  # issue_view is an IssueView object
 
-        self._update_elapsed_time()
-        self.root.mainloop()
+        # Attach the windows using the TimerView and IssueView objects
+        self.__window.attach_window(timer_view.get_window(), position="top")
+
+
+        self.__window.mainloop()
 
         if self.__cancelled:
             raise UserCancelledError()
-        
+
         logger.info("issue update request: %s", self.__issue_update_request)
 
         return self.__issue_update_request, self.issue_id_var.get()
 
     def _on_issue_id_changed(self, *args):
         if self.debounce_id is not None:
-            self.root.after_cancel(self.debounce_id)
+            self.__window.after_cancel(self.debounce_id)
 
         issue_id = self.issue_id_var.get()
 
@@ -154,10 +88,11 @@ class IssueUpdateRequestUI:
             if self.__issue_viewer:
                 self.__issue_viewer.update_issue(self.__issue)
 
-        self.debounce_id = self.root.after(random.randint(253, 333), debounce)
+        self.debounce_id = self.__window.after(
+            random.randint(253, 333), debounce)
 
     def _on_cancel(self, event=None):
-        self.root.destroy()
+        self.__window.destroy()
 
     def _get_issue_state(self) -> str:
         for field in self.__issue.fields:
@@ -172,7 +107,7 @@ class IssueUpdateRequestUI:
 
     def _on_issue_state_change(self, event):
         if self.debounce_id:
-            self.root.after_cancel(self.debounce_id)
+            self.__window.after_cancel(self.debounce_id)
 
         def debounce():
             if not self._state_valid():
@@ -182,29 +117,8 @@ class IssueUpdateRequestUI:
             self.issue_state_combobox['values'] = \
                 self._get_available_issue_states()
 
-        self.debounce_id = self.root.after(random.randint(253, 333), debounce)
-
-    def _delete_word(self, event, stopping_chars: List[str]):
-        entry: tk.Entry = event.widget
-        cursor_pos = entry.index(tk.INSERT)
-
-        if not stopping_chars:
-            entry.delete(0, cursor_pos)
-            return "break"
-
-        pattern = f"[{''.join(map(re.escape, stopping_chars))}]"
-        text_up_to_cursor = entry.get()[:cursor_pos]
-
-        last_stop_index = -1
-        match = re.finditer(pattern, text_up_to_cursor)
-
-        for m in match:
-            if m.end() == cursor_pos:
-                continue
-            last_stop_index = m.start()
-
-        entry.delete(last_stop_index + 1, cursor_pos)
-        return "break"
+        self.debounce_id = self.__window.after(
+            random.randint(253, 333), debounce)
 
     def _apply_error_style(self, widget):
         """Apply error styling to a widget."""
@@ -230,61 +144,44 @@ class IssueUpdateRequestUI:
         duration_minutes = self._convert_time_to_minutes(time_entry_text)
         return duration_minutes is not None
 
-    def _update_elapsed_time(self):
-        elapsed = int(time.time() - self.__start_time)
-        hours, remainder = divmod(elapsed, 3600)
-        minutes, seconds = divmod(remainder, 60)
-        time_string = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
-        self.elapsed_time_label.config(text=f"Elapsed Time: {time_string}")
-        self.root.after(1000, self._update_elapsed_time)
-
-    def _convert_time_to_minutes(self, time_str: str) -> int | None:
-        def extract_time(unit: str) -> int:
-            match = re.search(rf"(\d+){unit}", time_str.strip())
-            return int(match.group(1)) if match else 0
-
-        days_in_minutes = extract_time('d') * 24 * 60
-        hours_in_minutes = extract_time('h') * 60
-
-        total_minutes = days_in_minutes + hours_in_minutes + extract_time('m')
-
-        return total_minutes if total_minutes > 0 else None
-
     def _on_submit(self):
         try:
             self.__cancelled = False
-    
+
             logger.info("Validating issue update request...")
-    
+
             # Create the base update request using the issue response
             self.__issue_update_request = IssueUpdateRequest(
                 summary=self.__issue.summary,  # Use the current summary from the issue response
-                description=self.__issue.description,  # Use the current description from the issue response
+                # Use the current description from the issue response
+                description=self.__issue.description,
                 fields=[],  # We will populate this with updated fields later
-                markdownEmbeddings=[],  # UI data for markdown embeddings (assuming this is UI input)
-                usesMarkdown=True  # UI input (assuming this is a toggle or similar in the UI)
+                # UI data for markdown embeddings (assuming this is UI input)
+                markdownEmbeddings=[],
+                # UI input (assuming this is a toggle or similar in the UI)
+                usesMarkdown=True
             )
-    
+
             # Handling the fields: use the response data to keep fields in sync
             for field in self.__issue.fields:
                 # Here we could have logic to check if fields were updated in the UI
-                updated_field_value = self.get_field_value_from_ui(field.id)  # This is a placeholder method
-    
+                updated_field_value = self.get_field_value_from_ui(
+                    field.id)  # This is a placeholder method
+
                 if updated_field_value:
                     # Override the field value from the UI
                     field.value.name = updated_field_value
-    
+
                 # Append the field to the update request's fields
                 self.__issue_update_request.fields.append(field)
-    
+
             logger.info("Valid issue update request.")
-            self.root.destroy()
-    
+            self.__window.destroy()
+
         except Exception as e:
             logger.error(f"Error submitting issue: {e}")
-            self.root.destroy()
+            self.__window.destroy()
             raise e
-
 
     def get_field_value_from_ui(self, field_id):
         # Example logic to get the value of a field from the UI by field id
@@ -292,8 +189,3 @@ class IssueUpdateRequestUI:
             return self.ui_state_input.get()  # Fetch the value from a UI field
         # Add additional field checks as necessary
         return None  # Return None if no update is found in the UI for the field
-
-
-
-def issue_id_valid(issue_id: str) -> bool:
-    return re.match(r"^[A-Za-z]+-\d+$", issue_id)

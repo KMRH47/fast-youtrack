@@ -22,3 +22,12 @@ class IssueUpdateRequest(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
+
+class AddSpentTimeRequest(BaseModel):
+    duration: Optional[int] = None
+    description: Optional[str] = None
+    type: Optional[str] = None
+
+
+    class Config:
+        arbitrary_types_allowed = True

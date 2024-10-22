@@ -2,17 +2,19 @@ import logging
 import time
 import tkinter as tk
 
+from ui.custom.window_attach_mixin import WindowAttachMixin
+
 logger = logging.getLogger(__name__)
 
 
-class TimerView:
-    def __init__(self, parent_window: tk.Tk):
+class TimerView(WindowAttachMixin):
+    def __init__(self, parent_window: tk.Toplevel):
         self.__parent_window = parent_window
         self.__window = None
         self.__start_time = None
         self.__timer_label = None
 
-    def show(self):
+    def show(self) -> "TimerView":  # Return TimerView instead of Toplevel
         """Initialize and display the Timer window when called."""
         if self.__window is None:
             self.__window = tk.Toplevel(self.__parent_window)
@@ -33,6 +35,11 @@ class TimerView:
         # Start the timer when the window is displayed
         self.__start_time = int(time.time())
         self._update_elapsed_time()
+        return self  # Return TimerView object, not just Toplevel
+
+    def get_window(self):
+        """Expose the underlying Toplevel window if needed."""
+        return self.__window
 
     def _initialize_timer_ui(self):
         """Initialize the Toplevel window for displaying the timer."""
