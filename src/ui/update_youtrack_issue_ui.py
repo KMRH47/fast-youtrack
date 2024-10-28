@@ -62,7 +62,6 @@ class IssueUpdateRequestUI:
         # Attach the windows using the TimerView and IssueView objects
         self.__window.attach_window(timer_view.get_window(), position="top")
 
-
         self.__window.mainloop()
 
         if self.__cancelled:

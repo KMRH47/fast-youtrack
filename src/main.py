@@ -5,6 +5,7 @@ import traceback
 import requests
 
 from errors.user_cancelled_error import UserCancelledError
+from ui.add_spent_time_to_issue_ui import AddSpentTimeToIssueUI
 from ui.update_youtrack_issue_ui import IssueUpdateRequestUI
 from errors.user_error import UserError
 from services.youtrack_service import YouTrackService
@@ -36,7 +37,9 @@ def main():
         bearer_token=bearer_token,
         base_dir=base_dir)
 
-    update_request = IssueUpdateRequestUI(youtrack_service).show("DEMO-31")
+    # update_request = IssueUpdateRequestUI(youtrack_service).show("DEMO-31")
+
+    asd = AddSpentTimeToIssueUI(youtrack_service).show("DEMO-31")
 
     # Test Updating Issue
     #logger.info(f"Updating issue {issue_id} with request:")

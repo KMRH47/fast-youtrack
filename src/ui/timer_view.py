@@ -1,77 +1,97 @@
 import logging
 import time
 import tkinter as tk
+from typing import Optional
 
-from ui.custom.window_attach_mixin import WindowAttachMixin
+from ui.custom.custom_toplevel import CustomTopLevel
 
 logger = logging.getLogger(__name__)
 
 
-class TimerView(WindowAttachMixin):
-    def __init__(self, parent_window: tk.Toplevel):
-        self.__parent_window = parent_window
-        self.__window = None
-        self.__start_time = None
-        self.__timer_label = None
+class TimerView(CustomTopLevel):
+    """
+    A window that displays an elapsed time counter.
+    Inherits window management functionality from BaseTopLevelView.
+    """
 
-    def show(self) -> "TimerView":  # Return TimerView instead of Toplevel
-        """Initialize and display the Timer window when called."""
-        if self.__window is None:
-            self.__window = tk.Toplevel(self.__parent_window)
-            self.__window.title("Elapsed Time")
-            self.__window.wm_attributes('-topmost', True)
-            self.__window.wm_attributes('-disabled', True)
-            self.__window.bind("<FocusIn>", self._on_focus_in)
-            self._bind_window_movement()
+    def __init__(self, parent_window: tk.Tk):
+        super().__init__(parent_window, title="Elapsed Time", topmost=True)
+        self.__start_time: Optional[int] = None
+        self.__timer_label: Optional[tk.Label] = None
+        self.__update_job: Optional[str] = None
 
-            self._initialize_timer_ui()
+    def _build_ui(self) -> None:
+        """Build the timer UI elements."""
+        window = self.get_window()
+        if not window:
+            return
 
-        # Show the window and update its position
-        self.__window.transient(self.__parent_window)
-        self.__window.deiconify()
-        self.__window.update_idletasks()
-        self._update_window_position()
-
-        # Start the timer when the window is displayed
-        self.__start_time = int(time.time())
-        self._update_elapsed_time()
-        return self  # Return TimerView object, not just Toplevel
-
-    def get_window(self):
-        """Expose the underlying Toplevel window if needed."""
-        return self.__window
-
-    def _initialize_timer_ui(self):
-        """Initialize the Toplevel window for displaying the timer."""
-        container_frame = tk.Frame(self.__window, padx=10, pady=10)
+        container_frame = tk.Frame(window, padx=10, pady=10)
         container_frame.pack(fill='both', expand=True)
 
-        self.__timer_label = tk.Label(container_frame, text="Elapsed Time: 00:00:00", font=("Arial", 14, "bold"))
+        self.__timer_label = tk.Label(
+            container_frame,
+            text="Elapsed Time: 00:00:00",
+            font=("Arial", 14, "bold")
+        )
         self.__timer_label.pack()
 
-    def _on_focus_in(self, event):
-        """Redirect focus back to the main application window when TimerViewer gains focus."""
-        self.__parent_window.focus_force()
+    def _on_show(self) -> None:
+        """
+        Override base _on_show to start the timer when window is displayed.
+        Called automatically by the base class show() method.
+        """
+        self.__start_time = int(time.time())
+        self._update_elapsed_time()
 
-    def _bind_window_movement(self):
-        """Bind the parent window's movement to follow the TimerViewer."""
-        self.__parent_window.bind("<Configure>", self._on_update_ui_moved)
-
-    def _on_update_ui_moved(self, event):
-        """Move the TimerViewer window when the parent UI window is moved."""
-        self._update_window_position()
-
-    def _update_window_position(self):
-        """Position the TimerViewer next to the parent UI window."""
-        x = self.__parent_window.winfo_x() + self.__parent_window.winfo_width() + 10
-        y = self.__parent_window.winfo_y()
-        self.__window.geometry(f"+{x}+{y}")
-
-    def _update_elapsed_time(self):
+    def _update_elapsed_time(self) -> None:
         """Update the elapsed time label every second."""
+        if not self.__start_time or not self.__timer_label or not self.get_window():
+            return
+
         elapsed = int(time.time()) - self.__start_time
         hours, remainder = divmod(elapsed, 3600)
         minutes, seconds = divmod(remainder, 60)
         time_string = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+
         self.__timer_label.config(text=f"Elapsed Time: {time_string}")
-        self.__window.after(1000, self._update_elapsed_time)
+
+        # Schedule next update if window exists
+        window = self.get_window()
+        if window:
+            self.__update_job = window.after(1000, self._update_elapsed_time)
+
+    def reset_timer(self) -> None:
+        """Reset the timer to zero."""
+        self.__start_time = int(time.time())
+        self._update_elapsed_time()
+
+    def get_elapsed_time(self) -> int:
+        """Get the current elapsed time in seconds."""
+        if self.__start_time is None:
+            return 0
+        return int(time.time()) - self.__start_time
+
+    def destroy(self) -> None:
+        """
+        Override destroy to cancel any pending timer updates 
+        before destroying the window.
+        """
+        window = self.get_window()
+        if window and self.__update_job:
+            window.after_cancel(self.__update_job)
+            self.__update_job = None
+
+        super().destroy()
+
+    def hide(self) -> None:
+        """
+        Override hide to cancel any pending timer updates 
+        before hiding the window.
+        """
+        window = self.get_window()
+        if window and self.__update_job:
+            window.after_cancel(self.__update_job)
+            self.__update_job = None
+
+        super().hide()

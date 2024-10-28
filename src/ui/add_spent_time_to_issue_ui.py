@@ -71,10 +71,8 @@ class AddSpentTimeToIssueUI:
 
         logger.info("Prompting for issue update request...")
 
-        timer_view = self.__timer_view.show()
-        issue_view = self.__issue_view.show()
-        self.__window.attach_window(issue_view, position="top")
-        self.__window.attach_window(timer_view, position="top")
+        self.__window.attach_window(self.__timer_view, position="top")
+        self.__window.attach_window(self.__issue_view, position="right")
 
         self.__window.mainloop()
 
