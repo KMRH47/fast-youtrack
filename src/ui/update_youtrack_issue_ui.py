@@ -14,7 +14,6 @@ from models.issue_states import BundleEnums
 from models.general_requests import IssueUpdateRequest
 from ui.custom.custom_window import CustomWindow, CustomWindowConfig
 from ui.timer_view import TimerView
-from ui.issue_viewer import IssueView
 
 
 logger = logging.getLogger(__name__)

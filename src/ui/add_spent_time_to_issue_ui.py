@@ -1,19 +1,18 @@
 import logging
+import random
 import re
-import time
 import tkinter as tk
 
-from tkinter import ttk
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 
 from services.youtrack_service import YouTrackService
 from models.general_requests import AddSpentTimeRequest, IssueUpdateRequest
 from models.general_responses import Issue
 from errors.user_cancelled_error import UserCancelledError
+from ui.timer_view import TimerView
 from ui.custom.custom_window import CustomWindow, CustomWindowConfig
 from ui.custom.custom_entry import CustomEntry, CustomEntryConfig
-from ui.issue_viewer import IssueView
-from ui.timer_view import TimerView
+from ui.issue_view import IssueView
 
 
 logger = logging.getLogger(__name__)
@@ -27,6 +26,7 @@ class AddSpentTimeToIssueUI:
         self.__youtrack_service = youtrack_service
         self.__issue: Issue | None = None
         self.__issue_update_request: IssueUpdateRequest | None = None
+        self.__debounce_id: Optional[int] = None
 
         # Intialize Read-only UIs
         self.__timer_view = TimerView(self.__window)
@@ -104,12 +104,20 @@ class AddSpentTimeToIssueUI:
             raise e
 
     def _on_issue_id_changed(self, *args):
-        id = self.__id_var.get()
+        if self.__debounce_id is not None:
+            self.__window.after_cancel(self.__debounce_id)
 
-        if not id_valid(id):
+        issue_id = self.__id_var.get()
+        if not id_valid(issue_id):
             return
 
-        self.__issue_view.update_issue(self.__issue)
+        def debounce():
+            self.__issue = self.__youtrack_service.get_issue(issue_id)
+            if self.__issue_view:
+                self.__issue_view.update_issue(self.__issue)
+
+        self.__debounce_id = self.__window.after(
+            random.randint(253, 333), debounce)
 
     def _get_issue_state(self) -> str:
         for field in self.__issue.fields:
