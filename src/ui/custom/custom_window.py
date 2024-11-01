@@ -19,7 +19,7 @@ class CustomWindowConfig:
 
 class CustomWindow(tk.Tk, WindowAttachMixin):
     def __init__(self, config: Optional[CustomWindowConfig] = None,
-                 on_cancel: Optional[Callable] = None):
+                 on_cancel: Optional[Callable] = None) -> tk.Tk:
         super().__init__()
 
         self.config = config if config is not None else CustomWindowConfig()
