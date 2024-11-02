@@ -9,9 +9,9 @@ from utils.youtrack import id_valid
 
 
 class AddSpentTimeController:
-    def __init__(self, youtrack_service: YouTrackService, issue_id: str = ""):
+    def __init__(self, template: AddSpentTimeTemplate, youtrack_service: YouTrackService):
+        self.__template = template
         self.__youtrack_service = youtrack_service
-        self.__template = AddSpentTimeTemplate(issue_id)
 
         self.__issue_view = IssueView(self.__template.get_window())
         self.__timer_view = TimerView(self.__template.get_window())

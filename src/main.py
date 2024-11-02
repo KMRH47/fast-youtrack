@@ -8,8 +8,9 @@ logger = logging.getLogger(__name__)
 
 try:
     import requests
-    from errors.user_cancelled_error import UserCancelledError
+    from ui.add_spent_time.add_spent_time_template import AddSpentTimeTemplate
     from ui.add_spent_time.add_spent_time_controller import AddSpentTimeController
+    from errors.user_cancelled_error import UserCancelledError
     from errors.user_error import UserError
     from services.youtrack_service import YouTrackService
     from services.bearer_token_service import BearerTokenService
@@ -40,10 +41,10 @@ def main():
         bearer_token=bearer_token,
         base_dir=base_dir)
 
-    # update_request = IssueUpdateRequestUI(youtrack_service).show("DEMO-31")
-
     issue_id, add_spent_time_request = AddSpentTimeController(
-        youtrack_service, "DEMO-31").show()
+        AddSpentTimeTemplate("DEMO-31"),
+        youtrack_service).show()
+    
     logger.info("Issue ID: " + issue_id)
     logger.info("Add Time Request: " + str(add_spent_time_request))
 
