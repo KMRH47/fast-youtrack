@@ -9,6 +9,7 @@ from services.youtrack_service import YouTrackService
 from models.general_requests import AddSpentTimeRequest, IssueUpdateRequest
 from models.general_responses import Issue
 from errors.user_cancelled_error import UserCancelledError
+from ui.custom.custom_window_config import KeyAction
 from ui.timer_view import TimerView
 from ui.custom.custom_window import CustomWindow, CustomWindowConfig
 from ui.custom.custom_entry import CustomEntry, CustomEntryConfig
@@ -21,7 +22,11 @@ logger = logging.getLogger(__name__)
 class AddSpentTimeToIssueUI:
     def __init__(self, youtrack_service: YouTrackService):
         self.__window = CustomWindow(config=CustomWindowConfig(
-            width=300, height=325, title="Add Spent Time", topmost=True, close_on_cancel=True))
+            width=300, height=325,
+            title="Add Spent Time",
+            topmost=True,
+            destroy_action=KeyAction('Escape'),
+            submit_action=KeyAction('Return', action=self._on_submit)))
         self.__cancelled = True
         self.__youtrack_service = youtrack_service
         self.__issue: Issue | None = None
@@ -33,8 +38,6 @@ class AddSpentTimeToIssueUI:
         self.__issue_view = IssueView(self.__window)
 
     def show(self, id: str = "") -> Tuple[Optional[IssueUpdateRequest], str]:
-        self.__window.bind("<Return>", self._on_submit)
-
         # ID Text
         tk.Label(self.__window, text="Issue ID:").pack(
             anchor='w', padx=10, pady=5)
@@ -87,7 +90,6 @@ class AddSpentTimeToIssueUI:
     def _on_submit(self, event=None):
         try:
             self.__cancelled = False
-
             logger.info("Validating issue update request...")
 
             self.__issue_update_request = AddSpentTimeRequest(
@@ -95,13 +97,9 @@ class AddSpentTimeToIssueUI:
                 time=self.__time_entry.get(),
                 type=self.__type_entry.get(),
             )
-
-            self.__window.destroy()
-
         except Exception as e:
             logger.error(
                 f"Error adding spent time to issue: {self.__id_var.get()}")
-            self.__window.destroy()
             raise e
 
     def _on_issue_id_changed(self, *args):
