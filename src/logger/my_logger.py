@@ -1,5 +1,5 @@
-import logging
 import os
+import logging
 
 
 def setup_logger(log_dir="logs", log_file="log.txt"):

@@ -15,7 +15,7 @@ class CustomTopLevel(ABC):
 
     def show(self) -> None:
         if self._window is None:
-            self._create_window()  # Ensure window is created immediately
+            self._create_window()
         self._window.transient(self._parent_window)
         self._window.deiconify()
         self._window.update_idletasks()

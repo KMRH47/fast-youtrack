@@ -1,10 +1,9 @@
 import tkinter as tk
 import re
-from typing import List
 
 class CustomEntryConfig:
     """Configuration object for CustomEntry."""
-    def __init__(self, break_chars: List[str] = None):
+    def __init__(self, break_chars: list[str] = None):
         self.break_chars = break_chars if break_chars is not None else []
 
 class CustomEntry(tk.Entry):
@@ -16,7 +15,7 @@ class CustomEntry(tk.Entry):
     def _on_control_backspace(self, event):
         return self._delete_word(event, self.config.break_chars)
 
-    def _delete_word(self, event, stopping_chars: List[str]):
+    def _delete_word(self, event, stopping_chars: list[str]):
         cursor_pos = self.index(tk.INSERT)
 
         if not stopping_chars:
