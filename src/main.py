@@ -19,7 +19,7 @@ except Exception as e:
 
 
 def main():
-    logger.info("Starting YouTrack CLI...")
+    logger.info("Starting FastYouTrack...")
     passphrase = sys.argv[1] if len(sys.argv) > 1 else None
     subdomain = sys.argv[2] if len(sys.argv) > 2 else None
 

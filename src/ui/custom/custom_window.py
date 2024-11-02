@@ -19,12 +19,10 @@ class CustomWindow(tk.Tk, CustomWindowAttachMixin):
         self.title(self.config.title)
         self.attributes('-topmost', self.config.topmost)
 
-        self.on_destroy = config.destroy_action.action
-        self.on_submit = config.submit_action.action
-        self.config.destroy_action.key and self.bind(
-            f"<{self.config.destroy_action.key}>", self._destroy_on_action)
-        self.config.submit_action.key and self.bind(
-            f"<{self.config.submit_action.key}>", self._submit_on_action)
+        self.config.cancel_key and self.bind(
+            f"<{self.config.cancel_key}>", self._destroy)
+        self.config.submit_key and self.bind(
+            f"<{self.config.submit_key}>", self._submit)
 
         self._set_window_geometry()
 
@@ -45,18 +43,9 @@ class CustomWindow(tk.Tk, CustomWindowAttachMixin):
         pos_down = int(self.winfo_screenheight() / 2 - height / 2)
         self.geometry(f"{width}x{height}+{pos_right}+{pos_down}")
 
-    def _destroy_on_action(self, event=None):
-        if self.config.destroy_action is None:
-            return
-        if self.on_destroy is not None:
-            self.on_destroy()
-            return
+    def _destroy(self, event=None):
         self.destroy()
 
-    def _submit_on_action(self, event=None):
+    def _submit(self, event=None):
         self.__cancelled = False
-        if self.config.submit_action is None:
-            return
-        if self.on_submit is not None:
-            self.on_submit()
-        self.destroy()
+        self._destroy()
