@@ -11,8 +11,8 @@ class AttachedCustomTopLevel(BaseModel):
         arbitrary_types_allowed = True
 
 
-class WindowAttachMixin:
-    """Mixin that provides attach_top_level functionality for any Tkinter window."""
+class CustomWindowAttachMixin:
+    """Mixin that it possible to attach any Tkinter window to the left, top, right or bottom of other Tkinter windows."""
 
     def __init__(self):
         super().__init__()

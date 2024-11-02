@@ -4,15 +4,15 @@ from typing import Optional
 
 from errors.user_cancelled_error import UserCancelledError
 from ui.custom.custom_window_config import CustomWindowConfig
-from ui.custom.window_attach_mixin import WindowAttachMixin
+from ui.custom.custom_window_attach_mixin import CustomWindowAttachMixin
 
 logger = logging.getLogger(__name__)
 
 
-class CustomWindow(tk.Tk, WindowAttachMixin):
+class CustomWindow(tk.Tk, CustomWindowAttachMixin):
     def __init__(self, config: Optional[CustomWindowConfig] = None) -> tk.Tk:
         super().__init__()
-        WindowAttachMixin.__init__(self)
+        CustomWindowAttachMixin.__init__(self)
 
         self.__cancelled = True
         self.config = config if config is not None else CustomWindowConfig()
