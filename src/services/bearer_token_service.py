@@ -1,27 +1,25 @@
+import logging
+
 from security.encryption import EncryptionService
 from errors.user_cancelled_error import UserCancelledError
 from repositories.file_manager import FileManager
 from ui.token_ui import display_bearer_token_prompt
-import logging
 
 
 logger = logging.getLogger(__name__)
 
-
 class BearerTokenService:
-    def __init__(self, base_dir: str, passphrase: str):
+    def __init__(self, file_manager: FileManager, encryption_service: EncryptionService, token_file_name: str):
         """
         Initialize the TokenService.
 
-        :param passphrase: The passphrase provided by the user.
-        Used to derive the encryption key.
-
-        :param subdomain: The YouTrack subdomain provided by the user.
+        :param file_manager: The file manager for reading and writing token data.
+        :param encryption_service: The encryption service for encrypting and decrypting tokens.
+        :param token_file_name: The name of the file where the token is stored.
         """
-
-        self.__file_manager = FileManager(base_dir)
-        self.__encryption_service = EncryptionService(passphrase)
-        self.file_name = ".token"
+        self.__file_manager = file_manager
+        self.__encryption_service = encryption_service
+        self.file_name = token_file_name
 
     def get_bearer_token(self) -> str | None:
         encrypted_bearer_token = self.__file_manager.read_data(self.file_name)

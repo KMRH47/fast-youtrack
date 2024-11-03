@@ -1,6 +1,7 @@
 from typing import Literal
 from pydantic import BaseModel
 from ui.custom.custom_toplevel import CustomTopLevel
+import tkinter as tk
 
 
 class AttachedCustomTopLevel(BaseModel):
@@ -38,9 +39,9 @@ class CustomWindowAttachMixin:
             other_window = same_position_windows[i].top_level.get_window()
             other_window.update_idletasks()
             if attached_top_level.position in ["top", "bottom"]:
-                offset += other_window.winfo_width()  # Use width for horizontal stacking
+                offset += other_window.winfo_width()
             elif attached_top_level.position in ["left", "right"]:
-                offset += other_window.winfo_height()  # Use height for vertical stacking
+                offset += other_window.winfo_height()
         return offset
 
     def _update_position(self, attached_top_level: AttachedCustomTopLevel):
@@ -83,11 +84,10 @@ class CustomWindowAttachMixin:
         self.bind("<Configure>", lambda event,
                   atl=attached_top_level: self._update_position(atl), add='+')
 
-    def show_all_attached_windows(self):
+    def show_all_attached_windows(self, parent_window: tk.Tk):
         """Show and position all attached windows."""
         for attached_top_level in self._attached_top_levels:
-            self._update_position(attached_top_level)
-            attached_top_level.top_level.show()
+            attached_top_level.top_level.show(parent_window)
             self._bind_update_position(attached_top_level)
 
     def hide_all_attached_windows(self):

@@ -29,7 +29,9 @@ class CustomWindow(tk.Tk, CustomWindowAttachMixin):
         self.resizable(self.config.resizable, self.config.resizable)
 
     def show(self):
-        self.show_all_attached_windows()
+        self.deiconify()
+        self.update_idletasks()
+        self.show_all_attached_windows(self)
         self.mainloop()
 
         if self.__cancelled:

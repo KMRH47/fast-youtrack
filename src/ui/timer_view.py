@@ -3,6 +3,7 @@ import time
 import tkinter as tk
 from typing import Optional
 
+from ui.custom.custom_window_config import CustomWindowConfig
 from ui.custom.custom_toplevel import CustomTopLevel
 
 logger = logging.getLogger(__name__)
@@ -14,8 +15,8 @@ class TimerView(CustomTopLevel):
     Inherits window management functionality from BaseTopLevelView.
     """
 
-    def __init__(self, parent_window: tk.Tk):
-        super().__init__(parent_window, title="Elapsed Time", topmost=True)
+    def __init__(self, config: Optional[CustomWindowConfig] = None):
+        super().__init__(config)
         self.__start_time: Optional[int] = None
         self.__timer_label: Optional[tk.Label] = None
         self.__update_job: Optional[str] = None

@@ -3,14 +3,15 @@ from typing import Optional
 import logging
 
 from models.general_responses import EnumBundleElement, Issue
+from ui.custom.custom_window_config import CustomWindowConfig
 from ui.custom.custom_toplevel import CustomTopLevel
 
 logger = logging.getLogger(__name__)
 
 
 class IssueView(CustomTopLevel):
-    def __init__(self, parent_window: tk.Tk, issue: Optional[Issue] = None):
-        super().__init__(parent_window, title="Issue Viewer", topmost=True)
+    def __init__(self, issue: Optional[Issue] = None, config: Optional[CustomWindowConfig] = None):
+        super().__init__(config)
         self.__issue = issue
 
     def update_issue(self, issue: Issue) -> None:
@@ -19,6 +20,8 @@ class IssueView(CustomTopLevel):
 
         if self.get_window():
             self._build_ui()
+            self.get_window().update_idletasks()
+            self.get_window().geometry("")
 
     def _build_ui(self) -> None:
         """Build the UI for displaying issue details."""
@@ -80,7 +83,7 @@ class IssueView(CustomTopLevel):
             parent,
             text=summary_text,
             font=("Arial", 10),
-            wraplength=250,
+            wraplength=300,
             justify="left"
         )
         summary_label.grid(row=row, column=1, sticky='nw')

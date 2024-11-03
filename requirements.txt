@@ -9,3 +9,4 @@ requests
 cryptography
 pyautogui
 flake8
+dependency-injector

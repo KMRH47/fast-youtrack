@@ -1,22 +1,14 @@
 import tkinter as tk
+from typing import Optional
+
 from ui.utils.entry_utils import create_labeled_entry
 from ui.custom.custom_window import CustomWindow
-from ui.custom.custom_window_config import CustomWindowConfig
 from ui.custom.custom_entry import CustomEntryConfig
 
 
 class AddSpentTimeView:
-    def __init__(self, issue_id: str):
-        self.__window = CustomWindow(
-            config=CustomWindowConfig(
-                width=300,
-                height=325,
-                title="Add Spent Time",
-                topmost=True,
-                cancel_key='Escape',
-                submit_key='Return'
-            )
-        )
+    def __init__(self, window: CustomWindow, issue_id: Optional[str]):
+        self.__window = window
 
         # ID Entry
         self.__issue_id_var = create_labeled_entry(
@@ -53,7 +45,7 @@ class AddSpentTimeView:
             self.__window, text="OK", command=self.__window._submit, width=10)
         ok_button.pack(pady=5)
 
-    def bind_issue_id_change(self, callback):
+    def _bind_issue_id_change(self, callback):
         """Bind a callback function to the issue ID change event."""
         self.__issue_id_change_callback = callback
 
@@ -61,21 +53,21 @@ class AddSpentTimeView:
         if self.__issue_id_change_callback:
             self.__issue_id_change_callback(self.__issue_id_var.get())
 
-    def get_issue_id(self) -> str:
+    def _get_issue_id(self) -> str:
         return self.__issue_id_var.get()
 
-    def get_time(self) -> str:
+    def _get_time(self) -> str:
         return self.__time_var.get()
 
-    def get_description(self) -> str:
+    def _get_description(self) -> str:
         return self.__description_var.get()
 
-    def get_issue_type(self) -> str:
+    def _get_issue_type(self) -> str:
         return self.__type_var.get()
 
-    def get_window(self) -> CustomWindow:
+    def _get_window(self) -> CustomWindow:
         return self.__window
 
-    def show(self):
+    def _show(self):
         """Displays the main window."""
         self.__window.show()
