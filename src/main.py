@@ -8,6 +8,8 @@ logger = logging.getLogger(__name__)
 
 try:
     import requests
+    from repositories.file_manager import FileManager
+    from services.http_service import HttpService
     from ui.add_spent_time.add_spent_time_view import AddSpentTimeView
     from ui.add_spent_time.add_spent_time_controller import AddSpentTimeController
     from errors.user_cancelled_error import UserCancelledError
@@ -36,15 +38,20 @@ def main():
     bearer_token = token_service.get_bearer_token() or \
         token_service.prompt_for_bearer_token()
 
+    http_service = HttpService(
+        base_url=f"https://{subdomain}.youtrack.cloud/api",
+        bearer_token=bearer_token
+    )
+    file_manager = FileManager(base_dir)
     youtrack_service = YouTrackService(
-        subdomain=subdomain,
-        bearer_token=bearer_token,
-        base_dir=base_dir)
+        http_service=http_service,
+        file_manager=file_manager
+    )
 
     issue_id, add_spent_time_request = AddSpentTimeController(
         AddSpentTimeView("DEMO-31"),
         youtrack_service).show()
-    
+
     logger.info("Issue ID: " + issue_id)
     logger.info("Add Time Request: " + str(add_spent_time_request))
 

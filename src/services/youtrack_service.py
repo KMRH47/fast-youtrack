@@ -1,6 +1,6 @@
 import logging
 
-from typing import List, Literal, Optional
+from typing import List
 
 from repositories.file_manager import FileManager
 from services.http_service import HttpService
@@ -14,32 +14,9 @@ logger = logging.getLogger(__name__)
 
 
 class YouTrackService:
-    def __init__(self, subdomain: str, bearer_token: str, base_dir: str):
-        self.__http_service = HttpService()
-        self.__base_url = f"https://{subdomain}.youtrack.cloud/api"
-        self.__bearer_token = bearer_token
-        self.__file_manager = FileManager(base_dir)
-
-    def _request(self,
-                 endpoint: str,
-                 fields: str | None = None,
-                 method: Literal['get', 'post'] = 'get',
-                 json: Optional[dict] = None) -> dict:
-        http_method = getattr(self.__http_service, method)
-
-        request_body = {
-            "url": f"{self.__base_url}/{endpoint}",
-            "headers": {
-                "Authorization": f"Bearer {self.__bearer_token}",
-                "Accept": "application/json"
-            }
-        }
-        if method == 'get' and fields:
-            request_body["params"] = {"fields": fields}
-        elif method == 'post' and json:
-            request_body["data"] = json
-
-        return http_method(**request_body)
+    def __init__(self, http_service: HttpService, file_manager: FileManager):
+        self.__file_manager = file_manager
+        self._request = http_service.request
 
     def get_user_info(self) -> User:
         try:
