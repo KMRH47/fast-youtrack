@@ -48,4 +48,4 @@ class CustomWindow(tk.Tk, CustomWindowAttachMixin):
 
     def _submit(self, event=None):
         self.__cancelled = False
-        self._destroy()
+        self.destroy()
