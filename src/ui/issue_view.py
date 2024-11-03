@@ -83,7 +83,7 @@ class IssueView(CustomTopLevel):
             parent,
             text=summary_text,
             font=("Arial", 10),
-            wraplength=300,
+            wraplength=250,
             justify="left"
         )
         summary_label.grid(row=row, column=1, sticky='nw')
@@ -120,9 +120,20 @@ class IssueView(CustomTopLevel):
             if isinstance(field.value, EnumBundleElement):
                 field_value = field.value.name if field.value else "No value"
             elif isinstance(field.value, list):
-                field_value = ", ".join(
-                    [element.name for element in field.value if element.name]
-                ) if field.value else "No value"
+                # Check if the list contains dictionaries
+                if all(isinstance(element, dict) for element in field.value):
+                    field_value = ", ".join(
+                        [element.get('name', 'No name')
+                         for element in field.value]
+                    )
+                else:
+                    field_value = ", ".join(
+                        [element.name for element in field.value if hasattr(
+                            element, 'name')]
+                    ) if field.value else "No value"
+            elif isinstance(field.value, dict):
+                # Handle single dictionary case
+                field_value = field.value.get('name', 'No name')
             else:
                 field_value = "No value"
 

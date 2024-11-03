@@ -46,7 +46,6 @@ def load_config() -> Config:
 
         return Config(
             base_url=f"https://{subdomain}.youtrack.cloud/api",
-            bearer_token=None,
             base_dir=f"../user/{subdomain}",
             passphrase=passphrase,
         )

@@ -46,8 +46,19 @@ class AddSpentTimeController:
         """Set a callback to be called when the issue is updated."""
         self.__issue_callback = callback
 
+        initial_issue_id = self.__view._get_issue_id()
+        if initial_issue_id:
+            self._fetch_and_propagate_issue(initial_issue_id)
+
     def get_window(self) -> CustomWindow:
         return self.__view._get_window()
+
+    def _fetch_and_propagate_issue(self, issue_id: str):
+        """Fetch the issue and propagate it using the callback."""
+        if id_valid(issue_id):
+            issue = self.__youtrack_service.get_issue(issue_id)
+            if issue and self.__issue_callback:
+                self.__issue_callback(issue)
 
     def _on_issue_id_changed(self, issue_id: str):
         """
@@ -64,9 +75,7 @@ class AddSpentTimeController:
             return
 
         def debounce():
-            issue = self.__youtrack_service.get_issue(issue_id)
-            if issue and self.__issue_callback:
-                self.__issue_callback(issue)
+            self._fetch_and_propagate_issue(issue_id)
 
         self.__debounce_id = self.__view._get_window().after(
             random.randint(253, 333), debounce)
