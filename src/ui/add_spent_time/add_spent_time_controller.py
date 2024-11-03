@@ -2,14 +2,14 @@ import random
 from typing import Optional
 from services.youtrack_service import YouTrackService
 from models.general_requests import AddSpentTimeRequest
-from ui.add_spent_time.add_spent_time_template import AddSpentTimeTemplate
+from ui.add_spent_time.add_spent_time_view import AddSpentTimeView
 from ui.issue_view import IssueView
 from ui.timer_view import TimerView
 from utils.youtrack import id_valid
 
 
 class AddSpentTimeController:
-    def __init__(self, template: AddSpentTimeTemplate, youtrack_service: YouTrackService):
+    def __init__(self, template: AddSpentTimeView, youtrack_service: YouTrackService):
         self.__template = template
         self.__youtrack_service = youtrack_service
 

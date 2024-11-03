@@ -5,7 +5,7 @@ from ui.custom.custom_window_config import CustomWindowConfig
 from ui.custom.custom_entry import CustomEntryConfig
 
 
-class AddSpentTimeTemplate:
+class AddSpentTimeView:
     def __init__(self, issue_id: str):
         self.__window = CustomWindow(
             config=CustomWindowConfig(

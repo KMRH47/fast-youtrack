@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 try:
     import requests
-    from ui.add_spent_time.add_spent_time_template import AddSpentTimeTemplate
+    from ui.add_spent_time.add_spent_time_view import AddSpentTimeView
     from ui.add_spent_time.add_spent_time_controller import AddSpentTimeController
     from errors.user_cancelled_error import UserCancelledError
     from errors.user_error import UserError
@@ -42,7 +42,7 @@ def main():
         base_dir=base_dir)
 
     issue_id, add_spent_time_request = AddSpentTimeController(
-        AddSpentTimeTemplate("DEMO-31"),
+        AddSpentTimeView("DEMO-31"),
         youtrack_service).show()
     
     logger.info("Issue ID: " + issue_id)
