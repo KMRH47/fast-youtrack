@@ -1,9 +1,12 @@
 import functools
+import logging
 import tkinter as tk
 from typing import Optional, Any
 from abc import ABC, abstractmethod
 
 from ui.custom.custom_window_config import CustomWindowConfig
+
+logger = logging.getLogger(__name__)
 
 
 class CustomTopLevel(ABC):
@@ -22,17 +25,24 @@ class CustomTopLevel(ABC):
     def _create_window(self, parent_window: tk.Tk) -> None:
         self._window = tk.Toplevel(parent_window)
         self._window.title(self._config.title)
-        self._window.geometry(f"{self._config.width}x{self._config.height}")
+
+        geometry = f"{self._config.width}x{self._config.height}" \
+            if self._config.height and self._config.width \
+            else ""
+
+        self._window.geometry(geometry)
         self._window.wm_attributes('-topmost', self._config.topmost)
         self._window.wm_attributes('-disabled', True)
         self._window.resizable(self._config.resizable, self._config.resizable)
 
         self._window.bind("<FocusIn>", functools.partial(
             self._on_focus_in, parent_window=parent_window))
-        self._initialize_window()
-
-    def _initialize_window(self) -> None:
         self._build_ui()
+
+    def _clear_window(self) -> None:
+        """Destroy all child widgets of the given window."""
+        for widget in self._window.winfo_children():
+            widget.destroy()
 
     @abstractmethod
     def _build_ui(self) -> None:

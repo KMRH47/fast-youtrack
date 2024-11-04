@@ -18,28 +18,20 @@ class IssueView(CustomTopLevel):
         """Update the window with new issue details."""
         self.__issue = issue
 
-        if self.get_window():
+        if self._window:
             self._build_ui()
-            self.get_window().update_idletasks()
-            self.get_window().geometry("")
+            self._window.update_idletasks()
 
     def _build_ui(self) -> None:
         """Build the UI for displaying issue details."""
-        window = self.get_window()
-        if not window:
+        if not self._window:
             return
+        self._clear_window()
 
-        self._clear_window(window)
-
-        container_frame = tk.Frame(window, padx=10, pady=10)
+        self._window.geometry("")
+        container_frame = tk.Frame(self._window, padx=10, pady=10)
         container_frame.pack(fill='both', expand=True)
-
         self._populate_widgets(container_frame)
-
-    def _clear_window(self, window: tk.Tk) -> None:
-        """Destroy all child widgets of the given window."""
-        for widget in window.winfo_children():
-            widget.destroy()
 
     def _populate_widgets(self, parent: tk.Frame) -> None:
         """Populate widgets into the parent frame with issue details."""

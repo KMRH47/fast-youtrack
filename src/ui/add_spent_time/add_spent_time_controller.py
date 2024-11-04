@@ -1,3 +1,4 @@
+import logging
 import random
 from typing import Callable, Optional
 
@@ -8,6 +9,7 @@ from ui.custom.custom_window import CustomWindow
 from ui.add_spent_time.add_spent_time_view import AddSpentTimeView
 from utils.youtrack import id_valid
 
+logger = logging.getLogger(__name__)
 
 class AddSpentTimeController:
     def __init__(self, view: AddSpentTimeView, youtrack_service: YouTrackService):
@@ -68,6 +70,7 @@ class AddSpentTimeController:
         Args:
             issue_id: The YouTrack issue ID entered by the user.
         """
+
         if self.__debounce_id is not None:
             self.__view._get_window().after_cancel(self.__debounce_id)
 

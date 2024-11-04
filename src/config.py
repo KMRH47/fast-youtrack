@@ -24,9 +24,7 @@ class Config(BaseModel):
     )
     issue_view_config: CustomWindowConfig = CustomWindowConfig(
         title="Issue Viewer",
-        topmost=True,
-        width=300,
-        height=350
+        topmost=True
     )
     timer_view_config: CustomWindowConfig = CustomWindowConfig(
         title="Elapsed Time",
