@@ -50,8 +50,10 @@ class AddSpentTimeView:
         self.__issue_id_change_callback = callback
 
     def _on_issue_id_changed(self, *args):
+        issue_id = self.__issue_id_var.get().upper()
+        self.__issue_id_var.set(issue_id)
         if self.__issue_id_change_callback:
-            self.__issue_id_change_callback(self.__issue_id_var.get())
+            self.__issue_id_change_callback(issue_id)
 
     def _get_issue_id(self) -> str:
         return self.__issue_id_var.get()
