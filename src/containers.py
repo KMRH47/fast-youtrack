@@ -1,15 +1,14 @@
 import logging
 import sys
 
-
 logger = logging.getLogger(__name__)
 
 try:
-    from ui.custom.custom_window import CustomWindow
     from ui.issue_view import IssueView
     from ui.timer_view import TimerView
     from ui.add_spent_time.add_spent_time_controller import AddSpentTimeController
-    from ui.add_spent_time.add_spent_time_view import AddSpentTimeView
+    from ui.add_spent_time.add_spent_time_window import AddSpentTimeWindow
+    from utils.clipboard import get_selected_number
     from config import Config, load_config
     from dependency_injector import containers, providers
     from services.http_service import HttpService
@@ -49,8 +48,7 @@ class Container(containers.DeclarativeContainer):
     )
 
     bearer_token: providers.Provider[str] = providers.Callable(
-        generate_bearer_token,
-        bearer_token_service
+        generate_bearer_token, bearer_token_service
     )
 
     http_service: providers.Provider[HttpService] = providers.Factory(
@@ -59,37 +57,31 @@ class Container(containers.DeclarativeContainer):
         bearer_token=bearer_token,
     )
 
+    issue_view_factory: providers.Provider[IssueView] = providers.Factory(
+        IssueView, config=providers.Object(config().issue_view_config)
+    )
+
+    timer_view_factory: providers.Provider[TimerView] = providers.Factory(
+        TimerView, config=providers.Object(config().timer_view_config)
+    )
+
     youtrack_service: providers.Provider[YouTrackService] = providers.Factory(
         YouTrackService,
         http_service=http_service,
         file_manager=file_manager,
     )
 
-    custom_window: providers.Provider[CustomWindow] = providers.Factory(
-        CustomWindow,
-        config=providers.Object(config().add_spent_time_config)
+    add_spent_time_view: providers.Provider[AddSpentTimeWindow] = providers.Factory(
+        AddSpentTimeWindow,
+        issue_id=get_selected_number() or None,
+        attached_views=[issue_view_factory, timer_view_factory],
+        config=providers.Object(config().add_spent_time_config),
     )
 
-    clipboard = "DEMO-31"
-
-    add_spent_time_view: providers.Provider[AddSpentTimeView] = providers.Factory(
-        AddSpentTimeView,
-        window=custom_window,
-        issue_id=clipboard or None
-    )
-
-    add_spent_time_controller: providers.Provider[AddSpentTimeController] = providers.Factory(
-        AddSpentTimeController,
-        view=add_spent_time_view,
-        youtrack_service=youtrack_service
-    )
-
-    issue_view: providers.Provider[IssueView] = providers.Factory(
-        IssueView,
-        config=providers.Object(config().issue_view_config)
-    )
-
-    timer_view: providers.Provider[TimerView] = providers.Factory(
-        TimerView,
-        config=providers.Object(config().timer_view_config)
+    add_spent_time_controller: providers.Provider[AddSpentTimeController] = (
+        providers.Factory(
+            AddSpentTimeController,
+            view=add_spent_time_view,
+            youtrack_service=youtrack_service,
+        )
     )

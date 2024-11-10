@@ -3,7 +3,8 @@ import logging
 from typing import Optional
 from pydantic import BaseModel, Field, ValidationError
 
-from ui.custom.custom_window_config import CustomWindowConfig
+from ui.custom.custom_view_config import CustomViewConfig
+
 
 logger = logging.getLogger(__name__)
 
@@ -14,23 +15,19 @@ class Config(BaseModel):
     base_dir: str
     passphrase: str
     token_file_name: str = ".token"
-    add_spent_time_config: CustomWindowConfig = CustomWindowConfig(
+    add_spent_time_config: CustomViewConfig = CustomViewConfig(
         width=300,
         height=325,
         title="Add Spent Time",
         topmost=True,
-        cancel_key='Escape',
-        submit_key='Return'
+        cancel_key="Escape",
+        submit_key="Return",
     )
-    issue_view_config: CustomWindowConfig = CustomWindowConfig(
-        title="Issue Viewer",
-        topmost=True
+    issue_view_config: CustomViewConfig = CustomViewConfig(
+        title="Issue Viewer", topmost=True, position="right"
     )
-    timer_view_config: CustomWindowConfig = CustomWindowConfig(
-        title="Elapsed Time",
-        topmost=True,
-        width=300,
-        height=50
+    timer_view_config: CustomViewConfig = CustomViewConfig(
+        title="Elapsed Time", topmost=True, width=300, height=50, position="top"
     )
 
 

@@ -7,7 +7,7 @@ from services.http_service import HttpService
 from models.work_item_response import WorkItemResponse
 from models.general_responses import Issue, Project, StateBundleElement, User
 from constants.youtrack_queries import issue_query, bundle_query
-from models.general_requests import IssueUpdateRequest
+from models.general_requests import AddSpentTimeRequest, IssueUpdateRequest
 
 
 logger = logging.getLogger(__name__)
@@ -74,6 +74,22 @@ class YouTrackService:
             logger.error(f"Could not update issue {issue_id}")
             raise e
 
+    def add_spent_time(self, issue_id: str, add_spent_time_request: AddSpentTimeRequest) -> None:
+        try:
+
+            work_item_types = self.get_work_item_types()
+
+            response = self._request(
+                method="post",
+                endpoint=f"issues/{issue_id}/timeTracking/workItems",
+                json=add_spent_time_request.model_dump_json(exclude_none=True)
+            )
+
+            logger.info(f"Added spent time to issue {issue_id}")
+        except Exception as e:
+            logger.error(f"Could not add spent time to issue {issue_id}")
+            raise e
+
     def get_all_projects(self) -> List[Project]:
         try:
             config = self.__file_manager.read_json("config")
@@ -125,6 +141,31 @@ class YouTrackService:
             return Issue(**issue_data)
         except Exception as e:
             logger.error(f"Could not fetch issue {issue_id}")
+            raise e
+
+    def get_work_item_types(self) -> List[WorkItemResponse]:
+        try:
+            config = self.__file_manager.read_json("config")
+            
+            if "workItemTypes" not in config:
+                config['workItemTypes'] = {}
+
+            response = self._request(
+                endpoint="admin/timeTrackingSettings/workItemTypes",
+                fields="id,name"
+            )
+            work_item_responses = [
+                WorkItemResponse(**item) for item in response]
+
+            work_item_types = [item.model_dump()
+                               for item in work_item_responses]
+
+            self.__file_manager.write_json(config, "config")
+            self.__file_manager.write_json(work_item_types, "workItemTypes")
+
+            return work_item_responses
+        except Exception as e:
+            logger.error("Could not fetch work item types")
             raise e
 
     def get_bundle(self, bundle_id: str) -> list[StateBundleElement]:

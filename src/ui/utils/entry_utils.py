@@ -21,7 +21,7 @@ def create_labeled_entry(
     custom_entry = CustomEntry(parent, textvariable=text_var,
                                config=entry_config, **kwargs)
 
-    should_focus and custom_entry.focus_set()
+    should_focus and custom_entry.focus_force()
     cursor_end and custom_entry.icursor(tk.END)
     on_change and text_var.trace_add('write', on_change)
 

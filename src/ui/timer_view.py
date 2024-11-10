@@ -3,35 +3,28 @@ import time
 import tkinter as tk
 from typing import Optional
 
-from ui.custom.custom_window_config import CustomWindowConfig
-from ui.custom.custom_toplevel import CustomTopLevel
+from ui.custom.custom_view_config import CustomViewConfig
+from ui.custom.custom_view import CustomView
 
 logger = logging.getLogger(__name__)
 
 
-class TimerView(CustomTopLevel):
+class TimerView(CustomView):
     """
     A window that displays an elapsed time counter.
     Inherits window management functionality from BaseTopLevelView.
     """
 
-    def __init__(self, config: Optional[CustomWindowConfig] = None):
-        super().__init__(config)
+    def __init__(self, config: Optional[CustomViewConfig] = None):
+        super().__init__(config=config)
         self.__start_time: Optional[int] = None
         self.__timer_label: Optional[tk.Label] = None
         self.__update_job: Optional[str] = None
 
-    def _build_ui(self) -> None:
-        """Build the timer UI elements."""
-        window = self.get_window()
-        if not window:
-            return
-
-        container_frame = tk.Frame(window, padx=10, pady=10)
-        container_frame.pack(fill='both', expand=True)
-
+    def _populate_widgets(self, parent: tk.Frame) -> None:
+        """Populate widgets into the parent frame with timer details."""
         self.__timer_label = tk.Label(
-            container_frame,
+            parent,
             text="Elapsed Time: 00:00:00",
             font=("Arial", 14, "bold")
         )
@@ -47,7 +40,7 @@ class TimerView(CustomTopLevel):
 
     def _update_elapsed_time(self) -> None:
         """Update the elapsed time label every second."""
-        if not self.__start_time or not self.__timer_label or not self.get_window():
+        if not self.__start_time or not self.__timer_label:
             return
 
         elapsed = int(time.time()) - self.__start_time
@@ -56,11 +49,7 @@ class TimerView(CustomTopLevel):
         time_string = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
 
         self.__timer_label.config(text=f"Elapsed Time: {time_string}")
-
-        # Schedule next update if window exists
-        window = self.get_window()
-        if window:
-            self.__update_job = window.after(1000, self._update_elapsed_time)
+        self.__update_job = self.after(1000, self._update_elapsed_time)
 
     def reset_timer(self) -> None:
         """Reset the timer to zero."""
@@ -78,21 +67,19 @@ class TimerView(CustomTopLevel):
         Override destroy to cancel any pending timer updates 
         before destroying the window.
         """
-        window = self.get_window()
-        if window and self.__update_job:
-            window.after_cancel(self.__update_job)
+        if self.__update_job:
+            self.after_cancel(self.__update_job)
             self.__update_job = None
 
         super().destroy()
 
-    def hide(self) -> None:
+    def _hide(self) -> None:
         """
         Override hide to cancel any pending timer updates 
         before hiding the window.
         """
-        window = self.get_window()
-        if window and self.__update_job:
-            window.after_cancel(self.__update_job)
+        if self.__update_job:
+            self.after_cancel(self.__update_job)
             self.__update_job = None
 
-        super().hide()
+        super()._hide()

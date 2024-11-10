@@ -12,7 +12,7 @@ from errors.user_cancelled_error import UserCancelledError
 from models.general_responses import Issue, StateBundleElement
 from models.issue_states import BundleEnums
 from models.general_requests import IssueUpdateRequest
-from ui.custom.custom_window import CustomWindow, CustomWindowConfig
+from ui.custom.custom_window import CustomWindow, CustomViewConfig
 from ui.timer_view import TimerView
 
 
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class IssueUpdateRequestUI:
     def __init__(self, youtrack_service: YouTrackService):
         self.__window = CustomWindow(
-            config=CustomWindowConfig(width=300, height=325, title="Update YouTrack Issue", topmost=True))
+            config=CustomViewConfig(width=300, height=325, title="Update YouTrack Issue", topmost=True))
         self.__youtrack_service = youtrack_service
         self.__cancelled = True
         self.__issue: Issue | None = None
@@ -55,7 +55,7 @@ class IssueUpdateRequestUI:
 
         # Test Attach
 # Test Attach
-        timer_view = self.__timer_view.show()  # Now timer_view is a TimerView object
+        timer_view = self.__timer_view._show()  # Now timer_view is a TimerView object
         issue_view = self.__issue_viewer.show()  # issue_view is an IssueView object
 
         # Attach the windows using the TimerView and IssueView objects

@@ -1,69 +1,68 @@
-from typing import Literal
-from pydantic import BaseModel
-from ui.custom.custom_toplevel import CustomTopLevel
 import tkinter as tk
+from typing import Callable, Optional
+
+from ui.custom.custom_view import CustomView
 
 
-class AttachedCustomTopLevel(BaseModel):
-    top_level: CustomTopLevel
-    position: Literal["left", "right", "top", "bottom"]
+class CustomWindowAttachMixin(tk.Tk):
+    """Mixin that it possible to attach any Tkinter window to the left, top, right or bottom of other Tkinter views."""
 
-    class Config:
-        arbitrary_types_allowed = True
+    __attached_views: list[CustomView]
 
-
-class CustomWindowAttachMixin:
-    """Mixin that it possible to attach any Tkinter window to the left, top, right or bottom of other Tkinter windows."""
-
-    def __init__(self):
+    def __init__(
+        self,
+        attached_views: Optional[list[Callable[[], CustomView]]] = None,
+    ):
         super().__init__()
-        self._attached_top_levels: list[AttachedCustomTopLevel] = []
+        self.__attached_views = (
+            [factory() for factory in attached_views] if attached_views else []
+        )
 
-    def attach_windows(self, attached_top_levels: list[tuple[CustomTopLevel, Literal["left", "right", "top", "bottom"]]]):
+    def attach_views(self, custom_views: list[CustomView]):
         """
-        Attach multiple windows with specified positions.
+        Attach multiple views with specified positions.
         Accepts a list of (CustomTopLevel, position) tuples.
         """
-        for top_level, position in attached_top_levels:
-            attached_top_level = AttachedCustomTopLevel(
-                top_level=top_level, position=position)
-            self._attached_top_levels.append(attached_top_level)
+        self.__attached_views = custom_views
 
-    def _get_cumulative_offset(self, attached_top_level: AttachedCustomTopLevel) -> int:
-        """Calculate cumulative offset for windows attached in the same position."""
-        same_position_windows = [
-            atl for atl in self._attached_top_levels if atl.position == attached_top_level.position]
-        index = same_position_windows.index(attached_top_level)
+    def get_attached_views(self) -> list[CustomView]:
+        """Return a list of attached top-level views."""
+        return self.__attached_views
+
+    def _get_cumulative_offset(self, attached_view: CustomView) -> int:
+        """Calculate cumulative offset for views attached in the same position."""
+        same_pos_views = [
+            view for view in self.__attached_views
+            if view._get_position() == attached_view._get_position()
+        ]
+
+        index = same_pos_views.index(attached_view)
         offset = 0
         for i in range(index):
-            other_window = same_position_windows[i].top_level.get_window()
-            other_window.update_idletasks()
-            if attached_top_level.position in ["top", "bottom"]:
-                offset += other_window.winfo_width()
-            elif attached_top_level.position in ["left", "right"]:
-                offset += other_window.winfo_height()
+            other_view = same_pos_views[i]
+            other_view.update_idletasks()
+            if attached_view._get_position() in ["top", "bottom"]:
+                offset += other_view.winfo_width()
+            elif attached_view._get_position() in ["left", "right"]:
+                offset += other_view.winfo_height()
         return offset
 
-    def _update_position(self, attached_top_level: AttachedCustomTopLevel):
+    def _update_position(self, attached_view: CustomView):
         """Calculate and apply the position based on the parent window."""
-        window = attached_top_level.top_level.get_window()
-        if window is None:
-            return
 
-        window.update_idletasks()
+        attached_view.update_idletasks()
         parent_x = self.winfo_x()
         parent_y = self.winfo_y()
         parent_width = self.winfo_width()
         parent_height = self.winfo_height()
         title_bar_height = self.winfo_rooty() - self.winfo_y()
 
-        window_width = window.winfo_width()
-        window_height = window.winfo_height()
+        window_width = attached_view.winfo_width()
+        window_height = attached_view.winfo_height()
 
-        # Adjust the offset based on the cumulative position for the current window
-        cumulative_offset = self._get_cumulative_offset(attached_top_level)
+        cumulative_offset = self._get_cumulative_offset(attached_view)
 
-        position = attached_top_level.position
+        position = attached_view._get_position()
         if position == "right":
             new_x = parent_x + parent_width
             new_y = parent_y + cumulative_offset
@@ -77,26 +76,31 @@ class CustomWindowAttachMixin:
             new_x = parent_x + cumulative_offset
             new_y = parent_y + parent_height + title_bar_height
 
-        window.geometry(f"+{new_x}+{new_y}")
+        attached_view.geometry(f"+{new_x}+{new_y}")
 
-    def _bind_update_position(self, attached_top_level: AttachedCustomTopLevel):
+    def _bind_update_position(self, attached_view: CustomView):
         """Bind the update position function for a specific attached top level."""
-        self.bind("<Configure>", lambda event,
-                  atl=attached_top_level: self._update_position(atl), add='+')
+        self.bind(
+            "<Configure>",
+            lambda event, attached_view_arg=attached_view: self._update_position(
+                attached_view_arg
+            ),
+            add="+",
+        )
 
-    def show_all_attached_windows(self, parent_window: tk.Tk):
-        """Show and position all attached windows."""
-        for attached_top_level in self._attached_top_levels:
-            attached_top_level.top_level.show(parent_window)
-            self._bind_update_position(attached_top_level)
+    def show_all_attached_views(self):
+        """Show and position all attached views."""
+        for attached_view in self.__attached_views:
+            attached_view._show(self)
+            self._bind_update_position(attached_view)
 
-    def hide_all_attached_windows(self):
-        """Hide all attached windows."""
-        for attached_top_level in self._attached_top_levels:
-            attached_top_level.top_level.hide()
+    def hide_all_attached_views(self):
+        """Hide all attached views."""
+        for attached_view in self.__attached_views:
+            attached_view._hide()
 
-    def destroy_all_attached_windows(self):
-        """Destroy all attached windows and clear the list."""
-        for attached_top_level in self._attached_top_levels:
-            attached_top_level.top_level.destroy()
-        self._attached_top_levels.clear()
+    def destroy_all_attached_views(self):
+        """Destroy all attached views and clear the list."""
+        for attached_view in self.__attached_views:
+            attached_view.destroy()
+        self.__attached_views.clear()
