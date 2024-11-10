@@ -25,12 +25,12 @@ class YouTrackService:
             if "user" in config:
                 return User(**config["user"])
 
-            response: dict = self._request(
-                "users/me", fields="id,name,login,email")
+            response: dict = self._request("users/me", fields="id,name,login,email")
             user_response = User(**response)
 
             self.__file_manager.write_json(
-                {"user": user_response.model_dump()}, "config")
+                {"user": user_response.model_dump()}, "config"
+            )
 
             return user_response
         except Exception as e:
@@ -41,40 +41,38 @@ class YouTrackService:
         config = self.__file_manager.read_json("config")
 
         if "workItemTypes" in config:
-            return [WorkItemResponse(**item) for item in
-                    config["workItemTypes"]]
+            return [WorkItemResponse(**item) for item in config["workItemTypes"]]
 
         response: List[dict] = self._request(
-            endpoint="admin/timeTrackingSettings/workItemTypes",
-            fields="id,name"
+            endpoint="admin/timeTrackingSettings/workItemTypes", fields="id,name"
         )
         work_item_responses = [WorkItemResponse(**item) for item in response]
         work_item_types = [item.model_dump() for item in work_item_responses]
 
-        self.__file_manager.write_json(
-            {"workItemTypes": work_item_types}, "config"
-        )
+        self.__file_manager.write_json({"workItemTypes": work_item_types}, "config")
 
         return work_item_responses
 
-    def update_issue(self,
-                     issue_id: str,
-                     issue_update_request: IssueUpdateRequest) -> None:
+    def update_issue(
+        self, issue_id: str, issue_update_request: IssueUpdateRequest
+    ) -> None:
         try:
             updated_issue: dict = self._request(
                 method="post",
                 endpoint=f"issues/{issue_id}",
-                json=issue_update_request.model_dump_json(exclude_none=True)
+                json=issue_update_request.model_dump_json(exclude_none=True),
             )
 
             config = self.__file_manager.read_json("config")
-            config['issues'][issue_id] = updated_issue
+            config["issues"][issue_id] = updated_issue
             self.__file_manager.write_json(config, "config")
         except Exception as e:
             logger.error(f"Could not update issue {issue_id}")
             raise e
 
-    def add_spent_time(self, issue_id: str, add_spent_time_request: AddSpentTimeRequest) -> None:
+    def add_spent_time(
+        self, issue_id: str, add_spent_time_request: AddSpentTimeRequest
+    ) -> None:
         try:
 
             work_item_types = self.get_work_item_types()
@@ -82,7 +80,7 @@ class YouTrackService:
             response = self._request(
                 method="post",
                 endpoint=f"issues/{issue_id}/timeTracking/workItems",
-                json=add_spent_time_request.model_dump_json(exclude_none=True)
+                json=add_spent_time_request.model_dump_json(exclude_none=True),
             )
 
             logger.info(f"Added spent time to issue {issue_id}")
@@ -99,8 +97,7 @@ class YouTrackService:
 
             logger.info("Projects not found in cache. Fetching from YouTrack.")
             response: dict = self._request(
-                endpoint="admin/projects",
-                fields="id,name,shortName"
+                endpoint="admin/projects", fields="id,name,shortName"
             )
             project_responses = [Project(**item) for item in response]
 
@@ -115,26 +112,25 @@ class YouTrackService:
         try:
             config = self.__file_manager.read_json("config")
 
-            if 'issues' not in config:
-                config['issues'] = {}
+            if "issues" not in config:
+                config["issues"] = {}
 
-            if issue_id in config['issues']:
-                cached_issue: Issue = config['issues'].get(issue_id)
+            if issue_id in config["issues"]:
+                cached_issue: Issue = config["issues"].get(issue_id)
                 response = self._request(
-                    endpoint=f"issues/{issue_id}",
-                    fields="updated"
+                    endpoint=f"issues/{issue_id}", fields="updated"
                 )
                 updated: int = response["updated"]
 
-                if updated == cached_issue['updated']:
+                if updated == cached_issue["updated"]:
                     logger.info(f"Using cached issue: {issue_id}")
                     return Issue(**cached_issue)
 
             issue_data: dict = self._request(
-                endpoint=f"issues/{issue_id}",
-                fields=issue_query)
+                endpoint=f"issues/{issue_id}", fields=issue_query
+            )
 
-            config['issues'][issue_id] = issue_data
+            config["issues"][issue_id] = issue_data
 
             self.__file_manager.write_json(config, "config")
 
@@ -146,19 +142,16 @@ class YouTrackService:
     def get_work_item_types(self) -> List[WorkItemResponse]:
         try:
             config = self.__file_manager.read_json("config")
-            
+
             if "workItemTypes" not in config:
-                config['workItemTypes'] = {}
+                config["workItemTypes"] = {}
 
             response = self._request(
-                endpoint="admin/timeTrackingSettings/workItemTypes",
-                fields="id,name"
+                endpoint="admin/timeTrackingSettings/workItemTypes", fields="id,name"
             )
-            work_item_responses = [
-                WorkItemResponse(**item) for item in response]
+            work_item_responses = [WorkItemResponse(**item) for item in response]
 
-            work_item_types = [item.model_dump()
-                               for item in work_item_responses]
+            work_item_types = [item.model_dump() for item in work_item_responses]
 
             self.__file_manager.write_json(config, "config")
             self.__file_manager.write_json(work_item_types, "workItemTypes")
@@ -172,16 +165,16 @@ class YouTrackService:
         try:
             config = self.__file_manager.read_json("config")
 
-            if 'bundles' not in config:
-                config['bundles'] = {}
+            if "bundles" not in config:
+                config["bundles"] = {}
 
-            if bundle_id in config['bundles']:
-                cached_bundle: list = config['bundles'].get(bundle_id)
+            if bundle_id in config["bundles"]:
+                cached_bundle: list = config["bundles"].get(bundle_id)
                 return [StateBundleElement(**item) for item in cached_bundle]
 
             response = self._request(
                 endpoint=f"admin/customFieldSettings/bundles/state/{bundle_id}/values?sort=true&$skip=0&$includeArchived=false",
-                fields=bundle_query
+                fields=bundle_query,
             )
             return [StateBundleElement(**item) for item in response]
         except Exception as e:

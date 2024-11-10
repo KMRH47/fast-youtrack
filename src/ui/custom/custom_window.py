@@ -1,9 +1,8 @@
 import logging
 import tkinter as tk
-from typing import Callable, Optional
+from typing import Optional
 
 from errors.user_cancelled_error import UserCancelledError
-from ui.custom.custom_view import CustomView
 from ui.custom.custom_view_config import CustomViewConfig
 from ui.custom.custom_window_attach_mixin import CustomWindowAttachMixin
 
@@ -13,13 +12,14 @@ logger = logging.getLogger(__name__)
 class CustomWindow(CustomWindowAttachMixin):
     def __init__(
         self,
-        attached_views: Optional[list[Callable[[], CustomView]]] = None,
         config: Optional[CustomViewConfig] = CustomViewConfig(),
+        **kwargs,
     ) -> tk.Tk:
+        attached_views = kwargs.pop("attached_views", None)
         super().__init__(attached_views=attached_views)
         self._config = config
         self.__cancelled = True
-        
+
         self.title(self._config.title)
         self.attributes("-topmost", self._config.topmost)
 

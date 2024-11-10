@@ -29,12 +29,25 @@ class IssueUpdateRequest(BaseModel):
         arbitrary_types_allowed = True
 
 
+class Duration(WorkItem):
+    minutes: int
+    presentation: Optional[str] = None
+
+
+class Type(WorkItem):
+    id: Optional[str] = None
+    name: Optional[str] = None
+    localizedName: Optional[str] = None
+    isDefault: Optional[bool] = None
+    isAutoAttached: Optional[bool] = None
+    presentation: Optional[str] = None
+
+
 class AddSpentTimeRequest(WorkItem):
-    duration: Optional[int] = None
-    description: Optional[str] = None
+    duration: Duration
+    text: Optional[str] = None
     type: Optional[str] = None
-    date_: Optional[date] = Field(alias='date')
+    date_millis: Optional[int] = Field(default=None, alias="date")
 
     class Config:
         arbitrary_types_allowed = True
-

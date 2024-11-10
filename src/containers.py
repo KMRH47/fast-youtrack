@@ -71,17 +71,17 @@ class Container(containers.DeclarativeContainer):
         file_manager=file_manager,
     )
 
-    add_spent_time_view: providers.Provider[AddSpentTimeWindow] = providers.Factory(
+    add_spent_time_window: providers.Provider[AddSpentTimeWindow] = providers.Factory(
         AddSpentTimeWindow,
         issue_id=get_selected_number() or None,
-        attached_views=[issue_view_factory, timer_view_factory],
         config=providers.Object(config().add_spent_time_config),
+        attached_views=[issue_view_factory, timer_view_factory],
     )
 
     add_spent_time_controller: providers.Provider[AddSpentTimeController] = (
         providers.Factory(
             AddSpentTimeController,
-            view=add_spent_time_view,
+            window=add_spent_time_window,
             youtrack_service=youtrack_service,
         )
     )
