@@ -1,16 +1,38 @@
+import logging
 import tkinter as tk
 import re
+from typing import Callable, Optional
+
+logger = logging.getLogger(__name__)
 
 class CustomEntryConfig:
     """Configuration object for CustomEntry."""
-    def __init__(self, break_chars: list[str] = None):
-        self.break_chars = break_chars if break_chars is not None else []
+
+    def __init__(
+        self,
+        break_chars: list[str] = [],
+        validation_func: Optional[Callable[[str], bool]] = None,
+    ):
+        self.break_chars = break_chars
+        self.validation_func = validation_func
+
 
 class CustomEntry(tk.Entry):
-    def __init__(self, master=None, config: CustomEntryConfig = None, **kwargs):
+    def __init__(
+        self, master=None, config: Optional[CustomEntryConfig] = None, **kwargs
+    ):
         super().__init__(master, **kwargs)
-        self.config = config if config is not None else CustomEntryConfig()
-        self.bind('<Control-BackSpace>', self._on_control_backspace)
+        self.config = config or CustomEntryConfig()
+        self.bind("<Control-BackSpace>", self._on_control_backspace)
+
+        if self.config.validation_func:
+            vcmd = (self.register(self._validate), "%P")
+            self.configure(validate="focusout", validatecommand=vcmd)
+
+    def _validate(self, new_value):
+        if self.config.validation_func:
+            return self.config.validation_func(new_value)
+        return True
 
     def _on_control_backspace(self, event):
         return self._delete_word(event, self.config.break_chars)

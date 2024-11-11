@@ -3,9 +3,9 @@ import random
 from typing import Optional
 
 from services.youtrack_service import YouTrackService
-from models.general_requests import AddSpentTimeRequest
+from models.general_requests import AddSpentTimeRequest, Duration
 from ui.add_spent_time.add_spent_time_window import AddSpentTimeWindow
-from utils.youtrack import _convert_time_to_minutes, id_valid
+from utils.youtrack import convert_time_to_minutes, id_valid
 
 logger = logging.getLogger(__name__)
 
@@ -29,13 +29,12 @@ class AddSpentTimeController:
         issue_id = self.__window._get_issue_id()
 
         time_short_format = self.__window._get_time()
-        time_minutes = _convert_time_to_minutes(time_short_format)
 
         add_spent_time_request = AddSpentTimeRequest(
             description=self.__window._get_description(),
-            duration=time_minutes,
+            duration=Duration(minutes=convert_time_to_minutes(time_short_format)),
             type=self.__window._get_issue_type(),
-            date_millis=self.__window._get_date() or None,
+            date_millis=self.__window._get_date_millis(),
         )
 
         self.__youtrack_service.add_spent_time(issue_id, add_spent_time_request)

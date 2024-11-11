@@ -10,3 +10,4 @@ cryptography
 pyautogui
 flake8
 dependency-injector
+tkcalendar
