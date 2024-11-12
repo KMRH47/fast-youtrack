@@ -22,7 +22,7 @@ class AddSpentTimeController:
         self.__window = window
         self.__youtrack_service = youtrack_service
         self.__debounce_id: Optional[int] = None
-        self.__window._bind_issue_id_change(self._on_issue_id_changed)
+        self.__window.bind_issue_id_change(self._on_issue_id_changed)
 
     def add_spent_time(self) -> None:
         self.__window.show()
@@ -63,6 +63,8 @@ class AddSpentTimeController:
             return
 
         def debounce():
+            issue_types = self.__youtrack_service.get_work_item_types()
+            self.__window._set_issue_types(issue_types)
             self._fetch_and_propagate_issue(issue_id)
 
         self.__debounce_id = self.__window.after(random.randint(253, 333), debounce)

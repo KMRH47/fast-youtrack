@@ -3,6 +3,7 @@ import logging
 from typing import Optional
 from pydantic import BaseModel, Field, ValidationError
 
+from ui.add_spent_time.add_spent_time_window_config import AddSpentTimeWindowConfig
 from ui.custom.custom_view_config import CustomViewConfig
 
 
@@ -15,7 +16,9 @@ class Config(BaseModel):
     base_dir: str
     passphrase: str
     token_file_name: str = ".token"
-    add_spent_time_config: CustomViewConfig = CustomViewConfig(
+    add_spent_time_config: AddSpentTimeWindowConfig = AddSpentTimeWindowConfig(
+        project="DEMO",
+        initial_issue_id="1",
         width=300,
         height=325,
         title="Add Spent Time",

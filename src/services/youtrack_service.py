@@ -37,22 +37,6 @@ class YouTrackService:
             logger.error("Could not fetch user info")
             raise e
 
-    def get_work_item_types(self) -> List[WorkItemResponse]:
-        config = self.__file_manager.read_json("config")
-
-        if "workItemTypes" in config:
-            return [WorkItemResponse(**item) for item in config["workItemTypes"]]
-
-        response: List[dict] = self._request(
-            endpoint="admin/timeTrackingSettings/workItemTypes", fields="id,name"
-        )
-        work_item_responses = [WorkItemResponse(**item) for item in response]
-        work_item_types = [item.model_dump() for item in work_item_responses]
-
-        self.__file_manager.write_json({"workItemTypes": work_item_types}, "config")
-
-        return work_item_responses
-
     def update_issue(
         self, issue_id: str, issue_update_request: IssueUpdateRequest
     ) -> None:
@@ -76,6 +60,9 @@ class YouTrackService:
         try:
 
             work_item_types = self.get_work_item_types()
+            logger.info(f"Work item types: {work_item_types}")
+
+            return
 
             response = self._request(
                 method="post",
@@ -84,6 +71,7 @@ class YouTrackService:
             )
 
             logger.info(f"Added spent time to issue {issue_id}")
+            logger.info(response)
         except Exception as e:
             logger.error(f"Could not add spent time to issue {issue_id}")
             raise e
@@ -140,26 +128,20 @@ class YouTrackService:
             raise e
 
     def get_work_item_types(self) -> List[WorkItemResponse]:
-        try:
-            config = self.__file_manager.read_json("config")
+        config = self.__file_manager.read_json("config")
 
-            if "workItemTypes" not in config:
-                config["workItemTypes"] = {}
+        if "workItemTypes" in config:
+            return [WorkItemResponse(**item) for item in config["workItemTypes"]]
 
-            response = self._request(
-                endpoint="admin/timeTrackingSettings/workItemTypes", fields="id,name"
-            )
-            work_item_responses = [WorkItemResponse(**item) for item in response]
+        response: List[dict] = self._request(
+            endpoint="admin/timeTrackingSettings/workItemTypes", fields="id,name"
+        )
+        work_item_responses = [WorkItemResponse(**item) for item in response]
+        work_item_types = [item.model_dump() for item in work_item_responses]
 
-            work_item_types = [item.model_dump() for item in work_item_responses]
+        self.__file_manager.write_json({"workItemTypes": work_item_types}, "config")
 
-            self.__file_manager.write_json(config, "config")
-            self.__file_manager.write_json(work_item_types, "workItemTypes")
-
-            return work_item_responses
-        except Exception as e:
-            logger.error("Could not fetch work item types")
-            raise e
+        return work_item_responses
 
     def get_bundle(self, bundle_id: str) -> list[StateBundleElement]:
         try:

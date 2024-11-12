@@ -1,11 +1,16 @@
 import datetime
 import logging
-from typing import Optional
+from typing import Callable, Optional
 import tkinter as tk
 
+from ui.custom.custom_combobox import CustomComboboxConfig
+from ui.add_spent_time.add_spent_time_window_config import AddSpentTimeWindowConfig
 from utils.youtrack import time_valid
-from ui.custom.custom_view_config import CustomViewConfig
-from ui.utils.entry_utils import create_labeled_date_entry, create_labeled_entry
+from ui.utils.entry_utils import (
+    create_labeled_combobox,
+    create_labeled_date_entry,
+    create_labeled_entry,
+)
 from ui.custom.custom_window import CustomWindow
 from ui.custom.custom_entry import CustomEntryConfig
 
@@ -13,56 +18,74 @@ logger = logging.getLogger(__name__)
 
 
 class AddSpentTimeWindow(CustomWindow):
+    __issue_id_change_callback: Optional[Callable] = None
+    __issue_types: list[str] = []
 
     def __init__(
-        self, issue_id: str = "", config: Optional[CustomViewConfig] = None, **kwargs
+        self,
+        config: Optional[AddSpentTimeWindowConfig] = None,
+        **kwargs,
     ):
         super().__init__(config=config, **kwargs)
+
+        initial_issue_id = (
+            f"{config.project}{config.issue_separator}{config.initial_issue_id}"
+        )
 
         # ID Entry
         self.__issue_id_var = create_labeled_entry(
             parent=self,
-            initial_value=issue_id,
             label="Issue ID:",
-            config=CustomEntryConfig(break_chars=["-"]),
-            should_focus=True,
-            cursor_end=True,
-            on_change=self._on_issue_id_changed,
+            config=CustomEntryConfig(
+                initial_value=initial_issue_id or "",
+                break_chars=["-"],
+                force_focus=True,
+                cursor_end=True,
+                on_change=self._on_issue_id_changed,
+            ),
         )
-        self.__issue_id_change_callback = None
 
         # Time Entry
         self.__time_var = create_labeled_entry(
             parent=self,
             label="Enter Time (e.g., 1h30m):",
             config=CustomEntryConfig(
+                initial_value=config.initial_time or "",
                 break_chars=["w", "d", "h", "m"],
                 validation_func=lambda time: time_valid(time),
             ),
         )
 
         # Description Entry
-        self.__description_var = create_labeled_entry(parent=self, label="Description:")
+        self.__description_var = create_labeled_entry(
+            parent=self,
+            label="Description:",
+            config=CustomEntryConfig(initial_value=config.initial_description or ""),
+        )
 
         # Type Entry
-        self.__type_var = create_labeled_entry(parent=self, label="Type:")
+        self.__type_var = create_labeled_combobox(
+            parent=self,
+            label="Type:",
+            config=CustomComboboxConfig(values=self.__issue_types),
+        )
 
         # Date Entry
         self.__date_var = create_labeled_date_entry(parent=self, label="Date:")
 
         # OK Button
-        ok_button = tk.Button(
-            self, text="OK", command=self._submit, width=10
-        )
+        ok_button = tk.Button(self, text="OK", command=self._submit, width=10)
         ok_button.pack(pady=5)
+
+    def bind_issue_id_change(self, callback):
+        """Bind a callback function to the issue ID change event."""
+        self.__issue_id_change_callback = callback
+        if self.__issue_id_var.get():
+            self._on_issue_id_changed()
 
     def _submit(self, event=None):
         if time_valid(self.__time_var.get()):
             super()._submit(event)
-
-    def _bind_issue_id_change(self, callback):
-        """Bind a callback function to the issue ID change event."""
-        self.__issue_id_change_callback = callback
 
     def _on_issue_id_changed(self, *args):
         issue_id = self.__issue_id_var.get().upper()
@@ -91,3 +114,6 @@ class AddSpentTimeWindow(CustomWindow):
         except ValueError as e:
             logger.error(f"Error parsing date: {e}")
             return None
+
+    def _set_issue_types(self, issue_types: list[str]):
+        self.__issue_types = issue_types
