@@ -1,7 +1,10 @@
 import logging
 import tkinter as tk
-from typing import Literal, Optional, TypeVar
+import logging
+import math
 
+from typing import Literal
+from typing import Literal, Optional, TypeVar
 from ui.custom.custom_view_config import CustomViewConfig
 
 logger = logging.getLogger(__name__)
@@ -90,3 +93,89 @@ class CustomView(tk.Toplevel):
 
     def _on_show(self) -> None:
         pass
+
+    def _flash_update(
+        self,
+        bg_color: str = "#F0F0F0",
+        flash_color: Literal["red", "green", "yellow"] = "yellow",
+    ) -> None:
+        """Flash the border with a smooth fade effect."""
+        try:
+
+            STEPS = 15
+            DELAY = 10
+            BORDER_WIDTH = 1
+
+            FLASH_COLOR_MAP = {
+                "red": "#FFCCCC",
+                "green": "#CCFFCC",
+                "yellow": "#FFFFCC",
+            }
+
+            target_color = FLASH_COLOR_MAP.get(flash_color, FLASH_COLOR_MAP["yellow"])
+
+            def interpolate(ratio: float) -> str:
+                """Interpolate between background and target color."""
+                try:
+
+                    bg_rgb = [
+                        int(bg_color.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4)
+                    ]
+                    target_rgb = [
+                        int(target_color.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4)
+                    ]
+
+                    current_rgb = [
+                        int(bg_rgb[i] + (target_rgb[i] - bg_rgb[i]) * ratio)
+                        for i in range(3)
+                    ]
+
+                    return (
+                        f"#{current_rgb[0]:02x}{current_rgb[1]:02x}{current_rgb[2]:02x}"
+                    )
+                except Exception as e:
+                    logging.error(f"Color interpolation failed: {e}")
+                    return bg_color
+
+            def fade_step(step: int = 0):
+                if step > STEPS:
+
+                    self.configure(
+                        highlightthickness=BORDER_WIDTH,
+                        highlightbackground=bg_color,
+                        highlightcolor=bg_color,
+                    )
+                    return
+
+                ratio = math.sin((step / STEPS) * math.pi)
+                color = interpolate(ratio)
+
+                try:
+                    self.configure(
+                        highlightthickness=BORDER_WIDTH,
+                        highlightbackground=color,
+                        highlightcolor=color,
+                    )
+                except Exception as e:
+                    logging.error(f"Widget update failed: {e}")
+                    return
+
+                self.after(DELAY, lambda: fade_step(step + 1))
+
+            self.configure(highlightthickness=BORDER_WIDTH)
+
+            try:
+                for after_id in self.tk.eval("after info").split():
+                    self.after_cancel(int(after_id))
+            except Exception:
+                pass
+
+            fade_step(0)
+
+        except Exception as e:
+            logging.error(f"Flash update failed: {e}")
+            self.configure(
+                highlightthickness=BORDER_WIDTH,
+                highlightbackground=bg_color,
+                highlightcolor=bg_color,
+            )

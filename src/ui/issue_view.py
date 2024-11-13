@@ -10,18 +10,21 @@ logger = logging.getLogger(__name__)
 
 
 class IssueView(CustomView):
+    __issue: Optional[Issue] = None
+
     def __init__(
         self, issue: Optional[Issue] = None, config: Optional[CustomViewConfig] = None
     ):
         super().__init__(config=config)
         self.__issue = issue
 
-    def update_value(self, issue: Issue) -> None:
+    def update_value(self, issue: Optional[Issue] = None) -> None:
         """Update the window with new issue details."""
         self.__issue = issue
 
         self._build_ui()
         self.update_idletasks()
+        self._flash_update(flash_color="red" if issue is None else "green")
 
     def _populate_widgets(self, parent: tk.Frame) -> None:
         """Populate widgets into the parent frame with issue details."""
