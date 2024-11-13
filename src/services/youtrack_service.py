@@ -2,6 +2,8 @@ import logging
 
 from typing import List
 
+from requests import RequestException
+
 from repositories.file_manager import FileManager
 from services.http_service import HttpService
 from models.work_item_response import WorkItemResponse
@@ -123,6 +125,11 @@ class YouTrackService:
             self.__file_manager.write_json(config, "config")
 
             return Issue(**issue_data)
+        except RequestException as e:
+            if e.response.status_code == 404:
+                logger.error(f"Issue {issue_id} not found (404)")
+                return None
+            raise e
         except Exception as e:
             logger.error(f"Could not fetch issue {issue_id}")
             raise e
