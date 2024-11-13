@@ -41,7 +41,7 @@ class HttpService:
             return self._handle_response(url, response)
         except requests.RequestException as e:
             logger.error(f"{method.upper()} {url} - Failed: {e}")
-            raise
+            raise e
 
     def _log_request(self, method: str, url: str, params_or_data: dict = None):
         logger.info(f"{method} Request URL: {url}")
@@ -70,7 +70,7 @@ class HttpService:
             return self._handle_response(url, response)
         except requests.RequestException as e:
             logger.error(f"GET {url} - Failed: {e}")
-            raise
+            raise e
 
     def post(self, url: str, data: dict = None, headers: dict = None) -> dict:
         self._log_request("POST", url, data)
@@ -79,4 +79,4 @@ class HttpService:
             return self._handle_response(url, response)
         except requests.RequestException as e:
             logger.error(f"POST {url} - Failed: {e}")
-            raise
+            raise e
