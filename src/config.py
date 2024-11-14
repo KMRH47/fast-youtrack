@@ -25,6 +25,7 @@ class Config(BaseModel):
         topmost=True,
         cancel_key="Escape",
         submit_key="Return",
+        date_format="dd/mm/yyyy",
     )
     issue_view_config: CustomViewConfig = CustomViewConfig(
         title="Issue Viewer", topmost=True, position="right"

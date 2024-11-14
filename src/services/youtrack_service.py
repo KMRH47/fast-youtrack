@@ -1,6 +1,6 @@
 import logging
 
-from typing import List
+from typing import List, Optional
 
 from requests import RequestException
 
@@ -57,15 +57,9 @@ class YouTrackService:
             raise e
 
     def add_spent_time(
-        self, issue_id: str, add_spent_time_request: AddSpentTimeRequest
+        self, issue_id: Optional[str], add_spent_time_request: AddSpentTimeRequest
     ) -> None:
         try:
-
-            work_item_types = self.get_work_item_types()
-            logger.info(f"Work item types: {work_item_types}")
-
-            return
-
             response = self._request(
                 method="post",
                 endpoint=f"issues/{issue_id}/timeTracking/workItems",

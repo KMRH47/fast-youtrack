@@ -9,6 +9,10 @@ from ui.custom.custom_entry import CustomEntry, CustomEntryConfig
 logger = logging.getLogger(__name__)
 
 
+class CustomDateEntryConfig(CustomEntryConfig):
+    date_format: Optional[str] = "yyyy-mm-dd"
+
+
 def create_labeled_entry(
     parent: tk.Tk, label: str = "", config: Optional[CustomEntryConfig] = None, **kwargs
 ) -> tk.StringVar:
@@ -40,28 +44,32 @@ def create_labeled_entry(
 def create_labeled_date_entry(
     parent: tk.Tk,
     label: Optional[str] = None,
-    initial_value: Optional[str] = None,
-    on_change: Optional[callable] = None,
+    config: Optional[CustomDateEntryConfig] = None,
     **kwargs
 ) -> tk.StringVar:
     label_widget = tk.Label(parent, text=label)
     label_widget.pack(anchor="w", padx=10, pady=5)
 
-    text_var = tk.StringVar(value=initial_value)
-    date_entry = DateEntry(parent, textvariable=text_var, **kwargs)
+    text_var = tk.StringVar(value=config.initial_value)
+    date_entry = DateEntry(
+        parent, textvariable=text_var, date_pattern=config.date_format, **kwargs
+    )
     date_entry.pack(anchor="w", padx=10, fill="x", expand=True)
 
-    if on_change:
-        text_var.trace_add("write", on_change)
+    if config.on_change:
+        text_var.trace_add("write", config.on_change)
 
     return text_var
 
 
-def create_labeled_combobox(parent, label, config: Optional[CustomEntryConfig] = None):
+def create_labeled_combobox(
+    parent, label: Optional[str] = None, config: Optional[CustomEntryConfig] = None
+) -> tk.StringVar:
     label_widget = tk.Label(parent, text=label)
     label_widget.pack(anchor="w", padx=10, pady=5)
 
+    text_var = tk.StringVar(value=config.initial_value)
     combobox = CustomCombobox(master=parent, config=config)
     combobox.pack(anchor="w", padx=10, fill="x", expand=True)
 
-    return combobox
+    return text_var

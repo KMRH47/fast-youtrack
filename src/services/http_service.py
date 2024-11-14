@@ -43,12 +43,12 @@ class HttpService:
             logger.error(f"{method.upper()} {url} - Failed: {e}")
             raise e
 
-    def _log_request(self, method: str, url: str, params_or_data: dict = None):
+    def _log_request(self, method: str, url: str, params_or_data: dict = None, max_chars: int = 9999):
         logger.info(f"{method} Request URL: {url}")
         if params_or_data:
             content_str = str(params_or_data)
-            content_str = content_str[:50] + \
-                '...' if len(content_str) > 50 else content_str
+            content_str = content_str[:max_chars] + \
+                '...' if len(content_str) > max_chars else content_str
             logger.info(f"{method} Request Data: {content_str}")
 
     def _handle_response(self, url: str, response: requests.Response):

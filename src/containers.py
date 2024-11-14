@@ -65,13 +65,13 @@ class Container(containers.DeclarativeContainer):
         TimerView, config=providers.Object(config().timer_view_config)
     )
 
-    youtrack_service: providers.Provider[YouTrackService] = providers.Factory(
+    youtrack_service: providers.Provider[YouTrackService] = providers.Singleton(
         YouTrackService,
         http_service=http_service,
         file_manager=file_manager,
     )
 
-    add_spent_time_window: providers.Provider[AddSpentTimeWindow] = providers.Factory(
+    add_spent_time_window: providers.Provider[AddSpentTimeWindow] = providers.Singleton(
         AddSpentTimeWindow,
         issue_id=get_selected_number() or None,
         config=providers.Object(config().add_spent_time_config),
@@ -79,7 +79,7 @@ class Container(containers.DeclarativeContainer):
     )
 
     add_spent_time_controller: providers.Provider[AddSpentTimeController] = (
-        providers.Factory(
+        providers.Singleton(
             AddSpentTimeController,
             window=add_spent_time_window,
             youtrack_service=youtrack_service,

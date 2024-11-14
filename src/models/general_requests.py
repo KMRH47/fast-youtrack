@@ -1,18 +1,22 @@
-from datetime import date
+from datetime import datetime
 from pydantic import BaseModel, Field
 from typing import Optional, List
 
 from models.work_item_base import WorkItem
 
+
 class FieldStyle(WorkItem):
     background: Optional[str]
     foreground: Optional[str]
 
+
 class Value(WorkItem):
     color: Optional[FieldStyle]
 
+
 class WorkItemField(WorkItem):
     value: Optional[Value]
+
 
 class IssueUpdateRequest(BaseModel):
     summary: Optional[str] = None
@@ -24,6 +28,7 @@ class IssueUpdateRequest(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
+
 class Type(WorkItem):
     id: Optional[str] = None
     name: Optional[str] = None
@@ -32,15 +37,17 @@ class Type(WorkItem):
     isAutoAttached: Optional[bool] = None
     presentation: Optional[str] = None
 
+
 class Duration(WorkItem):
     minutes: int
     presentation: Optional[str] = None
 
+
 class AddSpentTimeRequest(WorkItem):
     duration: Duration
+    date: int = Field(alias="date_millis")
     text: Optional[str] = None
     type: Optional[str] = None
-    date_millis: Optional[int] = Field(default=None, alias="date")
 
     class Config:
         arbitrary_types_allowed = True

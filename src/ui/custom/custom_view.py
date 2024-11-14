@@ -14,6 +14,7 @@ T = TypeVar("T")
 
 class CustomView(tk.Toplevel):
     __position: Literal["left", "right", "top", "bottom"] = "right"
+    __bg_color: str = "#000000"
 
     def __init__(
         self,
@@ -23,6 +24,7 @@ class CustomView(tk.Toplevel):
         super().__init__(master=parent_window)
         self._config = config
         self.__position = config.position
+        self.__bg_color = config.bg_color
         self._update_job: Optional[str] = None
 
     def update_value(self, value: T) -> None:
@@ -96,16 +98,13 @@ class CustomView(tk.Toplevel):
 
     def _flash_update(
         self,
-        bg_color: str = "#F0F0F0",
         flash_color: Literal["red", "green", "yellow"] = "yellow",
     ) -> None:
         """Flash the border with a smooth fade effect."""
         try:
-
-            STEPS = 15
-            DELAY = 10
-            BORDER_WIDTH = 1
-
+            STEPS = 20
+            DELAY = 8
+            BORDER_WIDTH = 2
             FLASH_COLOR_MAP = {
                 "red": "#FFCCCC",
                 "green": "#CCFFCC",
@@ -119,31 +118,28 @@ class CustomView(tk.Toplevel):
                 try:
 
                     bg_rgb = [
-                        int(bg_color.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4)
+                        int(self.__bg_color.lstrip("#")[i : i + 2], 16)
+                        for i in (0, 2, 4)
                     ]
                     target_rgb = [
                         int(target_color.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4)
                     ]
-
                     current_rgb = [
                         int(bg_rgb[i] + (target_rgb[i] - bg_rgb[i]) * ratio)
                         for i in range(3)
                     ]
-
                     return (
                         f"#{current_rgb[0]:02x}{current_rgb[1]:02x}{current_rgb[2]:02x}"
                     )
                 except Exception as e:
                     logging.error(f"Color interpolation failed: {e}")
-                    return bg_color
+                    return self.__bg_color
 
             def fade_step(step: int = 0):
                 if step > STEPS:
-
                     self.configure(
                         highlightthickness=BORDER_WIDTH,
-                        highlightbackground=bg_color,
-                        highlightcolor=bg_color,
+                        highlightbackground=self.__bg_color,
                     )
                     return
 
@@ -154,15 +150,12 @@ class CustomView(tk.Toplevel):
                     self.configure(
                         highlightthickness=BORDER_WIDTH,
                         highlightbackground=color,
-                        highlightcolor=color,
                     )
                 except Exception as e:
                     logging.error(f"Widget update failed: {e}")
                     return
 
                 self.after(DELAY, lambda: fade_step(step + 1))
-
-            self.configure(highlightthickness=BORDER_WIDTH)
 
             try:
                 for after_id in self.tk.eval("after info").split():
@@ -176,6 +169,6 @@ class CustomView(tk.Toplevel):
             logging.error(f"Flash update failed: {e}")
             self.configure(
                 highlightthickness=BORDER_WIDTH,
-                highlightbackground=bg_color,
-                highlightcolor=bg_color,
+                highlightbackground=self.__bg_color,
+                highlightcolor=self.__bg_color,
             )

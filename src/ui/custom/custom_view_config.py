@@ -10,6 +10,7 @@ class CustomViewConfig(BaseModel):
     title: str = "Untitled Window"
     position: Literal["left", "right", "top", "bottom"] = "right"
     topmost: bool = True
+    bg_color: Optional[str] = "#000000"
     cancel_key: Optional[str] = None
     submit_key: Optional[str] = None
 

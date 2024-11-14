@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, time
 import logging
 from typing import Callable, Optional
 import tkinter as tk
@@ -7,6 +7,7 @@ from ui.custom.custom_combobox import CustomComboboxConfig
 from ui.add_spent_time.add_spent_time_window_config import AddSpentTimeWindowConfig
 from utils.youtrack import time_valid
 from ui.utils.entry_utils import (
+    CustomDateEntryConfig,
     create_labeled_combobox,
     create_labeled_date_entry,
     create_labeled_entry,
@@ -16,10 +17,28 @@ from ui.custom.custom_entry import CustomEntryConfig
 
 logger = logging.getLogger(__name__)
 
+DATE_FORMAT_MAP = {
+    "dd/mm/yyyy": "%d/%m/%Y",
+    "mm/dd/yyyy": "%m/%d/%Y",
+    "yyyy/mm/dd": "%Y/%m/%d",
+    "dd-mm-yyyy": "%d-%m-%Y",
+    "mm-dd-yyyy": "%m-%d-%Y",
+    "yyyy-mm-dd": "%Y-%m-%d",
+}
+
 
 class AddSpentTimeWindow(CustomWindow):
+    # Metadata
     __issue_id_change_callback: Optional[Callable] = None
     __issue_types: list[str] = []
+    __config: Optional[AddSpentTimeWindowConfig] = None
+
+    # Add Spent Time Request Fields
+    __issue_id_var: tk.StringVar
+    __time_var: tk.StringVar
+    __description_var: tk.StringVar
+    __type_var: tk.StringVar
+    __date_var: tk.StringVar
 
     def __init__(
         self,
@@ -27,6 +46,7 @@ class AddSpentTimeWindow(CustomWindow):
         **kwargs,
     ):
         super().__init__(config=config, **kwargs)
+        self.__config = config
 
         initial_issue_id = (
             f"{config.project}{config.issue_separator}{config.initial_issue_id}"
@@ -67,11 +87,20 @@ class AddSpentTimeWindow(CustomWindow):
         self.__type_var = create_labeled_combobox(
             parent=self,
             label="Type:",
-            config=CustomComboboxConfig(values=self.__issue_types),
+            config=CustomComboboxConfig(
+                values=self.__issue_types,
+            ),
         )
 
         # Date Entry
-        self.__date_var = create_labeled_date_entry(parent=self, label="Date:")
+        self.__date_var = create_labeled_date_entry(
+            parent=self,
+            label="Date:",
+            config=CustomDateEntryConfig(
+                initial_value=config.initial_date,
+                date_format=config.date_format,
+            ),
+        )
 
         # OK Button
         ok_button = tk.Button(self, text="OK", command=self._submit, width=10)
@@ -103,14 +132,26 @@ class AddSpentTimeWindow(CustomWindow):
         return self.__description_var.get()
 
     def _get_issue_type(self) -> str:
-        return self.__type_var.get()
+        # Disabled until fixed
+        return None # self.__type_var.get()
+
+    def _get_strptime_format(self, date_entry_format: str) -> str:
+        return DATE_FORMAT_MAP.get(date_entry_format.lower())
 
     def _get_date_millis(self) -> Optional[int]:
         date_str = self.__date_var.get()
         try:
-            date_obj = datetime.datetime.strptime(date_str, "%m/%d/%Y")
-            timestamp = date_obj.timestamp()
-            return int(timestamp * 1000)
+            strptime_format = self._get_strptime_format(self.__config.date_format)
+            if not strptime_format:
+                raise ValueError(
+                    f"Unsupported date format: {self.__config.date_format}"
+                )
+
+            date_obj = datetime.strptime(date_str, strptime_format)
+            timestamp = date_obj.timestamp() or int(time() * 1000)
+            timestamp_millis = int(timestamp * 1000)
+            logger.info(f"Date: {date_obj}, Timestamp: {timestamp_millis}")
+            return timestamp_millis
         except ValueError as e:
             logger.error(f"Error parsing date: {e}")
             return None
