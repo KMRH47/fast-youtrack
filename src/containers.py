@@ -1,6 +1,7 @@
 import logging
 import sys
 
+
 logger = logging.getLogger(__name__)
 
 try:
@@ -9,7 +10,14 @@ try:
     from ui.add_spent_time.add_spent_time_controller import AddSpentTimeController
     from ui.add_spent_time.add_spent_time_window import AddSpentTimeWindow
     from utils.clipboard import get_selected_number
-    from config import Config, load_config
+    from config import (
+        Config,
+        load_config,
+        create_issue_view_config,
+        create_timer_view_config,
+        create_add_spent_time_config,
+        generate_bearer_token,
+    )
     from dependency_injector import containers, providers
     from services.http_service import HttpService
     from services.youtrack_service import YouTrackService
@@ -19,10 +27,6 @@ try:
 except Exception as e:
     logger.critical("Error during imports", exc_info=True)
     sys.exit(1)
-
-
-def generate_bearer_token(service: BearerTokenService) -> str:
-    return service.get_bearer_token() or service.prompt_for_bearer_token()
 
 
 class Container(containers.DeclarativeContainer):
@@ -57,31 +61,44 @@ class Container(containers.DeclarativeContainer):
         bearer_token=bearer_token,
     )
 
-    issue_view_factory: providers.Provider[IssueView] = providers.Factory(
-        IssueView, config=providers.Object(config().issue_view_config)
-    )
-
-    timer_view_factory: providers.Provider[TimerView] = providers.Factory(
-        TimerView, config=providers.Object(config().timer_view_config)
-    )
-
     youtrack_service: providers.Provider[YouTrackService] = providers.Singleton(
         YouTrackService,
         http_service=http_service,
         file_manager=file_manager,
     )
 
-    add_spent_time_window: providers.Provider[AddSpentTimeWindow] = providers.Singleton(
+    issue_view_config = providers.Factory(
+        create_issue_view_config,
+    )
+
+    timer_view_config = providers.Factory(
+        create_timer_view_config,
+    )
+
+    add_spent_time_config = providers.Factory(
+        create_add_spent_time_config,
+        youtrack_service,
+    )
+
+    issue_view_factory = providers.Factory(
+        IssueView,
+        config=issue_view_config,
+    )
+
+    timer_view_factory = providers.Factory(
+        TimerView,
+        config=timer_view_config,
+    )
+
+    add_spent_time_window = providers.Singleton(
         AddSpentTimeWindow,
         issue_id=get_selected_number() or None,
-        config=providers.Object(config().add_spent_time_config),
+        config=add_spent_time_config,
         attached_views=[issue_view_factory, timer_view_factory],
     )
 
-    add_spent_time_controller: providers.Provider[AddSpentTimeController] = (
-        providers.Singleton(
-            AddSpentTimeController,
-            window=add_spent_time_window,
-            youtrack_service=youtrack_service,
-        )
+    add_spent_time_controller = providers.Singleton(
+        AddSpentTimeController,
+        window=add_spent_time_window,
+        youtrack_service=youtrack_service,
     )

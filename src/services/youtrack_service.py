@@ -63,7 +63,7 @@ class YouTrackService:
             response = self._request(
                 method="post",
                 endpoint=f"issues/{issue_id}/timeTracking/workItems",
-                json=add_spent_time_request.model_dump_json(exclude_none=True),
+                json=add_spent_time_request.model_dump(exclude_none=True),
             )
 
             logger.info(f"Added spent time to issue {issue_id}")

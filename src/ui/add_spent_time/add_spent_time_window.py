@@ -30,7 +30,7 @@ DATE_FORMAT_MAP = {
 class AddSpentTimeWindow(CustomWindow):
     # Metadata
     __issue_id_change_callback: Optional[Callable] = None
-    __issue_types: list[str] = []
+    __work_item_type_mapping: dict[str, str] = {}
     __config: Optional[AddSpentTimeWindowConfig] = None
 
     # Add Spent Time Request Fields
@@ -47,6 +47,7 @@ class AddSpentTimeWindow(CustomWindow):
     ):
         super().__init__(config=config, **kwargs)
         self.__config = config
+        self.__work_item_type_mapping = config.work_item_types
 
         initial_issue_id = (
             f"{config.project}{config.issue_separator}{config.initial_issue_id}"
@@ -88,7 +89,7 @@ class AddSpentTimeWindow(CustomWindow):
             parent=self,
             label="Type:",
             config=CustomComboboxConfig(
-                values=self.__issue_types,
+                values=list(self.__work_item_type_mapping.keys()),
             ),
         )
 
@@ -132,8 +133,8 @@ class AddSpentTimeWindow(CustomWindow):
         return self.__description_var.get()
 
     def _get_issue_type(self) -> str:
-        # Disabled until fixed
-        return None # self.__type_var.get()
+        selected_type_name = self.__type_var.get()
+        return self.__work_item_type_mapping.get(selected_type_name)
 
     def _get_strptime_format(self, date_entry_format: str) -> str:
         return DATE_FORMAT_MAP.get(date_entry_format.lower())
@@ -155,6 +156,3 @@ class AddSpentTimeWindow(CustomWindow):
         except ValueError as e:
             logger.error(f"Error parsing date: {e}")
             return None
-
-    def _set_issue_types(self, issue_types: list[str]):
-        self.__issue_types = issue_types
