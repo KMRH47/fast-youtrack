@@ -1,4 +1,3 @@
-from datetime import datetime
 from pydantic import BaseModel, Field
 from typing import Optional, List
 
@@ -47,7 +46,7 @@ class AddSpentTimeRequest(WorkItem):
     duration: Duration
     date: int = Field(alias="date_millis")
     text: Optional[str] = Field(None, alias="description")
-    type: Optional[str] = None
+    type: Optional[WorkItem] = None
 
     class Config:
         arbitrary_types_allowed = True

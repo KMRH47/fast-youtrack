@@ -6,7 +6,7 @@ import tkinter as tk
 from ui.custom.custom_combobox import CustomComboboxConfig
 from ui.add_spent_time.add_spent_time_window_config import AddSpentTimeWindowConfig
 from utils.youtrack import time_valid
-from ui.utils.entry_utils import (
+from ui.utils.create_labeled_widgets import (
     CustomDateEntryConfig,
     create_labeled_combobox,
     create_labeled_date_entry,

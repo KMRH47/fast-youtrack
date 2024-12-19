@@ -3,7 +3,7 @@ import tkinter as tk
 from tkcalendar import DateEntry
 from typing import Optional
 
-from ui.custom.custom_combobox import CustomCombobox
+from ui.custom.custom_combobox import CustomCombobox, CustomComboboxConfig
 from ui.custom.custom_entry import CustomEntry, CustomEntryConfig
 
 logger = logging.getLogger(__name__)
@@ -63,13 +63,15 @@ def create_labeled_date_entry(
 
 
 def create_labeled_combobox(
-    parent, label: Optional[str] = None, config: Optional[CustomEntryConfig] = None
+    parent, label: Optional[str] = None, config: Optional[CustomComboboxConfig] = None
 ) -> tk.StringVar:
+    logger.info("Creating labeled combobox, config: %s", config)
     label_widget = tk.Label(parent, text=label)
     label_widget.pack(anchor="w", padx=10, pady=5)
 
     text_var = tk.StringVar(value=config.initial_value)
-    combobox = CustomCombobox(master=parent, config=config)
+    combobox = CustomCombobox(master=parent, config=config, textvariable=text_var)
+
     combobox.pack(anchor="w", padx=10, fill="x", expand=True)
 
     return text_var

@@ -4,6 +4,7 @@ from typing import Optional
 
 from services.youtrack_service import YouTrackService
 from models.general_requests import AddSpentTimeRequest, Duration
+from models.work_item_base import WorkItem
 from ui.add_spent_time.add_spent_time_window import AddSpentTimeWindow
 from utils.youtrack import convert_time_to_minutes, id_valid
 
@@ -33,7 +34,7 @@ class AddSpentTimeController:
         add_spent_time_request = AddSpentTimeRequest(
             description=self.__window._get_description(),
             duration=Duration(minutes=convert_time_to_minutes(time_short_format)),
-            type=self.__window._get_issue_type(),
+            type=WorkItem(id=self.__window._get_issue_type()),
             date_millis=self.__window._get_date_millis(),
         )
 
@@ -42,7 +43,7 @@ class AddSpentTimeController:
     def _fetch_and_propagate_issue(self, issue_id: str):
         """Fetch the issue and propagate it using the callback."""
         issue = self.__youtrack_service.get_issue(issue_id)
-        
+
         for view in self.__window.get_attached_views():
             view.update_value(issue)
 
