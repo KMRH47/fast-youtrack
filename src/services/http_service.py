@@ -56,20 +56,25 @@ class HttpService:
             logger.info(f"{method} Request Data:\n\n{content_str}\n")
 
     def _handle_response(self, url: str, response: requests.Response):
-        response_content = response and json.dumps(response.json(), indent=2)
-        response_text = (
-            "Response body:\n\n " + (response_content or "No Response Body") + "\n"
-        )
-        if response.status_code == 401:
-            raise UserError("Unauthorized. Please check subdomain and token.")
+        try:
+            response_content = response.json()
+            formatted_response = json.dumps(response_content, indent=2)
+        except ValueError:
+            formatted_response = response.text or "No Response Body"
+
+        response_text = f"Response body:\n\n{formatted_response}\n"
+
         if response.status_code >= 400:
-            logger.error(
-                f"Request to {url} failed with status {response.status_code}: {response.text}\n\n{response}"
-            )
-            logger.error(response_text)
+            message = f"Request to {url} failed with status {response.status_code}: {formatted_response}"
+            logger.error(message)
+
+            if response.status_code == 401:
+                raise UserError("Unauthorized. Please check subdomain and token.")
+            else:
+                raise UserError(f"Error: {response.status_code} - {formatted_response}")
         else:
-            logger.info(f"Response body:\n\n{response_text}\n")
-        response.raise_for_status()
+            logger.info(response_text)
+
         return response.json()
 
     def get(self, url: str, headers: dict = None, params: dict = None) -> dict:
