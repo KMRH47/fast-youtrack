@@ -65,13 +65,13 @@ class HttpService:
         response_text = f"Response body:\n\n{formatted_response}\n"
 
         if response.status_code >= 400:
-            message = f"Request to {url} failed with status {response.status_code}: {formatted_response}"
-            logger.error(message)
+            message = f"Response:\n\nRequest to {url} failed with status {response.status_code}: {formatted_response}"
+            logger.error(f'{message}\n')
 
             if response.status_code == 401:
                 raise UserError("Unauthorized. Please check subdomain and token.")
             else:
-                raise UserError(f"Error: {response.status_code} - {formatted_response}")
+                response.raise_for_status()
         else:
             logger.info(response_text)
 
