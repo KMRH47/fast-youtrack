@@ -8,6 +8,13 @@ set AHK_DIR=ahk
 set AHK_URL=https://www.autohotkey.com/download/ahk-v2.zip
 set AHK_ZIP=%AHK_DIR%\ahk-v2.zip
 
+REM Check if Python is installed
+python --version >nul 2>&1
+if %ERRORLEVEL% neq 0 (
+    echo Please install Python manually from https://www.python.org/downloads/
+    exit /b 1
+)
+
 REM Check if virtual environment exists
 if not exist %VENV_DIR% (
     echo Creating virtual environment...
