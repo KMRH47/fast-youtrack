@@ -13,9 +13,6 @@ try:
     from config import (
         Config,
         load_config,
-        create_issue_view_config,
-        create_timer_view_config,
-        create_add_spent_time_config,
         generate_bearer_token,
     )
     from dependency_injector import containers, providers
@@ -67,27 +64,28 @@ class Container(containers.DeclarativeContainer):
         file_manager=file_manager,
     )
 
-    issue_view_config = providers.Factory(
-        create_issue_view_config,
-    )
-
-    timer_view_config = providers.Factory(
-        create_timer_view_config,
-    )
-
-    add_spent_time_config = providers.Factory(
-        create_add_spent_time_config,
-        youtrack_service,
-    )
-
     issue_view_factory = providers.Factory(
         IssueView,
-        config=issue_view_config,
+        config=providers.Callable(lambda x=config().issue_view_config: x),
     )
 
     timer_view_factory = providers.Factory(
         TimerView,
-        config=timer_view_config,
+        config=providers.Callable(lambda x=config().timer_view_config: x),
+    )
+
+    add_spent_time_config = providers.Factory(
+        lambda config, youtrack_service: config.add_spent_time_config.copy(
+            update={
+                "work_item_types": config.add_spent_time_config.work_item_types
+                or {
+                    item.name: item.id
+                    for item in youtrack_service.get_work_item_types()
+                }
+            }
+        ),
+        config,
+        youtrack_service,
     )
 
     add_spent_time_window = providers.Singleton(

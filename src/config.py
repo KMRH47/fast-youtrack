@@ -28,6 +28,7 @@ class Config(BaseModel):
         cancel_key="Escape",
         submit_key="Return",
         date_format="dd/mm/yyyy",
+        work_item_types={} # Types fetched from YouTrack if empty (name: id)
     )
     issue_view_config: CustomViewConfig = CustomViewConfig(
         title="Issue Viewer", topmost=True, position="right"
@@ -56,45 +57,6 @@ def load_config() -> Config:
     except ValueError as e:
         logger.error("ValueError encountered: %s", e, exc_info=True)
         sys.exit(1)
-
-
-def create_issue_view_config() -> CustomViewConfig:
-    return CustomViewConfig(
-        title="Issue Details",
-        topmost=True,
-        width=300,
-        height=325,
-        position="right",
-    )
-
-
-def create_timer_view_config() -> CustomViewConfig:
-    return CustomViewConfig(
-        title="Elapsed Time",
-        topmost=True,
-        width=300,
-        height=50,
-        position="top",
-    )
-
-
-def create_add_spent_time_config(
-    youtrack_service: YouTrackService,
-) -> AddSpentTimeWindowConfig:
-    return AddSpentTimeWindowConfig(
-        project="DEMO",
-        initial_issue_id="1",
-        width=300,
-        height=325,
-        title="Add Spent Time",
-        topmost=True,
-        cancel_key="Escape",
-        submit_key="Return",
-        date_format="dd/mm/yyyy",
-        work_item_types={
-            item.name: item.id for item in youtrack_service.get_work_item_types()
-        },
-    )
 
 
 def generate_bearer_token(service: BearerTokenService) -> str:
