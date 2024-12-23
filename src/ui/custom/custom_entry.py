@@ -39,10 +39,10 @@ class CustomEntry(tk.Entry):
 
     def _on_backspace(self, event):
         cursor_pos = self.index(tk.INSERT)
+        text_up_to_cursor = self.text_var.get()[:cursor_pos]
 
         if not self.__break_chars:
-            self.delete(0, cursor_pos)
-            return "break"
+            self._delete_word(cursor_pos, text_up_to_cursor)
 
         pattern = f"[{''.join(map(re.escape, self.__break_chars))}]"
         text_up_to_cursor = self.get()[:cursor_pos]
@@ -57,3 +57,19 @@ class CustomEntry(tk.Entry):
 
         self.delete(last_stop_index + 1, cursor_pos)
         return "break"
+
+    def _delete_word(self, cursor_pos: int, text: str):
+        reversed_text = text[::-1]
+
+        for i, char in enumerate(reversed_text):
+            last_index = len(reversed_text) - 1 == i
+
+            if last_index:
+                self.delete(0, cursor_pos)
+                break
+
+            adjacent_char = reversed_text[i + 1]
+
+            if char != " " and adjacent_char == " ":
+                self.delete(cursor_pos - i, cursor_pos)
+                break
