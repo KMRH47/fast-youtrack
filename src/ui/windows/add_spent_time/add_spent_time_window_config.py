@@ -1,5 +1,6 @@
 from datetime import date
-from ui.custom.custom_view_config import CustomViewConfig
+
+from ui.views.base.custom_view_config import CustomViewConfig
 
 
 class AddSpentTimeWindowConfig(CustomViewConfig):

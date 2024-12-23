@@ -3,8 +3,8 @@ import tkinter as tk
 from typing import Optional
 
 from errors.user_cancelled_error import UserCancelledError
-from ui.custom.custom_view_config import CustomViewConfig
-from ui.custom.custom_window_attach_mixin import CustomWindowAttachMixin
+from ui.views.base.custom_view_config import CustomViewConfig
+from ui.windows.base.custom_window_attach_mixin import CustomWindowAttachMixin
 
 logger = logging.getLogger(__name__)
 

@@ -3,7 +3,7 @@ from tkinter import ttk
 
 from typing import Optional
 
-from ui.custom.custom_entry import CustomEntryConfig
+from ui.widgets.custom_entry import CustomEntryConfig
 
 
 logger = logging.getLogger(__name__)

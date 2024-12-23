@@ -3,8 +3,9 @@ import tkinter as tk
 from tkcalendar import DateEntry
 from typing import Optional
 
-from ui.custom.custom_combobox import CustomCombobox, CustomComboboxConfig
-from ui.custom.custom_entry import CustomEntry, CustomEntryConfig
+from ui.widgets.custom_combobox import CustomCombobox, CustomComboboxConfig
+from ui.widgets.custom_entry import CustomEntry, CustomEntryConfig
+
 
 logger = logging.getLogger(__name__)
 

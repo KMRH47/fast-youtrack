@@ -13,9 +13,10 @@ from services.youtrack_service import YouTrackService
 from errors.user_cancelled_error import UserCancelledError
 from models.general_responses import Issue, StateBundleElement
 from models.general_requests import IssueUpdateRequest
-from ui.issue_view import IssueView
-from ui.custom.custom_window import CustomWindow, CustomViewConfig
-from ui.timer_view import TimerView
+from ui.views.base.custom_view_config import CustomViewConfig
+from ui.views.issue_viewer.issue_viewer_view import IssueViewerView
+from ui.views.timer.timer_view import TimerView
+from ui.windows.base.custom_window import CustomWindow
 
 
 logger = logging.getLogger(__name__)
@@ -40,7 +41,7 @@ class IssueUpdate(BaseModel):
     state: str = ""
     type: str = ""
 
-class IssueUpdateRequestUI:
+class UpdateIssueView:
     def __init__(self, youtrack_service: YouTrackService):
         self.__window = CustomWindow(
             config=CustomViewConfig(width=300, height=325, title="Update YouTrack Issue", topmost=True))
@@ -48,7 +49,7 @@ class IssueUpdateRequestUI:
         self.__cancelled = True
         self.__issue: Issue | None = None
         self.__issue_update_request: IssueUpdateRequest | None = None
-        self.__issue_viewer = IssueView(self.__window)
+        self.__issue_viewer = IssueViewerView(self.__window)
         self.__timer_view = TimerView(self.__window)
 
     def show(self, issue_id: str = "") -> Tuple[Optional[IssueUpdateRequest], str]:

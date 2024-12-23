@@ -3,8 +3,8 @@ import logging
 from typing import Optional
 from pydantic import BaseModel, Field, ValidationError
 
-from ui.add_spent_time.add_spent_time_window_config import AddSpentTimeWindowConfig
-from ui.custom.custom_view_config import CustomViewConfig
+from ui.views.base.custom_view_config import CustomViewConfig
+from ui.windows.add_spent_time.add_spent_time_window_config import AddSpentTimeWindowConfig
 
 
 logger = logging.getLogger(__name__)

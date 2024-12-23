@@ -7,7 +7,7 @@ from containers import Container
 from logger.my_logger import setup_logger
 from errors.user_error import UserError
 from errors.user_cancelled_error import UserCancelledError
-from ui.add_spent_time.add_spent_time_controller import AddSpentTimeController
+from ui.windows.add_spent_time.add_spent_time_controller import AddSpentTimeController
 
 setup_logger()
 

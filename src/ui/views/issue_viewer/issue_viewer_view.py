@@ -3,13 +3,14 @@ from typing import Optional
 import logging
 
 from models.general_responses import EnumBundleElement, Issue
-from ui.custom.custom_view_config import CustomViewConfig
-from ui.custom.custom_view import CustomView
+
+from ui.views.base.custom_view import CustomView
+from ui.views.base.custom_view_config import CustomViewConfig
 
 logger = logging.getLogger(__name__)
 
 
-class IssueView(CustomView):
+class IssueViewerView(CustomView):
     __issue: Optional[Issue] = None
 
     def __init__(

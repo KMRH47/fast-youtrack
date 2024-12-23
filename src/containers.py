@@ -1,14 +1,13 @@
 import logging
 import sys
 
-
 logger = logging.getLogger(__name__)
 
 try:
-    from ui.issue_view import IssueView
-    from ui.timer_view import TimerView
-    from ui.add_spent_time.add_spent_time_controller import AddSpentTimeController
-    from ui.add_spent_time.add_spent_time_window import AddSpentTimeWindow
+    from ui.windows.add_spent_time.add_spent_time_controller import AddSpentTimeController
+    from ui.windows.add_spent_time.add_spent_time_window import AddSpentTimeWindow
+    from ui.views.issue_viewer.issue_viewer_view import IssueViewerView
+    from ui.views.timer.timer_view import TimerView
     from utils.clipboard import get_selected_number
     from config import Config, load_config
     from dependency_injector import containers, providers
@@ -60,7 +59,7 @@ class Container(containers.DeclarativeContainer):
     )
 
     issue_view_factory = providers.Factory(
-        IssueView,
+        IssueViewerView,
         config=providers.Callable(lambda config=config().issue_view_config: config),
     )
 

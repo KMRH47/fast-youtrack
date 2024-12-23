@@ -1,7 +1,8 @@
 import tkinter as tk
 from typing import Callable, Optional
 
-from ui.custom.custom_view import CustomView
+from ui.views.base.custom_view import CustomView
+
 
 
 class CustomWindowAttachMixin(tk.Tk):

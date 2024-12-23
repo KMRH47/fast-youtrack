@@ -3,8 +3,10 @@ import logging
 from typing import Callable, Optional
 import tkinter as tk
 
-from ui.custom.custom_combobox import CustomComboboxConfig
-from ui.add_spent_time.add_spent_time_window_config import AddSpentTimeWindowConfig
+from ui.widgets.custom_combobox import CustomComboboxConfig
+from ui.widgets.custom_entry import CustomEntryConfig
+from ui.windows.add_spent_time.add_spent_time_window_config import AddSpentTimeWindowConfig
+from ui.windows.base.custom_window import CustomWindow
 from utils.youtrack import time_valid
 from ui.utils.create_labeled_widgets import (
     CustomDateEntryConfig,
@@ -12,8 +14,6 @@ from ui.utils.create_labeled_widgets import (
     create_labeled_date_entry,
     create_labeled_entry,
 )
-from ui.custom.custom_window import CustomWindow
-from ui.custom.custom_entry import CustomEntryConfig
 
 logger = logging.getLogger(__name__)
 

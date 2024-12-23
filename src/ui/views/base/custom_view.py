@@ -5,7 +5,9 @@ import math
 
 from typing import Literal
 from typing import Literal, Optional, TypeVar
-from ui.custom.custom_view_config import CustomViewConfig
+
+from ui.views.base.custom_view_config import CustomViewConfig
+
 
 logger = logging.getLogger(__name__)
 
