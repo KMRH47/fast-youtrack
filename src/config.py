@@ -28,7 +28,7 @@ class Config(BaseModel):
         cancel_key="Escape",
         submit_key="Return",
         date_format="dd/mm/yyyy",
-        work_item_types={} # Types fetched from YouTrack if empty (name: id)
+        work_item_types={},  # Types fetched from YouTrack if empty (name: id)
     )
     issue_view_config: CustomViewConfig = CustomViewConfig(
         title="Issue Viewer", topmost=True, position="right"
@@ -57,7 +57,3 @@ def load_config() -> Config:
     except ValueError as e:
         logger.error("ValueError encountered: %s", e, exc_info=True)
         sys.exit(1)
-
-
-def generate_bearer_token(service: BearerTokenService) -> str:
-    return service.get_bearer_token() or service.prompt_for_bearer_token()

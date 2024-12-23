@@ -10,11 +10,7 @@ try:
     from ui.add_spent_time.add_spent_time_controller import AddSpentTimeController
     from ui.add_spent_time.add_spent_time_window import AddSpentTimeWindow
     from utils.clipboard import get_selected_number
-    from config import (
-        Config,
-        load_config,
-        generate_bearer_token,
-    )
+    from config import Config, load_config
     from dependency_injector import containers, providers
     from services.http_service import HttpService
     from services.youtrack_service import YouTrackService
@@ -48,14 +44,13 @@ class Container(containers.DeclarativeContainer):
         token_file_name=config().token_file_name,
     )
 
-    bearer_token: providers.Provider[str] = providers.Callable(
-        generate_bearer_token, bearer_token_service
-    )
-
     http_service: providers.Provider[HttpService] = providers.Factory(
         HttpService,
         base_url=config().base_url,
-        bearer_token=bearer_token,
+        bearer_token=providers.Callable(
+            lambda service=bearer_token_service: service().get_bearer_token()
+            or service().prompt_for_bearer_token()
+        ),
     )
 
     youtrack_service: providers.Provider[YouTrackService] = providers.Singleton(
@@ -66,12 +61,12 @@ class Container(containers.DeclarativeContainer):
 
     issue_view_factory = providers.Factory(
         IssueView,
-        config=providers.Callable(lambda x=config().issue_view_config: x),
+        config=providers.Callable(lambda config=config().issue_view_config: config),
     )
 
     timer_view_factory = providers.Factory(
         TimerView,
-        config=providers.Callable(lambda x=config().timer_view_config: x),
+        config=providers.Callable(lambda config=config().timer_view_config: config),
     )
 
     add_spent_time_config = providers.Factory(
