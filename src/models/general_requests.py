@@ -1,7 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
-
-from models.work_item_base import WorkItem
+from models.general_responses import WorkItem
 
 
 class FieldStyle(WorkItem):

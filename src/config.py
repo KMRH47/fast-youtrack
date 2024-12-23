@@ -3,8 +3,6 @@ import logging
 from typing import Optional
 from pydantic import BaseModel, Field, ValidationError
 
-from services.youtrack_service import YouTrackService
-from services.bearer_token_service import BearerTokenService
 from ui.add_spent_time.add_spent_time_window_config import AddSpentTimeWindowConfig
 from ui.custom.custom_view_config import CustomViewConfig
 

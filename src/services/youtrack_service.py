@@ -6,8 +6,7 @@ from requests import RequestException
 
 from repositories.file_manager import FileManager
 from services.http_service import HttpService
-from models.work_item_response import WorkItemResponse
-from models.general_responses import Issue, Project, StateBundleElement, User
+from models.general_responses import Issue, Project, StateBundleElement, User, WorkItem
 from constants.youtrack_queries import issue_query, bundle_query
 from models.general_requests import AddSpentTimeRequest, IssueUpdateRequest
 
@@ -128,16 +127,16 @@ class YouTrackService:
             logger.error(f"Could not fetch issue {issue_id}")
             raise e
 
-    def get_work_item_types(self) -> List[WorkItemResponse]:
+    def get_work_item_types(self) -> List[WorkItem]:
         config = self.__file_manager.read_json("config")
 
         if "workItemTypes" in config:
-            return [WorkItemResponse(**item) for item in config["workItemTypes"]]
+            return [WorkItem(**item) for item in config["workItemTypes"]]
 
         response: List[dict] = self._request(
             endpoint="admin/timeTrackingSettings/workItemTypes", fields="id,name"
         )
-        work_item_responses = [WorkItemResponse(**item) for item in response]
+        work_item_responses = [WorkItem(**item) for item in response]
         work_item_types = [item.model_dump() for item in work_item_responses]
 
         self.__file_manager.write_json({"workItemTypes": work_item_types}, "config")

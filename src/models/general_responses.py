@@ -1,6 +1,20 @@
-from typing import List, Optional, Union
+from pydantic import BaseModel, Field
+from typing import List, Optional, Union, Literal
 
-from models.work_item_base import WorkItem
+YoutrackResponseField = Literal[
+    "State", "Priority", "Type", "Assignee", "Fix versions", "Affected versions"
+]
+
+
+class WorkItem(BaseModel):
+    id: Optional[str] = None
+    name: Optional[str] = None
+    type_: Optional[str] = Field(None, alias="$type")
+
+
+class WorkItemResponse(BaseModel):
+    id: str
+    name: str
 
 
 class UserType(WorkItem):
@@ -46,8 +60,7 @@ class EnumBundleElement(WorkItem):
 
 class CustomField(WorkItem):
     projectCustomField: Optional[ProjectCustomField] = None
-    value: Optional[Union[EnumBundleElement,
-                          List[EnumBundleElement], None]] = None
+    value: Optional[Union[EnumBundleElement, List[EnumBundleElement], None]] = None
 
 
 class IssueWatchers(WorkItem):
@@ -275,7 +288,7 @@ class BuildProjectCustomField(WorkItem):
 
 
 class MultiBuildIssueCustomField(WorkItem):
-    value: Optional[List] = None    
+    value: Optional[List] = None
     projectCustomField: Optional[BuildProjectCustomField] = None
     isUpdatable: Optional[bool] = None
     searchResults: Optional[List] = None
@@ -324,15 +337,19 @@ class Issue(WorkItem):
     usersTyping: Optional[List] = None
     summaryTextSearchResult: Optional[str] = None
     descriptionTextSearchResult: Optional[str] = None
-    fields: Optional[List[Union[
-        SingleEnumIssueCustomField,
-        StateIssueCustomField,
-        SingleUserIssueCustomField,
-        MultiVersionIssueCustomField,
-        PeriodIssueCustomField,
-        MultiOwnedIssueCustomField,
-        SimpleIssueCustomField,
-        DateIssueCustomField,
-        MultiBuildIssueCustomField
-    ]]] = None
+    fields: Optional[
+        List[
+            Union[
+                SingleEnumIssueCustomField,
+                StateIssueCustomField,
+                SingleUserIssueCustomField,
+                MultiVersionIssueCustomField,
+                PeriodIssueCustomField,
+                MultiOwnedIssueCustomField,
+                SimpleIssueCustomField,
+                DateIssueCustomField,
+                MultiBuildIssueCustomField,
+            ]
+        ]
+    ] = None
     channel: Optional[str] = None

@@ -4,7 +4,7 @@ from typing import Optional
 
 from services.youtrack_service import YouTrackService
 from models.general_requests import AddSpentTimeRequest, Duration
-from models.work_item_base import WorkItem
+from models.general_responses import WorkItem
 from ui.add_spent_time.add_spent_time_window import AddSpentTimeWindow
 from utils.youtrack import convert_time_to_minutes, id_valid
 

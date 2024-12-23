@@ -7,17 +7,38 @@ import tkinter as tk
 from typing import List, Optional, Tuple
 from tkinter import ttk
 
+from pydantic import BaseModel
+
 from services.youtrack_service import YouTrackService
 from errors.user_cancelled_error import UserCancelledError
 from models.general_responses import Issue, StateBundleElement
-from models.issue_states import BundleEnums
 from models.general_requests import IssueUpdateRequest
+from ui.issue_view import IssueView
 from ui.custom.custom_window import CustomWindow, CustomViewConfig
 from ui.timer_view import TimerView
 
 
 logger = logging.getLogger(__name__)
 
+
+class BundleEnums:
+    state = "110-0"
+    type = "108-1"
+    category = "108-269"
+    fix_versions = "113-23"
+    project_id = "108-35"
+    subsystems = "132-7"
+    resolution = "108-198"
+    build_number = "133-1"
+    priority = "108-0"
+
+
+class IssueUpdate(BaseModel):
+    id: str = ""
+    time: str = ""
+    description: str = ""
+    state: str = ""
+    type: str = ""
 
 class IssueUpdateRequestUI:
     def __init__(self, youtrack_service: YouTrackService):
