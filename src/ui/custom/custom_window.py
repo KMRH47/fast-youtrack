@@ -35,9 +35,9 @@ class CustomWindow(CustomWindowAttachMixin):
         self.resizable(self._config.resizable, self._config.resizable)
 
     def show(self):
-        self.deiconify()
-        self.update_idletasks()
         self.show_all_attached_views()
+        self.update_idletasks()
+        self.after(0, self.focus_force)
         self.mainloop()
 
         if self.__cancelled:

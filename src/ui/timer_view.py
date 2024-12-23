@@ -19,7 +19,6 @@ class TimerView(CustomView):
         super().__init__(config=config)
         self.__start_time: Optional[int] = None
         self.__timer_label: Optional[tk.Label] = None
-        self.__update_job: Optional[str] = None
 
     def _populate_widgets(self, parent: tk.Frame) -> None:
         """Populate widgets into the parent frame with timer details."""
@@ -49,7 +48,7 @@ class TimerView(CustomView):
         time_string = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
 
         self.__timer_label.config(text=f"Elapsed Time: {time_string}")
-        self.__update_job = self.after(1000, self._update_elapsed_time)
+        self.after(1000, self._update_elapsed_time)
 
     def reset_timer(self) -> None:
         """Reset the timer to zero."""
@@ -62,24 +61,3 @@ class TimerView(CustomView):
             return 0
         return int(time.time()) - self.__start_time
 
-    def destroy(self) -> None:
-        """
-        Override destroy to cancel any pending timer updates 
-        before destroying the window.
-        """
-        if self.__update_job:
-            self.after_cancel(self.__update_job)
-            self.__update_job = None
-
-        super().destroy()
-
-    def _hide(self) -> None:
-        """
-        Override hide to cancel any pending timer updates 
-        before hiding the window.
-        """
-        if self.__update_job:
-            self.after_cancel(self.__update_job)
-            self.__update_job = None
-
-        super()._hide()

@@ -50,7 +50,6 @@ class CustomWindowAttachMixin(tk.Tk):
     def _update_position(self, attached_view: CustomView):
         """Calculate and apply the position based on the parent window."""
 
-        attached_view.update_idletasks()
         parent_x = self.winfo_x()
         parent_y = self.winfo_y()
         parent_width = self.winfo_width()
@@ -91,8 +90,8 @@ class CustomWindowAttachMixin(tk.Tk):
     def show_all_attached_views(self):
         """Show and position all attached views."""
         for attached_view in self.__attached_views:
-            attached_view._show(self)
             self._bind_update_position(attached_view)
+            attached_view._show(self)
 
     def hide_all_attached_views(self):
         """Hide all attached views."""

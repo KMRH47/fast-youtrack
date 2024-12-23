@@ -25,7 +25,7 @@ class CustomView(tk.Toplevel):
         self._config = config
         self.__position = config.position
         self.__bg_color = config.bg_color
-        self._update_job: Optional[str] = None
+        self._hide() # Hide view to avoid flickering
 
     def update_value(self, value: T) -> None:
         """Update the view with a new value.
@@ -35,20 +35,14 @@ class CustomView(tk.Toplevel):
 
     def _show(self, parent_window: tk.Tk) -> None:
         self._create_window(parent_window)
-        self.transient(parent_window)
+        self.after(0, self.deiconify)
         self.update_idletasks()
         self._on_show()
 
     def _hide(self) -> None:
-        if self._update_job:
-            self.after_cancel(self._update_job)
-            self._update_job = None
         self.withdraw()
 
     def _destroy(self) -> None:
-        if self._update_job:
-            self.after_cancel(self._update_job)
-            self._update_job = None
         self.destroy()
         self = None
 
