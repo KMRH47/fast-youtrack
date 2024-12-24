@@ -8,7 +8,7 @@ try:
     from ui.windows.add_spent_time.add_spent_time_window import AddSpentTimeWindow
     from ui.views.issue_viewer.issue_viewer_view import IssueViewerView
     from ui.views.timer.timer_view import TimerView
-    from utils.clipboard import get_selected_number
+    from utils.clipboard import get_number_from_clipboard
     from config import Config, load_config
     from dependency_injector import containers, providers
     from services.http_service import HttpService
@@ -84,7 +84,7 @@ class Container(containers.DeclarativeContainer):
 
     add_spent_time_window = providers.Singleton(
         AddSpentTimeWindow,
-        issue_id=get_selected_number() or None,
+        issue_id=get_number_from_clipboard() or None,
         config=add_spent_time_config,
         attached_views=[issue_view_factory, timer_view_factory],
     )
