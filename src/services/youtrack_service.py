@@ -38,22 +38,7 @@ class YouTrackService:
             logger.error("Could not fetch user info")
             raise e
 
-    def update_issue(
-        self, issue_id: str, issue_update_request: IssueUpdateRequest
-    ) -> None:
-        try:
-            updated_issue: dict = self._request(
-                method="post",
-                endpoint=f"issues/{issue_id}",
-                json=issue_update_request.model_dump_json(exclude_none=True),
-            )
 
-            config = self.__file_manager.read_json("config")
-            config["issues"][issue_id] = updated_issue
-            self.__file_manager.write_json(config, "config")
-        except Exception as e:
-            logger.error(f"Could not update issue {issue_id}")
-            raise e
 
     def add_spent_time(
         self, issue_id: Optional[str], add_spent_time_request: AddSpentTimeRequest
