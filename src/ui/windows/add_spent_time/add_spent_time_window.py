@@ -38,7 +38,7 @@ class AddSpentTimeWindow(CustomWindow):
     ):
         super().__init__(config=config, **kwargs)
         self.__issue_id_change_callback: Optional[Callable] = None
-        self.__work_item_type_mapping: dict[str, str] = {}
+        self.__work_item_type_mapping: dict[str, str] = config.work_item_types if config else {}
         self.__config: Optional[AddSpentTimeWindowConfig] = config
 
         # StringVars
