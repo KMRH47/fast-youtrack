@@ -1,11 +1,14 @@
-from datetime import datetime, time
 import logging
-from typing import Callable, Optional
 import tkinter as tk
+
+from datetime import datetime, time
+from typing import Callable, Optional
 
 from ui.widgets.custom_combobox import CustomComboboxConfig
 from ui.widgets.custom_entry import CustomEntryConfig
-from ui.windows.add_spent_time.add_spent_time_window_config import AddSpentTimeWindowConfig
+from ui.windows.add_spent_time.add_spent_time_window_config import (
+    AddSpentTimeWindowConfig,
+)
 from ui.windows.base.custom_window import CustomWindow
 from utils.youtrack import time_valid
 from ui.utils.create_labeled_widgets import (
@@ -28,26 +31,22 @@ DATE_FORMAT_MAP = {
 
 
 class AddSpentTimeWindow(CustomWindow):
-    # Metadata
-    __issue_id_change_callback: Optional[Callable] = None
-    __work_item_type_mapping: dict[str, str] = {}
-    __config: Optional[AddSpentTimeWindowConfig] = None
-
-    # Add Spent Time Request Fields
-    __issue_id_var: tk.StringVar
-    __time_var: tk.StringVar
-    __description_var: tk.StringVar
-    __type_var: tk.StringVar
-    __date_var: tk.StringVar
-
     def __init__(
         self,
         config: Optional[AddSpentTimeWindowConfig] = None,
         **kwargs,
     ):
         super().__init__(config=config, **kwargs)
-        self.__config = config
-        self.__work_item_type_mapping = config.work_item_types
+        self.__issue_id_change_callback: Optional[Callable] = None
+        self.__work_item_type_mapping: dict[str, str] = {}
+        self.__config: Optional[AddSpentTimeWindowConfig] = config
+
+        # StringVars
+        self.__issue_id_var = tk.StringVar()
+        self.__time_var = tk.StringVar()
+        self.__description_var = tk.StringVar()
+        self.__type_var = tk.StringVar()
+        self.__date_var = tk.StringVar()
 
         initial_issue_id = (
             f"{config.project}{config.issue_separator}{config.initial_issue_id}"

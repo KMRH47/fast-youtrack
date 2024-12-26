@@ -5,18 +5,15 @@ from ui.views.base.custom_view import CustomView
 from ui.constants.tk_events import TkEvents
 
 
-
 class CustomWindowAttachMixin(tk.Tk):
     """Mixin that it possible to attach any Tkinter window to the left, top, right or bottom of other Tkinter views."""
-
-    __attached_views: list[CustomView]
 
     def __init__(
         self,
         attached_views: Optional[list[Callable[[], CustomView]]] = None,
     ):
         super().__init__()
-        self.__attached_views = (
+        self.__attached_views: list[CustomView] = (
             [factory() for factory in attached_views] if attached_views else []
         )
 
@@ -34,7 +31,8 @@ class CustomWindowAttachMixin(tk.Tk):
     def _get_cumulative_offset(self, attached_view: CustomView) -> int:
         """Calculate cumulative offset for views attached in the same position."""
         same_pos_views = [
-            view for view in self.__attached_views
+            view
+            for view in self.__attached_views
             if view._get_position() == attached_view._get_position()
         ]
 
@@ -51,12 +49,10 @@ class CustomWindowAttachMixin(tk.Tk):
 
     def _update_position(self, attached_view: CustomView):
         """Calculate and apply the position based on the parent window."""
-
-        parent_x = self.winfo_x()
-        parent_y = self.winfo_y()
+        parent_x = self.winfo_rootx()
+        parent_y = self.winfo_rooty()
         parent_width = self.winfo_width()
         parent_height = self.winfo_height()
-        title_bar_height = self.winfo_rooty() - self.winfo_y()
 
         window_width = attached_view.winfo_width()
         window_height = attached_view.winfo_height()
@@ -72,10 +68,10 @@ class CustomWindowAttachMixin(tk.Tk):
             new_y = parent_y + cumulative_offset
         elif position == "top":
             new_x = parent_x + cumulative_offset
-            new_y = parent_y - window_height - title_bar_height
+            new_y = self.winfo_y() - window_height
         elif position == "bottom":
             new_x = parent_x + cumulative_offset
-            new_y = parent_y + parent_height + title_bar_height
+            new_y = parent_y + parent_height
 
         attached_view.geometry(f"+{new_x}+{new_y}")
 

@@ -23,15 +23,15 @@ logger = logging.getLogger(__name__)
 
 
 class BundleEnums:
-    state = "110-0"
-    type = "108-1"
-    category = "108-269"
-    fix_versions = "113-23"
-    project_id = "108-35"
-    subsystems = "132-7"
-    resolution = "108-198"
-    build_number = "133-1"
-    priority = "108-0"
+    STATE = "110-0"
+    TYPE = "108-1"
+    CATEGORY = "108-269"
+    FIX_VERSIONS = "113-23"
+    PROJECT_ID = "108-35"
+    SUBSYSTEMS = "132-7"
+    RESOLUTION = "108-198"
+    BUILD_NUMBER = "133-1"
+    PRIORITY = "108-0"
 
 
 class IssueUpdate(BaseModel):
@@ -41,46 +41,55 @@ class IssueUpdate(BaseModel):
     state: str = ""
     type: str = ""
 
+
+# INCOMPLETE AND NOT IN USE (basically just some old code I'm keeping for reference)
 class UpdateIssueView:
     def __init__(self, youtrack_service: YouTrackService):
         self.__window = CustomWindow(
-            config=CustomViewConfig(width=300, height=325, title="Update YouTrack Issue", topmost=True))
+            config=CustomViewConfig(
+                width=300, height=325, title="Update YouTrack Issue", topmost=True
+            )
+        )
         self.__youtrack_service = youtrack_service
         self.__cancelled = True
-        self.__issue: Issue | None = None
-        self.__issue_update_request: IssueUpdateRequest | None = None
+        self.__issue: Optional[Issue] = None
+        self.__issue_update_request: Optional[IssueUpdateRequest] = None
         self.__issue_viewer = IssueViewerView(self.__window)
         self.__timer_view = TimerView(self.__window)
+        self.debounce_id: Optional[str] = None
+        self.selected_issue_state_var: Optional[tk.StringVar] = None
+        self.issue_state_combobox: Optional[ttk.Combobox] = None
+        self.issue_id_var: Optional[tk.StringVar] = None
 
     def show(self, issue_id: str = "") -> Tuple[Optional[IssueUpdateRequest], str]:
         # Issue State ComboBox
-        tk.Label(self.__window, text="Current State:").pack(
-            anchor='w', padx=10)
+        tk.Label(self.__window, text="Current State:").pack(anchor="w", padx=10)
         self.selected_issue_state_var = tk.StringVar()
         self.issue_state_combobox = ttk.Combobox(
             self.__window,
             values=self._get_available_issue_states(),
-            textvariable=self.selected_issue_state_var)
+            textvariable=self.selected_issue_state_var,
+        )
         self.issue_state_combobox.pack(
-            anchor='w', padx=10, pady=5, fill='x', expand=True)
+            anchor="w", padx=10, pady=5, fill="x", expand=True
+        )
         self.issue_state_combobox.bind(
-            '<<ComboboxSelected>>', self._on_issue_state_change)
-        self.issue_state_combobox.bind(
-            '<KeyRelease>', self._on_issue_state_change)
+            "<<ComboboxSelected>>", self._on_issue_state_change
+        )
+        self.issue_state_combobox.bind("<KeyRelease>", self._on_issue_state_change)
 
         # OK Button
-        ok_button = tk.Button(self.__window, text="OK",
-                              command=self._on_submit, width=10)
+        ok_button = tk.Button(
+            self.__window, text="OK", command=self._on_submit, width=10
+        )
         ok_button.pack(pady=5)
 
         logger.info("Prompting for issue update request...")
 
         # Test Attach
-# Test Attach
-        timer_view = self.__timer_view._show()  # Now timer_view is a TimerView object
-        issue_view = self.__issue_viewer.show()  # issue_view is an IssueView object
+        timer_view = self.__timer_view._show()
+        issue_view = self.__issue_viewer.show()
 
-        # Attach the windows using the TimerView and IssueView objects
         self.__window.attach_window(timer_view.get_window(), position="top")
 
         self.__window.mainloop()
@@ -108,8 +117,7 @@ class UpdateIssueView:
             if self.__issue_viewer:
                 self.__issue_viewer.update_issue(self.__issue)
 
-        self.debounce_id = self.__window.after(
-            random.randint(253, 333), debounce)
+        self.debounce_id = self.__window.after(random.randint(253, 333), debounce)
 
     def _on_cancel(self, event=None):
         self.__window.destroy()
@@ -121,11 +129,14 @@ class UpdateIssueView:
                     return field.value.name
 
     def _get_available_issue_states(self):
-        issue_states: list[StateBundleElement] = \
-            self.__youtrack_service.get_bundle(BundleEnums.state)
+        issue_states: list[StateBundleElement] = self.__youtrack_service.get_bundle(
+            BundleEnums.state
+        )
         return [state.name for state in issue_states if state.name]
 
     def _on_issue_state_change(self, event):
+        logger.debug("Debouncing issue state change")
+
         if self.debounce_id:
             self.__window.after_cancel(self.debounce_id)
 
@@ -134,29 +145,29 @@ class UpdateIssueView:
                 self._apply_error_style(self.issue_state_combobox)
             else:
                 self._reset_style(self.issue_state_combobox)
-            self.issue_state_combobox['values'] = \
-                self._get_available_issue_states()
+            self.issue_state_combobox["values"] = self._get_available_issue_states()
 
-        self.debounce_id = self.__window.after(
-            random.randint(253, 333), debounce)
+        self.debounce_id = self.__window.after(random.randint(253, 333), debounce)
 
     def _apply_error_style(self, widget):
         """Apply error styling to a widget."""
         style = ttk.Style()
-        style.theme_use('clam')
-        style.configure('Error.TCombobox', fieldbackground='white',
-                        bordercolor='red', borderwidth=2)
-        widget.config(style='Error.TCombobox')
+        style.theme_use("clam")
+        style.configure(
+            "Error.TCombobox", fieldbackground="white", bordercolor="red", borderwidth=2
+        )
+        widget.config(style="Error.TCombobox")
 
     def _reset_style(self, widget):
         """Reset the style of a widget to default."""
-        widget.config(style='TCombobox')
+        widget.config(style="TCombobox")
 
     def _state_valid(self) -> bool:
         current_issue_state = self.selected_issue_state_var.get()
         return (
-            current_issue_state is None or current_issue_state == "" or
-            current_issue_state in self.issue_state_combobox['values']
+            current_issue_state is None
+            or current_issue_state == ""
+            or current_issue_state in self.issue_state_combobox["values"]
         )
 
     def _duration_valid(self) -> bool:
@@ -170,29 +181,21 @@ class UpdateIssueView:
 
             logger.info("Validating issue update request...")
 
-            # Create the base update request using the issue response
             self.__issue_update_request = IssueUpdateRequest(
-                summary=self.__issue.summary,  # Use the current summary from the issue response
-                # Use the current description from the issue response
+                summary=self.__issue.summary,
                 description=self.__issue.description,
-                fields=[],  # We will populate this with updated fields later
-                # UI data for markdown embeddings (assuming this is UI input)
+                fields=[],
                 markdownEmbeddings=[],
-                # UI input (assuming this is a toggle or similar in the UI)
-                usesMarkdown=True
+                usesMarkdown=True,
             )
 
-            # Handling the fields: use the response data to keep fields in sync
             for field in self.__issue.fields:
-                # Here we could have logic to check if fields were updated in the UI
-                updated_field_value = self.get_field_value_from_ui(
-                    field.id)  # This is a placeholder method
+                updated_field_value = self.get_field_value_from_ui(field.id)
 
                 if updated_field_value:
-                    # Override the field value from the UI
+
                     field.value.name = updated_field_value
 
-                # Append the field to the update request's fields
                 self.__issue_update_request.fields.append(field)
 
             logger.info("Valid issue update request.")
@@ -204,8 +207,7 @@ class UpdateIssueView:
             raise e
 
     def get_field_value_from_ui(self, field_id):
-        # Example logic to get the value of a field from the UI by field id
-        if field_id == '130-2':  # Let's say this is the field for state
-            return self.ui_state_input.get()  # Fetch the value from a UI field
-        # Add additional field checks as necessary
-        return None  # Return None if no update is found in the UI for the field
+        if field_id == "130-2":
+            return self.ui_state_input.get()
+
+        return None

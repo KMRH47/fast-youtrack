@@ -1,5 +1,6 @@
 import logging
 import tkinter as tk
+
 from tkcalendar import DateEntry
 from typing import Optional
 
@@ -66,7 +67,7 @@ def create_labeled_date_entry(
 def create_labeled_combobox(
     parent, label: Optional[str] = None, config: Optional[CustomComboboxConfig] = None
 ) -> tk.StringVar:
-    logger.info("Creating labeled combobox, config: %s", config)
+    logger.debug("Creating labeled combobox, config: %s", config)
     label_widget = tk.Label(parent, text=label)
     label_widget.pack(anchor="w", padx=10, pady=5)
 

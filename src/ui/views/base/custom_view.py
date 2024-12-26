@@ -1,9 +1,8 @@
 import logging
-import tkinter as tk
 import logging
 import math
+import tkinter as tk
 
-from typing import Literal
 from typing import Literal, Optional, TypeVar
 
 from ui.views.base.custom_view_config import CustomViewConfig
@@ -16,9 +15,6 @@ T = TypeVar("T")
 
 
 class CustomView(tk.Toplevel):
-    __position: Literal["left", "right", "top", "bottom"] = "right"
-    __bg_color: str = "#000000"
-
     def __init__(
         self,
         parent_window: Optional[tk.Tk] = None,
@@ -26,9 +22,7 @@ class CustomView(tk.Toplevel):
     ):
         super().__init__(master=parent_window)
         self._config = config
-        self.__position = config.position
-        self.__bg_color = config.bg_color
-        self._hide() # Hide view to avoid flickering
+        self._hide()  # Hide view to avoid flickering
 
     def update_value(self, value: T) -> None:
         """Update the view with a new value.
@@ -60,8 +54,8 @@ class CustomView(tk.Toplevel):
         )
 
         self.geometry(geometry)
+        self.overrideredirect(True)  # hides title bar
         self.wm_attributes("-topmost", self._config.topmost)
-        self.wm_attributes("-disabled", True)
         self.resizable(self._config.resizable, self._config.resizable)
 
         self._build_ui()
@@ -75,11 +69,10 @@ class CustomView(tk.Toplevel):
         """Build or rebuild the UI."""
         self._clear_window()
 
-        self.geometry("")
         container_frame = tk.Frame(self, padx=10, pady=10)
         container_frame.pack(fill="both", expand=True)
         self._populate_widgets(container_frame)
-        
+
         self.update_idletasks()
         if isinstance(self.master, tk.Tk):
             # Notify parent window that geometry has changed to trigger repositioning
@@ -88,10 +81,10 @@ class CustomView(tk.Toplevel):
     def _set_position(
         self, position: Literal["left", "right", "top", "bottom"]
     ) -> None:
-        self.__position = position
+        self._config.position = position
 
     def _get_position(self) -> Literal["left", "right", "top", "bottom"]:
-        return self.__position
+        return self._config.position
 
     def _populate_widgets(self, parent: tk.Frame) -> None:
         pass
@@ -115,14 +108,20 @@ class CustomView(tk.Toplevel):
             }
 
             target_color = FLASH_COLOR_MAP.get(flash_color, FLASH_COLOR_MAP["yellow"])
+            bg_color = self._config.bg_color or self.cget(
+                "bg"
+            )  # Use default Tkinter bg
+
+            # Convert system color name to hex if necessary
+            if not bg_color.startswith("#"):
+                rgb_tuple = self.winfo_rgb(bg_color)
+                bg_color = f"#{rgb_tuple[0]//256:02x}{rgb_tuple[1]//256:02x}{rgb_tuple[2]//256:02x}"
 
             def interpolate(ratio: float) -> str:
                 """Interpolate between background and target color."""
                 try:
-
                     bg_rgb = [
-                        int(self.__bg_color.lstrip("#")[i : i + 2], 16)
-                        for i in (0, 2, 4)
+                        int(bg_color.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4)
                     ]
                     target_rgb = [
                         int(target_color.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4)
@@ -136,13 +135,13 @@ class CustomView(tk.Toplevel):
                     )
                 except Exception as e:
                     logging.error(f"Color interpolation failed: {e}")
-                    return self.__bg_color
+                    return bg_color
 
             def fade_step(step: int = 0):
                 if step > STEPS:
                     self.configure(
                         highlightthickness=BORDER_WIDTH,
-                        highlightbackground=self.__bg_color,
+                        highlightbackground=bg_color,
                     )
                     return
 
@@ -172,6 +171,6 @@ class CustomView(tk.Toplevel):
             logging.error(f"Flash update failed: {e}")
             self.configure(
                 highlightthickness=BORDER_WIDTH,
-                highlightbackground=self.__bg_color,
-                highlightcolor=self.__bg_color,
+                highlightbackground=bg_color,
+                highlightcolor=bg_color,
             )

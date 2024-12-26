@@ -3,19 +3,18 @@ import tkinter as tk
 import re
 
 from typing import Callable, Optional
-from pydantic import BaseModel
+
+from ui.widgets.base_widget_config import BaseWidgetConfig
 
 
 logger = logging.getLogger(__name__)
 
 
-class CustomEntryConfig(BaseModel):
-    initial_value: Optional[str] = None
+class CustomEntryConfig(BaseWidgetConfig):
     break_chars: Optional[list[str]] = None
     force_focus: bool = False
     cursor_end: bool = False
     validation_func: Optional[Callable[[str], bool]] = None
-    on_change: Optional[Callable] = None
 
 
 class CustomEntry(tk.Entry):
@@ -31,7 +30,6 @@ class CustomEntry(tk.Entry):
         self.__break_chars = self.config.break_chars or []
         self.configure(textvariable=self.text_var)
 
-        # Event bindings (Control-BackSpace) and cursor position setup remain here
         self.bind("<Control-BackSpace>", self._on_backspace)
 
     def _validate(self, validation_func: Callable[[str], bool]):

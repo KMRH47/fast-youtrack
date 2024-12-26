@@ -1,33 +1,32 @@
 import logging
+from typing import Optional
 
 from security.encryption import EncryptionService
 from errors.user_cancelled_error import UserCancelledError
-from repositories.file_manager import FileManager
+from common.storage.store import Store
 from ui.token_ui import display_bearer_token_prompt
 
 
 logger = logging.getLogger(__name__)
 
+
 class BearerTokenService:
-    def __init__(self, file_manager: FileManager, encryption_service: EncryptionService, token_file_name: str):
-        """
-        Initialize the TokenService.
+    def __init__(
+        self, store: Store, encryption_service: EncryptionService, token_file_name: str
+    ):
+        self._store = store
+        self._encryption_service = encryption_service
+        self._token_file_name = token_file_name
 
-        :param file_manager: The file manager for reading and writing token data.
-        :param encryption_service: The encryption service for encrypting and decrypting tokens.
-        :param token_file_name: The name of the file where the token is stored.
-        """
-        self.__file_manager = file_manager
-        self.__encryption_service = encryption_service
-        self.file_name = token_file_name
-
-    def get_bearer_token(self) -> str | None:
-        encrypted_bearer_token = self.__file_manager.read_data(self.file_name)
-
-        if not encrypted_bearer_token:
+    def get_bearer_token(self) -> Optional[str]:
+        encrypted_token = self._store.read(self._token_file_name)
+        if not encrypted_token:
             return None
+        return self._encryption_service.decrypt(encrypted_token)
 
-        return self.__encryption_service.decrypt(encrypted_bearer_token)
+    def save_bearer_token(self, token: str) -> None:
+        encrypted_token = self._encryption_service.encrypt(token)
+        self._store.write(self._token_file_name, encrypted_token)
 
     def prompt_for_bearer_token(self) -> str:
         """
@@ -40,8 +39,7 @@ class BearerTokenService:
         if not bearer_token:
             raise UserCancelledError("User cancelled input. Exiting...")
 
-        encrypted_bearer_token = self.__encryption_service.encrypt(
-            bearer_token)
+        encrypted_bearer_token = self.__encryption_service.encrypt(bearer_token)
         self.__file_manager.write_data(encrypted_bearer_token, self.file_name)
 
         return bearer_token

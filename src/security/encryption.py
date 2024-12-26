@@ -39,7 +39,7 @@ class EncryptionService:
             length=32,
             salt=b"",
             iterations=100000,
-            backend=default_backend()
+            backend=default_backend(),
         )
         return kdf.derive(passphrase.encode())
 
@@ -69,8 +69,10 @@ class EncryptionService:
         except InvalidTag as e:
             raise UserError(
                 "Invalid passphrase. Please delete the associated \
-                  '.key' file and try again.") from e
+                  '.key' file and try again."
+            ) from e
         except binascii.Error as e:
             raise UserError(
                 "Invalid token. Please delete the associated \
-                  '.token' file and try again.") from e
+                  '.token' file and try again."
+            ) from e

@@ -1,5 +1,5 @@
 import logging
-import tkinter as tk
+
 from typing import Optional
 
 from errors.user_cancelled_error import UserCancelledError
@@ -14,14 +14,20 @@ class CustomWindow(CustomWindowAttachMixin):
         self,
         config: Optional[CustomViewConfig] = CustomViewConfig(),
         **kwargs,
-    ) -> tk.Tk:
+    ):
         attached_views = kwargs.pop("attached_views", None)
         super().__init__(attached_views=attached_views)
         self._config = config
         self.__cancelled = True
 
+        if self._config.bg_color:
+            self.option_add("*Background", self._config.bg_color)
+        if self._config.text_color:
+            self.option_add("*Foreground", self._config.text_color)
+
         self.title(self._config.title)
         self.attributes("-topmost", self._config.topmost)
+        self.configure(bg=self._config.bg_color)
 
         self._config.cancel_key and self.bind(
             f"<{self._config.cancel_key}>", self._destroy

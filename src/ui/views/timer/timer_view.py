@@ -1,6 +1,7 @@
 import logging
 import time
 import tkinter as tk
+
 from typing import Optional
 
 from ui.views.base.custom_view import CustomView
@@ -23,10 +24,14 @@ class TimerView(CustomView):
 
     def _populate_widgets(self, parent: tk.Frame) -> None:
         """Populate widgets into the parent frame with timer details."""
+        parent.config(bg=self._config.bg_color)
+        
         self.__timer_label = tk.Label(
             parent,
             text="Elapsed Time: 00:00:00",
-            font=("Arial", 14, "bold")
+            font=("Arial", 14, "bold"),
+            bg=self._config.bg_color,
+            fg=self._config.text_color
         )
         self.__timer_label.pack()
 
@@ -48,7 +53,11 @@ class TimerView(CustomView):
         minutes, seconds = divmod(remainder, 60)
         time_string = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
 
-        self.__timer_label.config(text=f"Elapsed Time: {time_string}")
+        self.__timer_label.config(
+            text=f"Elapsed Time: {time_string}",
+            bg=self._config.bg_color,
+            fg=self._config.text_color
+        )
         self.after(1000, self._update_elapsed_time)
 
     def reset_timer(self) -> None:
