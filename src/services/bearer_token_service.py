@@ -39,7 +39,7 @@ class BearerTokenService:
         if not bearer_token:
             raise UserCancelledError("User cancelled input. Exiting...")
 
-        encrypted_bearer_token = self.__encryption_service.encrypt(bearer_token)
-        self.__file_manager.write_data(encrypted_bearer_token, self.file_name)
+        encrypted_bearer_token = self._encryption_service.encrypt(bearer_token)
+        self._store.write(self._token_file_name, encrypted_bearer_token)
 
         return bearer_token
