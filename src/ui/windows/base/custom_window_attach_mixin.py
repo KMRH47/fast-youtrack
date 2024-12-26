@@ -2,6 +2,7 @@ import tkinter as tk
 from typing import Callable, Optional
 
 from ui.views.base.custom_view import CustomView
+from ui.constants.tk_events import TkEvents
 
 
 
@@ -81,7 +82,7 @@ class CustomWindowAttachMixin(tk.Tk):
     def _bind_update_position(self, attached_view: CustomView):
         """Bind the update position function for a specific attached top level."""
         self.bind(
-            "<Configure>",
+            TkEvents.GEOMETRY_CHANGED,
             lambda event, attached_view_arg=attached_view: self._update_position(
                 attached_view_arg
             ),

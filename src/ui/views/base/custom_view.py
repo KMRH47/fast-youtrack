@@ -7,6 +7,7 @@ from typing import Literal
 from typing import Literal, Optional, TypeVar
 
 from ui.views.base.custom_view_config import CustomViewConfig
+from ui.constants.tk_events import TkEvents
 
 
 logger = logging.getLogger(__name__)
@@ -71,12 +72,18 @@ class CustomView(tk.Toplevel):
             widget.destroy()
 
     def _build_ui(self) -> None:
+        """Build or rebuild the UI."""
         self._clear_window()
 
         self.geometry("")
         container_frame = tk.Frame(self, padx=10, pady=10)
         container_frame.pack(fill="both", expand=True)
         self._populate_widgets(container_frame)
+        
+        self.update_idletasks()
+        if isinstance(self.master, tk.Tk):
+            # Notify parent window that geometry has changed to trigger repositioning
+            self.master.event_generate(TkEvents.GEOMETRY_CHANGED)
 
     def _set_position(
         self, position: Literal["left", "right", "top", "bottom"]
