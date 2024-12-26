@@ -40,13 +40,6 @@ class AddSpentTimeController:
 
         self.__youtrack_service.add_spent_time(issue_id, add_spent_time_request)
 
-    def _fetch_and_propagate_issue(self, issue_id: str):
-        """Fetch the issue and propagate it using the callback."""
-        issue = self.__youtrack_service.get_issue(issue_id)
-
-        for view in self.__window.get_attached_views():
-            view.update_value(issue)
-
     def _on_issue_id_changed(self, issue_id: str):
         """
         Handle changes to the issue ID input field with debouncing.
@@ -66,3 +59,9 @@ class AddSpentTimeController:
             self._fetch_and_propagate_issue(issue_id)
 
         self.__debounce_id = self.__window.after(random.randint(253, 333), debounce)
+
+    def _fetch_and_propagate_issue(self, issue_id: str):
+        issue = self.__youtrack_service.get_issue(issue_id)
+
+        for view in self.__window.get_attached_views():
+            view.update_value(issue)
