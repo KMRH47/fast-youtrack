@@ -42,9 +42,5 @@ class FileStore(Store):
             logger.error(f"Error writing data to file: {e}")
             raise
 
-    def has(self, key: str) -> bool:
-        """Check if configuration key exists."""
-        pass
-
     def _get_file_path(self, file_name: str) -> str:
         return os.path.join(self.base_directory, file_name)

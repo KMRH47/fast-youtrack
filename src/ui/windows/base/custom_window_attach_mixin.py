@@ -27,6 +27,23 @@ class CustomWindowAttachMixin(tk.Tk):
     def get_attached_views(self) -> list[CustomView]:
         """Return a list of attached top-level views."""
         return self.__attached_views
+    
+    def show_all_attached_views(self):
+        """Show and position all attached views."""
+        for attached_view in self.__attached_views:
+            self._bind_update_position(attached_view)
+            attached_view._show(self)
+
+    def hide_all_attached_views(self):
+        """Hide all attached views."""
+        for attached_view in self.__attached_views:
+            attached_view._hide()
+
+    def destroy_all_attached_views(self):
+        """Destroy all attached views and clear the list."""
+        for attached_view in self.__attached_views:
+            attached_view.destroy()
+        self.__attached_views.clear()
 
     def _get_cumulative_offset(self, attached_view: CustomView) -> int:
         """Calculate cumulative offset for views attached in the same position."""
@@ -84,20 +101,3 @@ class CustomWindowAttachMixin(tk.Tk):
             ),
             add="+",
         )
-
-    def show_all_attached_views(self):
-        """Show and position all attached views."""
-        for attached_view in self.__attached_views:
-            self._bind_update_position(attached_view)
-            attached_view._show(self)
-
-    def hide_all_attached_views(self):
-        """Hide all attached views."""
-        for attached_view in self.__attached_views:
-            attached_view._hide()
-
-    def destroy_all_attached_views(self):
-        """Destroy all attached views and clear the list."""
-        for attached_view in self.__attached_views:
-            attached_view.destroy()
-        self.__attached_views.clear()

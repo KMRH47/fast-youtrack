@@ -190,7 +190,7 @@ class UpdateIssueView:
             )
 
             for field in self.__issue.fields:
-                updated_field_value = self.get_field_value_from_ui(field.id)
+                updated_field_value = self._get_field_value_from_ui(field.id)
 
                 if updated_field_value:
 
@@ -206,7 +206,7 @@ class UpdateIssueView:
             self.__window.destroy()
             raise e
 
-    def get_field_value_from_ui(self, field_id):
+    def _get_field_value_from_ui(self, field_id):
         if field_id == "130-2":
             return self.ui_state_input.get()
 

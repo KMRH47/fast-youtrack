@@ -1,6 +1,6 @@
 import logging
 
-from typing import List, Optional, Type, get_args, get_origin
+from typing import List, Optional
 
 from services.http.http_client import HttpClient
 from models.general_responses import Issue, Project, StateBundleElement, User, WorkItem
@@ -10,7 +10,6 @@ from typing import TypeVar
 from common.decorators.cache_decorator import cached_response
 from common.storage.config_store import ConfigStore
 from common.storage.store import Store
-import requests
 
 
 logger = logging.getLogger(__name__)
