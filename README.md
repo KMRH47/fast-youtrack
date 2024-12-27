@@ -6,18 +6,27 @@
 
 Run `run.bat`
 
-📁 ./
-
-```
+📁 `./`
+```sh
 ./run.bat
 ```
+
+*What happens when you run* `./run.bat`?
+
+1. 🔎 Checks if Python is installed
+2. 📦 Sets up everything you need (first time only)
+    - 🐍 Python packages
+    - ⌨️ AutoHotkey v2 portable
+3. ▶️ Starts the app in background
+
 
 ## Usage
 
 After running `./run.bat`, you can launch the program. The default hotkey is `CTRL+SHIFT+T`.
 
-The default hotkey can be changed inside `scripts/run.ahk` under:
+### Change default hotkey
 
+📁 `./scripts/run.ahk`
 ```ahk
 ; CTRL SHIFT T
 ^+t:: {
@@ -25,13 +34,17 @@ The default hotkey can be changed inside `scripts/run.ahk` under:
 
 These symbols `^+t` mean `CTRL+SHIFT+T`. Refer to the [AutoHotkey documentation](https://www.autohotkey.com/docs/) to customize it further.
 
-### Steps:
+### Guide
 
-1. After launching, you will be prompted for a **passphrase**. This passphrase acts as a PIN code to encrypt your YouTrack permanent token. This feature is designed to make retrieving the token more cumbersome in environments like offices. Currently, this is not optional.
+1. 🔎 After launching, you will be prompted for a **passphrase**
 
-2. Input your **YouTrack domain** and **token** when prompted.
+⚠️ **The passphrase is stored in plain text**
 
-3. If successful, a new UI for adding spent time will pop up. Some details, like issue types and user info, are fetched automatically.
+*This passphrase acts as a PIN code to encrypt your YouTrack permanent token. This feature is designed to make retrieving the token more cumbersome in environments like offices. Currently, this is not optional.*
+
+2. 🌐 Input your **YouTrack domain**
+3. 🔑 Input your **YouTrack token**
+4. ✨ Enjoy!
 
 ## About
 
