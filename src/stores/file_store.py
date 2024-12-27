@@ -1,5 +1,6 @@
 import logging
 import os
+import posixpath
 
 from typing import Optional, TypeVar
 from pydantic import BaseModel
@@ -43,4 +44,4 @@ class FileStore(Store):
             raise
 
     def _get_file_path(self, file_name: str) -> str:
-        return os.path.join(self.base_directory, file_name)
+        return posixpath.normpath(posixpath.join(self.base_directory, file_name))
