@@ -53,7 +53,6 @@ class Container(containers.DeclarativeContainer):
         YouTrackService,
         http_client=youtrack_http_client,
         store=store,
-        config_store=config_store,
     )
 
     issue_view_factory = providers.Factory(
