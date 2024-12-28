@@ -10,6 +10,7 @@ from typing import TypeVar
 from common.decorators.cache_decorator import cached_response
 from stores.config_store import ConfigStore
 from common.storage.store import Store
+from common.decorators.base_cacheable import Cacheable
 
 
 logger = logging.getLogger(__name__)
@@ -17,14 +18,18 @@ logger = logging.getLogger(__name__)
 T = TypeVar("T")
 
 
-class YouTrackService:
+class YouTrackService(Cacheable):
     def __init__(
         self, http_service: HttpClient, store: Store, config_store: ConfigStore
     ):
         self._http_service = http_service
         self._store = store
-        self._config_store = config_store
+        self._config_store_instance = config_store
         self._request = http_service.request
+
+    @property
+    def _config_store(self) -> ConfigStore:
+        return self._config_store_instance
 
     def add_spent_time(
         self, issue_id: Optional[str], add_spent_time_request: AddSpentTimeRequest

@@ -1,6 +1,7 @@
 import logging
 from functools import wraps
 from typing import TypeVar, Callable
+from .base_cacheable import Cacheable
 
 logger = logging.getLogger(__name__)
 T = TypeVar("T")
@@ -11,11 +12,18 @@ def cached_response(cache_key: str):
     Decorator that calls the underlying method and caches the response.
     For lists: Caches the entire list under the cache_key
     For single items: Caches under cache_key[item_id]
+    
+    Note: Can only be used on methods of classes that inherit from Cacheable
     """
 
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         def wrapper(self, *args, **kwargs):
+            if not isinstance(self, Cacheable):
+                raise TypeError(
+                    f"@cached_response can only be used with classes that inherit from Cacheable, "
+                    f"got {type(self).__name__}"
+                )
             try:
                 response = func(self, *args, **kwargs)
                 config = self._config_store.get("config") or {}
