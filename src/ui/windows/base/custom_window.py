@@ -3,6 +3,7 @@ import logging
 from typing import Optional
 
 from errors.user_cancelled_error import UserCancelledError
+from ui.constants.tk_events import TkEvents
 from ui.views.base.custom_view_config import CustomViewConfig
 from ui.windows.base.custom_window_attach_mixin import CustomWindowAttachMixin
 
@@ -19,6 +20,9 @@ class CustomWindow(CustomWindowAttachMixin):
         super().__init__(attached_views=attached_views)
         self._config = config
         self.__cancelled = True
+
+        self.bind(TkEvents.WINDOW_UNMAPPED, self._on_minimize)
+        self.bind(TkEvents.WINDOW_MAPPED, self._on_restore)
 
         if self._config.bg_color:
             self.option_add("*Background", self._config.bg_color)

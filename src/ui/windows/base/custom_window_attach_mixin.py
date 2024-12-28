@@ -27,7 +27,7 @@ class CustomWindowAttachMixin(tk.Tk):
     def get_attached_views(self) -> list[CustomView]:
         """Return a list of attached top-level views."""
         return self.__attached_views
-    
+
     def show_all_attached_views(self):
         """Show and position all attached views."""
         for attached_view in self.__attached_views:
@@ -101,3 +101,11 @@ class CustomWindowAttachMixin(tk.Tk):
             ),
             add="+",
         )
+
+    def _on_minimize(self, event=None):
+        for attached_view in self.__attached_views:
+            attached_view.withdraw()
+
+    def _on_restore(self, event=None):
+        for attached_view in self.__attached_views:
+            attached_view.deiconify()
