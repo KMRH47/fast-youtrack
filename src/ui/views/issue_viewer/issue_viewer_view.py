@@ -19,14 +19,13 @@ class IssueViewerView(CustomView):
         self.__issue: Optional[Issue] = issue
 
     def update_value(self, issue: Optional[Issue] = None) -> None:
-        """Update the window with new issue details."""
+        """Update the view with new issue details."""
         self.__issue = issue
         self._build_ui()
         self.update_idletasks()
         self._flash_update(flash_color="red" if issue is None else "green")
 
     def _populate_widgets(self, parent: tk.Frame) -> None:
-        """Populate widgets into the parent frame with issue details."""
         parent.config(bg=self._config.bg_color)
         parent.grid_columnconfigure(0, weight=1)
 
@@ -60,7 +59,6 @@ class IssueViewerView(CustomView):
             self._add_fields_section(parent, row)
 
     def _add_label(self, parent: tk.Frame, text: str, row: int) -> None:
-        """Helper method to create a styled label."""
         label = tk.Label(
             parent,
             text=text,
@@ -91,7 +89,7 @@ class IssueViewerView(CustomView):
     def _add_text_box(
         self, parent: tk.Frame, text: str, row: int, height: int = 4
     ) -> int:
-        """Helper method to add a scrollable text box."""
+        """Add a scrollable text box."""
         frame = tk.Frame(parent, bg=self._config.bg_color)
         frame.grid(row=row, column=0, sticky="ew", padx=10, pady=5)
         frame.grid_columnconfigure(0, weight=1)
@@ -116,7 +114,6 @@ class IssueViewerView(CustomView):
         return row + 1
 
     def _add_fields_section(self, parent: tk.Frame, row: int) -> None:
-        """Add fields section."""
         self._add_label(parent, "Fields:", row)
         row += 1
 
