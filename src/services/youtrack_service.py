@@ -7,7 +7,6 @@ from models.general_responses import Issue, Project, StateBundleElement, User, W
 from constants.youtrack_queries import issue_query, bundle_query
 from models.general_requests import AddSpentTimeRequest
 from typing import TypeVar
-from stores.config_store import ConfigStore
 from common.storage.store import Store
 
 
@@ -17,9 +16,7 @@ T = TypeVar("T")
 
 
 class YouTrackService:
-    def __init__(
-        self, http_client: HttpClient, store: Store, config_store: ConfigStore
-    ):
+    def __init__(self, http_client: HttpClient, store: Store):
         self._http_service = http_client
         self._store = store
         self._request = http_client.request
