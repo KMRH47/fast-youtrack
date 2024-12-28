@@ -1,4 +1,5 @@
 import logging
+import sys
 
 from dependency_injector.wiring import Provide
 
@@ -38,7 +39,7 @@ if __name__ == "__main__":
     except UserCancelledError as e:
         if logging.getLogger().handlers:
             logger.info(f"Cancelled by user. {e}")
-        raise
+        sys.exit(0)
     except UserError as e:
         e.display()
     except Exception as e:
