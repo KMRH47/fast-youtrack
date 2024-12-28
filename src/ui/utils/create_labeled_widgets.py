@@ -28,7 +28,7 @@ def create_labeled_entry(
     if config:
         custom_entry.text_var.set(config.initial_value or "")
         config.on_change and custom_entry.text_var.trace_add("write", config.on_change)
-        config.force_focus and parent.after(0, lambda: parent.after(0, custom_entry.focus_force))
+        config.force_focus and parent.after(0, custom_entry.focus_force)
         config.cursor_end and custom_entry.icursor(tk.END)
 
         if config.validation_func:

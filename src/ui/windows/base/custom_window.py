@@ -18,6 +18,7 @@ class CustomWindow(CustomWindowAttachMixin):
     ):
         attached_views = kwargs.pop("attached_views", None)
         super().__init__(attached_views=attached_views)
+        self.withdraw()  # Hide window initially
         self._config = config
         self.__cancelled = True
 
@@ -47,9 +48,10 @@ class CustomWindow(CustomWindowAttachMixin):
     def show(self):
         self.show_all_attached_views()
         self.update_idletasks()
-        self.after(0, self.focus_force)
+        self.deiconify()
+        self.focus_force()
+        
         self.mainloop()
-
         if self.__cancelled:
             raise UserCancelledError()
 
