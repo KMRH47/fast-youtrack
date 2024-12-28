@@ -8,9 +8,9 @@ T = TypeVar("T")
 
 def cached_response(cache_key: str):
     """
-    Decorator that calls the underlying method, inspects whether
-    the returned data is a single item or a list, and caches
-    accordingly in the config store.
+    Decorator that calls the underlying method and caches the response.
+    For lists: Caches the entire list under the cache_key
+    For single items: Caches under cache_key[item_id]
     """
 
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
@@ -22,27 +22,18 @@ def cached_response(cache_key: str):
 
                 if isinstance(response, list):
                     config[cache_key] = [item.model_dump() for item in response]
-                else:
-                    item_id = None
-                    if args:
-                        item_id = str(args[0])
-                    if not item_id:
-                        item_id = str(kwargs.get("id", "default"))
+                elif response is not None:
+                    if not args:
+                        raise ValueError(f"No ID provided for caching single item in {cache_key}")
+                    
+                    item_id = str(args[0])
 
-                    if cache_key not in config or not isinstance(
-                        config[cache_key], dict
-                    ):
+                    if cache_key not in config or not isinstance(config[cache_key], dict):
                         config[cache_key] = {}
-
-                    if response is not None:
-                        config[cache_key][item_id] = response.model_dump()
-                    else:
-                        logger.warning(
-                            f"No data to cache for {cache_key} with item ID {item_id}"
-                        )
+                        
+                    config[cache_key][item_id] = response.model_dump()
 
                 self._config_store.set("config", config)
-
                 return response
             except Exception as e:
                 logger.error(f"Could not handle cache for '{cache_key}': {e}")
