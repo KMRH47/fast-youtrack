@@ -1,15 +1,10 @@
 import logging
 import os
 import posixpath
+from pathlib import Path
 
-from typing import Optional, TypeVar
-from pydantic import BaseModel
-
+from typing import Optional
 from stores.store import Store
-
-
-T = TypeVar("T", bound=BaseModel)
-
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +20,7 @@ class FileStore(Store):
             with open(file_path, "r", encoding="utf-8") as file:
                 return file.read().strip()
         except FileNotFoundError:
-            logger.warning(f"File not found: {file_path}")
+            logger.warning(f"File not found: {self._get_log_path(file_path)}")
             return None
         except IOError as e:
             logger.error(f"Error reading data from file: {e}")
@@ -38,10 +33,14 @@ class FileStore(Store):
         try:
             with open(file_path, "w", encoding="utf-8") as file:
                 file.write(data)
-            logger.info(f"Data written to {file_path}")
+            logger.info(f"Data written to {self._get_log_path(file_path)}")
         except IOError as e:
             logger.error(f"Error writing data to file: {e}")
             raise
 
     def _get_file_path(self, file_name: str) -> str:
-        return posixpath.normpath(posixpath.join(self.base_directory, file_name))
+        return str(Path(self.base_directory) / file_name)
+
+    def _get_log_path(self, file_path: str) -> str:
+        return posixpath.normpath(file_path.replace(os.sep, '/'))
+
