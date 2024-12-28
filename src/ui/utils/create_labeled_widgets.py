@@ -1,14 +1,22 @@
 import logging
 import tkinter as tk
-
-from tkcalendar import DateEntry
+from datetime import datetime
 from typing import Optional
 
+from tkcalendar import DateEntry
 from ui.widgets.custom_combobox import CustomCombobox, CustomComboboxConfig
 from ui.widgets.custom_entry import CustomEntry, CustomEntryConfig
 
-
 logger = logging.getLogger(__name__)
+
+DATE_FORMAT_MAP = {
+    "dd/mm/yyyy": "%d/%m/%Y",
+    "mm/dd/yyyy": "%m/%d/%Y",
+    "yyyy/mm/dd": "%Y/%m/%d",
+    "dd-mm-yyyy": "%d-%m-%Y",
+    "mm-dd-yyyy": "%m-%d-%Y",
+    "yyyy-mm-dd": "%Y-%m-%d",
+}
 
 
 class CustomDateEntryConfig(CustomEntryConfig):
@@ -47,18 +55,31 @@ def create_labeled_date_entry(
     parent: tk.Tk,
     label: Optional[str] = None,
     config: Optional[CustomDateEntryConfig] = None,
-    **kwargs
+    **kwargs,
 ) -> tk.StringVar:
     label_widget = tk.Label(parent, text=label)
     label_widget.pack(anchor="w", padx=10, pady=5)
 
-    text_var = tk.StringVar(value=config.initial_value)
-    date_entry = DateEntry(
-        parent, textvariable=text_var, date_pattern=config.date_format, **kwargs
+    text_var = tk.StringVar()
+    date_format = (
+        config.date_format.lower() if config and config.date_format else "yyyy-mm-dd"
     )
+    strptime_format = DATE_FORMAT_MAP.get(date_format, "%Y-%m-%d")
+
+    date_entry = DateEntry(
+        parent, textvariable=text_var, date_pattern=date_format, **kwargs
+    )
+
+    if config and config.initial_value:
+        try:
+            initial_date = datetime.strptime(config.initial_value, strptime_format)
+            date_entry.set_date(initial_date)
+        except ValueError as e:
+            logger.error(f"Error parsing initial date: {e}")
+
     date_entry.pack(anchor="w", padx=10, fill="x", expand=True)
 
-    if config.on_change:
+    if config and config.on_change:
         text_var.trace_add("write", config.on_change)
 
     return text_var

@@ -12,6 +12,7 @@ from ui.windows.add_spent_time.add_spent_time_window_config import (
 from ui.windows.base.custom_window import CustomWindow
 from utils.youtrack import time_valid
 from ui.utils.create_labeled_widgets import (
+    DATE_FORMAT_MAP,
     CustomDateEntryConfig,
     create_labeled_combobox,
     create_labeled_date_entry,
@@ -19,15 +20,6 @@ from ui.utils.create_labeled_widgets import (
 )
 
 logger = logging.getLogger(__name__)
-
-DATE_FORMAT_MAP = {
-    "dd/mm/yyyy": "%d/%m/%Y",
-    "mm/dd/yyyy": "%m/%d/%Y",
-    "yyyy/mm/dd": "%Y/%m/%d",
-    "dd-mm-yyyy": "%d-%m-%Y",
-    "mm-dd-yyyy": "%m-%d-%Y",
-    "yyyy-mm-dd": "%Y-%m-%d",
-}
 
 
 class AddSpentTimeWindow(CustomWindow):
@@ -38,7 +30,9 @@ class AddSpentTimeWindow(CustomWindow):
     ):
         super().__init__(config=config, **kwargs)
         self.__issue_id_change_callback: Optional[Callable] = None
-        self.__work_item_type_mapping: dict[str, str] = config.work_item_types if config else {}
+        self.__work_item_type_mapping: dict[str, str] = (
+            config.work_item_types if config else {}
+        )
         self.__config: Optional[AddSpentTimeWindowConfig] = config
 
         # StringVars
@@ -89,6 +83,7 @@ class AddSpentTimeWindow(CustomWindow):
             label="Type:",
             config=CustomComboboxConfig(
                 values=list(self.__work_item_type_mapping.keys()),
+                initial_value=config.initial_type or "",
             ),
         )
 
