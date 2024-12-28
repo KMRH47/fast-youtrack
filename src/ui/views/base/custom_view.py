@@ -30,7 +30,7 @@ class CustomView(tk.Toplevel):
         pass
 
     def _show(self, parent_window: tk.Tk) -> None:
-        self._create_window(parent_window)
+        self._create_view(parent_window)
         self.after(0, self.deiconify)
         self.update_idletasks()
         self._on_show()
@@ -42,7 +42,7 @@ class CustomView(tk.Toplevel):
         self.destroy()
         self = None
 
-    def _create_window(self, parent_window: tk.Tk) -> None:
+    def _create_view(self, parent_window: tk.Tk) -> None:
         self.master = parent_window
         
         geometry = f"{self._config.width}x{self._config.height}"
@@ -53,14 +53,14 @@ class CustomView(tk.Toplevel):
 
         self._build_ui()
 
-    def _clear_window(self) -> None:
-        """Destroy all child widgets of the given window."""
+    def _clear_view(self) -> None:
+        """Destroy all child widgets of the given view."""
         for widget in self.winfo_children():
             widget.destroy()
 
     def _build_ui(self) -> None:
         """Build or rebuild the UI."""
-        self._clear_window()
+        self._clear_view()
 
         container_frame = tk.Frame(self, padx=10, pady=10)
         container_frame.pack(fill="both", expand=True)
