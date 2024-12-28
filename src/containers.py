@@ -12,8 +12,7 @@ from stores.file_store import FileStore
 from services.bearer_token_service import BearerTokenService
 from security.encryption import EncryptionService
 from common.storage.store import Store
-from common.storage.config_store import ConfigStore
-from stores.file_config_store import FileConfigStore
+from stores.config_store import ConfigStore
 from services.http.youtrack_http_client import YouTrackHttpClient
 
 
@@ -27,7 +26,7 @@ class Container(containers.DeclarativeContainer):
     )
 
     config_store: providers.Provider[ConfigStore] = providers.Singleton(
-        FileConfigStore,
+        ConfigStore,
         store=store,
     )
 

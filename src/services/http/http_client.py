@@ -5,7 +5,7 @@ import json
 from typing import Literal, Optional
 
 from errors.user_error import UserError
-from common.storage.config_store import ConfigStore
+from stores.config_store import ConfigStore
 
 logger = logging.getLogger(__name__)
 

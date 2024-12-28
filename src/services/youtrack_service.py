@@ -8,7 +8,7 @@ from constants.youtrack_queries import issue_query, bundle_query
 from models.general_requests import AddSpentTimeRequest
 from typing import TypeVar
 from common.decorators.cache_decorator import cached_response
-from common.storage.config_store import ConfigStore
+from stores.config_store import ConfigStore
 from common.storage.store import Store
 
 

@@ -4,7 +4,7 @@ from typing import Optional
 
 from services.http.http_client import HttpClient
 from services.bearer_token_service import BearerTokenService
-from common.storage.config_store import ConfigStore
+from stores.config_store import ConfigStore
 
 logger = logging.getLogger(__name__)
 
