@@ -1,5 +1,4 @@
 import logging
-import time
 import pyperclip
 import pyautogui
 import re
@@ -16,9 +15,15 @@ def get_number_from_clipboard(max_length: int = 10) -> str | None:
     Returns:
         str | None: The selected number as a string, or None if no number is selected.
     """
+    original = pyperclip.paste()
     pyperclip.copy("")
+
     pyautogui.hotkey("ctrl", "c")
-    time.sleep(0.1)
+
     selected_text = pyperclip.paste()
+    logger.info(f"Selected text: {selected_text}")
+
+    pyperclip.copy(original)
+
     truncated_text = selected_text[:max_length] if selected_text else None
     return re.sub(r"[^\d]", "", truncated_text) if truncated_text else None
