@@ -341,6 +341,11 @@ class UnlimitedVisibility(WorkItem):
     pass
 
 
+class Channel(WorkItem):
+    name: Optional[str] = None
+    id: Optional[str] = None
+
+
 class Issue(WorkItem):
     usesMarkdown: Optional[bool] = None
     created: Optional[int] = None
@@ -391,4 +396,4 @@ class Issue(WorkItem):
             ]
         ]
     ] = None
-    channel: Optional[str] = None
+    channel: Optional[Union[str, Channel]] = None
