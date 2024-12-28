@@ -1,68 +1,82 @@
-import sys
+import json
 import logging
 
-from typing import Optional
-from pydantic import Field, ValidationError
+from pathlib import Path
+from typing import Optional, Literal
+from pydantic import BaseModel
 
 from errors.user_error import UserError
 from ui.views.base.custom_view_config import CustomViewConfig
-from ui.windows.add_spent_time.add_spent_time_window_config import (
-    AddSpentTimeWindowConfig,
-)
-from ui.config.base_config import BaseConfig, LogLevel
-
+from ui.windows.add_spent_time.add_spent_time_window_config import AddSpentTimeWindowConfig
 
 logger = logging.getLogger(__name__)
 
+LogLevel = Literal["minimal", "normal", "debug"]
 
-class Config(BaseConfig):
-    base_url: str
-    bearer_token: Optional[str] = Field(default=None)
-    base_dir: str
-    passphrase: str
+class Config(BaseModel):
     token_file_name: str = ".token"
     log_level: LogLevel = "debug"
-    add_spent_time_config: AddSpentTimeWindowConfig = AddSpentTimeWindowConfig(
-        project="DEMO",
-        initial_issue_id="1",
-        width=300,
-        height=325,
-        title="Add Spent Time",
-        topmost=True,
-        cancel_key="Escape",
-        submit_key="Return",
-        date_format="dd/mm/yyyy",
-        work_item_types={},
-    )
+
+    add_spent_time_config: AddSpentTimeWindowConfig = AddSpentTimeWindowConfig()
     issue_view_config: CustomViewConfig = CustomViewConfig(
-        title="Issue Viewer", topmost=True, position="right"
+        width=500, height=500, position="right"
     )
     timer_view_config: CustomViewConfig = CustomViewConfig(
-        title="Elapsed Time", topmost=True, width=300, height=50, position="top"
+        width=300, height=40, position="top"
     )
 
+    def get_logging_level(self) -> int:
+        import logging
 
-def load_config() -> Config:
-    try:
-        passphrase = sys.argv[1] if len(sys.argv) > 1 else None
-        subdomain = sys.argv[2] if len(sys.argv) > 2 else None
+        levels = {
+            "minimal": logging.WARNING,
+            "normal": logging.INFO,
+            "debug": logging.DEBUG,
+        }
+        return levels[self.log_level]
 
-        if not passphrase or not subdomain:
-            raise UserError(
-                "Passphrase and subdomain are required.\n\n"
-                "Usage: fast-youtrack.exe <passphrase> <subdomain>"
+    @classmethod
+    def load_config(cls, config_path: Optional[str] = None) -> "Config":
+        """Load the config file (JSON) and return a populated Config object."""
+        resolved_path = cls._resolve_config_path(config_path)
+        return cls(**cls._read_or_initialize_file(resolved_path))
+
+    @staticmethod
+    def _resolve_config_path(config_path: Optional[str]) -> Path:
+        """
+        Resolve the config path from a string or use a default adjacent to this file.
+        """
+        if config_path:
+            return Path(config_path).resolve()
+        return (Path(__file__).parent / "config.json").resolve()
+
+    @classmethod
+    def _read_or_initialize_file(cls, path: Path) -> dict:
+        """
+        Reads config data from JSON file.
+        If the file doesn't exist, create it with default values (excluding
+        command-line dependent fields).
+        """
+        try:
+            with open(path, "r") as f:
+                config_data = json.load(f)
+            logger.info(f"Loaded existing config from: {path}")
+            return config_data
+
+        except FileNotFoundError:
+            default_config = cls(token_file_name="", log_level="debug")
+            minimal_data = json.loads(
+                default_config.model_dump_json(exclude={"token_file_name", "log_level"})
             )
 
-        config = Config(
-            base_url=f"https://{subdomain}.youtrack.cloud/api",
-            base_dir=f"../user/{subdomain}",
-            passphrase=passphrase,
-        )
+            with open(path, "w") as f:
+                json.dump(minimal_data, f, indent=2)
 
-        return config
-    except ValidationError as e:
-        raise UserError(f"Configuration validation error:\n\n{e}")
-    except ValueError as e:
-        raise UserError(f"Configuration error:\n\n{e}")
-    except Exception as e:
-        raise UserError(f"An unexpected error occurred:\n\n{str(e)}")
+            logger.info(f"Created new config file with defaults at: {path}")
+            return minimal_data
+
+        except json.JSONDecodeError:
+            raise UserError(
+                f"Invalid JSON in configuration file: {path}\n\n"
+                "Please ensure the config.json file contains valid JSON."
+            )

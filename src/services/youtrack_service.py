@@ -7,7 +7,7 @@ from models.general_responses import Issue, Project, StateBundleElement, User, W
 from constants.youtrack_queries import issue_query, bundle_query
 from models.general_requests import AddSpentTimeRequest
 from typing import TypeVar
-from common.storage.store import Store
+from stores.store import Store
 
 
 logger = logging.getLogger(__name__)

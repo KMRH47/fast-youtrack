@@ -1,17 +1,17 @@
 import os
 import logging
-
 from config import Config
+from app_args import AppArgs
 
 
-def initialize_infrastructure(config: Config) -> None:
+def initialize_infrastructure(args: AppArgs, config: Config) -> None:
     """Initialize application infrastructure components"""
-    initialize_logging(config)
+    initialize_logging(args, config)
 
 
-def initialize_logging(config: Config) -> None:
+def initialize_logging(args: AppArgs, config: Config) -> None:
     """Initialize logging configuration"""
-    log_dir = os.path.join(config.base_dir, "logs")
+    log_dir = os.path.join(args.base_dir, "logs")
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 

@@ -4,7 +4,7 @@ import json
 from abc import ABC
 from typing import Dict, Any
 
-from common.storage.store import Store
+from stores.store import Store
 
 logger = logging.getLogger(__name__)
 

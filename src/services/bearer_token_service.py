@@ -3,7 +3,7 @@ from typing import Optional
 
 from security.encryption import EncryptionService
 from errors.user_cancelled_error import UserCancelledError
-from common.storage.store import Store
+from stores.store import Store
 from ui.token_ui import display_bearer_token_prompt
 
 

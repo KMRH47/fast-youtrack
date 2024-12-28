@@ -5,7 +5,7 @@ import posixpath
 from typing import Optional, TypeVar
 from pydantic import BaseModel
 
-from common.storage.store import Store
+from stores.store import Store
 
 
 T = TypeVar("T", bound=BaseModel)

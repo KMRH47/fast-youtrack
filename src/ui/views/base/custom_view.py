@@ -44,16 +44,10 @@ class CustomView(tk.Toplevel):
 
     def _create_window(self, parent_window: tk.Tk) -> None:
         self.master = parent_window
-        self.title(self._config.title)
-
-        geometry = (
-            f"{self._config.width}x{self._config.height}"
-            if self._config.height and self._config.width
-            else ""
-        )
-
+        
+        geometry = f"{self._config.width}x{self._config.height}"
         self.geometry(geometry)
-        self.overrideredirect(True)  # hides title bar
+        self.overrideredirect(True) # hides title bar
         self.wm_attributes("-topmost", self._config.topmost)
         self.resizable(self._config.resizable, self._config.resizable)
 

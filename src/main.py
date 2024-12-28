@@ -3,9 +3,10 @@ import logging
 from dependency_injector.wiring import Provide
 
 from containers import Container
-from config import load_config
 from errors.user_error import UserError
 from errors.user_cancelled_error import UserCancelledError
+from config import Config
+from app_args import AppArgs
 from ui.windows.add_spent_time.add_spent_time_controller import AddSpentTimeController
 from infrastructure import initialize_infrastructure
 from utils.logging_utils import format_error_message
@@ -24,10 +25,13 @@ def main(
 
 if __name__ == "__main__":
     try:
-        config = load_config()
-        initialize_infrastructure(config)
+        args = AppArgs.from_sys_args()
+        config = Config.load_config()
+        initialize_infrastructure(args, config)
 
         container = Container()
+        container.args.override(args)
+        container.config.override(config)
         container.init_resources()
         container.wire(modules=[__name__])
         main()
