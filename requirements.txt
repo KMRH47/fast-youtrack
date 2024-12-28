@@ -7,4 +7,4 @@ flake8==7.1.1
 dependency-injector==4.44.0
 tkcalendar==1.6.1
 setuptools>=68.0.0
-pynput
+pynput==1.7.7
