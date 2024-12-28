@@ -5,3 +5,4 @@ __pycache__/
 /user
 /logs
 /venv
+*.log
