@@ -13,8 +13,7 @@ logger = logging.getLogger(__name__)
 
 class TimerView(CustomView):
     """
-    A window that displays an elapsed time counter.
-    Inherits window management functionality from BaseTopLevelView.
+    A view that displays an elapsed time counter.
     """
 
     def __init__(self, config: Optional[CustomViewConfig] = None):
@@ -25,21 +24,19 @@ class TimerView(CustomView):
     def _populate_widgets(self, parent: tk.Frame) -> None:
         """Populate widgets into the parent frame with timer details."""
         parent.config(bg=self._config.bg_color)
-        
+
         self.__timer_label = tk.Label(
             parent,
             text="Elapsed Time: 00:00:00",
             font=("Arial", 14, "bold"),
             bg=self._config.bg_color,
-            fg=self._config.text_color
+            fg=self._config.text_color,
         )
         self.__timer_label.pack()
 
     def _on_show(self) -> None:
-        """
-        Override base _on_show to start the timer when window is displayed.
-        Called automatically by the base class show() method.
-        """
+        if self.__start_time is not None:
+            return
         self.__start_time = int(time.time())
         self._update_elapsed_time()
 
@@ -56,6 +53,6 @@ class TimerView(CustomView):
         self.__timer_label.config(
             text=f"Elapsed Time: {time_string}",
             bg=self._config.bg_color,
-            fg=self._config.text_color
+            fg=self._config.text_color,
         )
         self.after(1000, self._update_elapsed_time)
