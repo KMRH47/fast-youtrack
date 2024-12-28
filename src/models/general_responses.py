@@ -1,5 +1,22 @@
+import logging
 from pydantic import BaseModel, Field
 from typing import List, Optional, Union, Literal
+from datetime import datetime, UTC
+from pydantic import field_validator
+
+logger = logging.getLogger(__name__)
+
+
+def convert_to_iso_if_timestamp(v):
+    """Convert integer timestamps to ISO format strings while preserving other values."""
+    if isinstance(v, int):
+        try:
+            return datetime.fromtimestamp(v / 1000.0, UTC).isoformat()
+        except Exception as e:
+            logger.warning(f"Failed timestamp conversion: {v} - {e}")
+            return str(v)
+    return v
+
 
 YoutrackResponseField = Literal[
     "State", "Priority", "Type", "Assignee", "Fix versions", "Affected versions"
@@ -56,11 +73,21 @@ class ProjectCustomField(WorkItem):
 
 class EnumBundleElement(WorkItem):
     name: Optional[str] = None
+    value: Optional[Union[str, int]] = None
 
 
 class CustomField(WorkItem):
+    """Custom field that can contain various value types including timestamps."""
+
     projectCustomField: Optional[ProjectCustomField] = None
-    value: Optional[Union[EnumBundleElement, List[EnumBundleElement], None]] = None
+    value: Optional[
+        Union[EnumBundleElement, List[EnumBundleElement], int, str, None]
+    ] = None
+
+    @field_validator("value", mode="before")
+    @classmethod
+    def normalize_value_format(cls, v):
+        return convert_to_iso_if_timestamp(v)
 
 
 class IssueWatchers(WorkItem):
@@ -135,10 +162,15 @@ class EnumProjectCustomField(WorkItem):
 
 
 class SingleEnumIssueCustomField(WorkItem):
+    """Enum field that may contain timestamp values in certain cases."""
+
     projectCustomField: Optional[EnumProjectCustomField] = None
-    value: Optional[EnumBundleElement] = None
-    isUpdatable: Optional[bool] = None
-    searchResults: Optional[List] = None
+    value: Optional[Union[EnumBundleElement, int, str]] = None
+
+    @field_validator("value", mode="before")
+    @classmethod
+    def normalize_value_format(cls, v):
+        return convert_to_iso_if_timestamp(v)
 
 
 class StateBundle(WorkItem):
@@ -267,10 +299,17 @@ class SimpleIssueCustomField(WorkItem):
 
 
 class DateIssueCustomField(WorkItem):
-    value: Optional[str] = None
+    """Date field that accepts both ISO strings and epoch timestamps."""
+
+    value: Optional[Union[str, int]] = None
     projectCustomField: Optional[SimpleProjectCustomField] = None
     isUpdatable: Optional[bool] = None
     searchResults: Optional[List] = None
+
+    @field_validator("value", mode="before")
+    @classmethod
+    def normalize_value_format(cls, v):
+        return convert_to_iso_if_timestamp(v)
 
 
 class BuildBundle(WorkItem):
