@@ -2,12 +2,15 @@ import logging
 import requests
 import json
 
-from typing import Literal, Optional
+from typing import Literal, Optional, TypeVar, Type, List
+from pydantic import BaseModel
 
 from errors.user_error import UserError
 from stores.config_store import ConfigStore
 
 logger = logging.getLogger(__name__)
+
+T = TypeVar("T", bound=BaseModel)
 
 
 class HttpClient:
@@ -23,22 +26,31 @@ class HttpClient:
     def request(
         self,
         endpoint: str,
+        response_model: Optional[Type[T]] = None,
         fields: str | None = None,
         method: Literal["get", "post", "put", "delete"] = "get",
         json: Optional[dict] = None,
-    ) -> dict:
+    ) -> Optional[T] | dict:
         if method == "get":
             cached = self._get_cached_response(endpoint)
             if cached and self._is_fresh(endpoint, cached):
                 logger.debug(f"Cache hit for endpoint: {endpoint}")
-                return cached
+                return (
+                    self._parse_response(cached, response_model)
+                    if response_model
+                    else cached
+                )
 
         response = self._make_request(endpoint, method, fields, json)
 
         if method == "get":
             self._cache_response(endpoint, response)
 
-        return response
+        return (
+            self._parse_response(response, response_model)
+            if response_model
+            else response
+        )
 
     def _make_request(
         self,
@@ -116,3 +128,33 @@ class HttpClient:
             logger.info(f"Response body:\n{formatted_response}")
 
         return response.json() if response.text else {}
+
+    def _parse_response(
+        self, data: dict | list, model: Optional[Type[T]]
+    ) -> Optional[T] | list:
+        if not data:
+            return [] if self._is_list_model(model) else None
+
+        if not model:
+            return None
+
+        try:
+            if self._is_list_model(model):
+                item_type = model.__args__[0]
+                return self._parse_list(data, item_type)
+            return self._parse_single(data, model)
+        except Exception as e:
+            logger.error(
+                f"Failed to parse response into {model.__name__}: {str(e)}",
+                exc_info=True,
+            )
+            return [] if self._is_list_model(model) else None
+
+    def _parse_single(self, data: dict, model: Type[T]) -> T:
+        return model(**data)
+
+    def _parse_list(self, data: list, item_model: Type[T]) -> List[T]:
+        return [item_model(**item) for item in data]
+
+    def _is_list_model(self, model: Optional[Type[T]]) -> bool:
+        return getattr(model, "__origin__", None) is list
