@@ -20,12 +20,12 @@ T = TypeVar("T")
 
 class YouTrackService(Cacheable):
     def __init__(
-        self, http_service: HttpClient, store: Store, config_store: ConfigStore
+        self, http_client: HttpClient, store: Store, config_store: ConfigStore
     ):
-        self._http_service = http_service
+        self._http_service = http_client
         self._store = store
         self._config_store_instance = config_store
-        self._request = http_service.request
+        self._request = http_client.request
 
     @property
     def _config_store(self) -> ConfigStore:

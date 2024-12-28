@@ -51,7 +51,7 @@ class Container(containers.DeclarativeContainer):
 
     youtrack_service: providers.Provider[YouTrackService] = providers.Singleton(
         YouTrackService,
-        http_service=youtrack_http_client,
+        http_client=youtrack_http_client,
         store=store,
         config_store=config_store,
     )
