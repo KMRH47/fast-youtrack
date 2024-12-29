@@ -25,10 +25,15 @@ if not exist %VENV_DIR% (
     )
 )
 
-REM Activate the virtual environment and install dependencies
+REM Activate the virtual environment
 call %VENV_ACTIVATE%
-echo Installing dependencies from requirements.txt...
-pip install -r requirements.txt
+
+REM Check if requirements need to be installed
+pip list --format=freeze | findstr /X /I /G:requirements.txt >nul 2>&1
+if %ERRORLEVEL% neq 0 (
+    echo Installing dependencies...
+    pip install -q -r requirements.txt
+)
 
 REM Download and set up AutoHotkey portable version
 if not exist %AHK_DIR% (
@@ -49,8 +54,5 @@ if not exist %AHK_DIR% (
         exit /b 1
     )
     echo AutoHotkey v2 portable setup complete!
-) else (
-    echo AutoHotkey v2 portable is already set up.
 )
 
-echo Setup complete!

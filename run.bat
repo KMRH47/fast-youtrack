@@ -18,17 +18,7 @@ set VENV_ACTIVATE=%VENV_DIR%\Scripts\activate
 set AHK_PATH=ahk\AutoHotkey64.exe
 set AHK_SCRIPT=scripts\run.ahk
 
-REM Activate the virtual environment
-if exist %VENV_ACTIVATE% (
-    echo Activating virtual environment...
-    call %VENV_ACTIVATE%
-) else (
-    echo Virtual environment not found.
-    exit /b 1
-)
-
 REM Run the AutoHotkey script
-echo Running AutoHotkey script...
 start "" /b %AHK_PATH% /restart %AHK_SCRIPT%
 
 REM Capture PID to ahk/pid.txt
