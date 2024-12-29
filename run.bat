@@ -1,8 +1,9 @@
 @echo off
 setlocal
 
-REM Kill all AutoHotkey processes
-taskkill /F /IM AutoHotkey64.exe 2>nul
+REM Kill previous Fast YouTrack AutoHotkey process if exists, suppress output
+set /p PID=<ahk\pid.txt <nul >nul 2>&1
+taskkill /F /PID %PID% 2>nul
 
 REM Run setup.bat to ensure venv and dependencies are installed
 call scripts\setup.bat
@@ -28,7 +29,9 @@ if exist %VENV_ACTIVATE% (
 
 REM Run the AutoHotkey script
 echo Running AutoHotkey script...
-start "" /b %AHK_PATH% %AHK_SCRIPT%
+start "" /b %AHK_PATH% /restart %AHK_SCRIPT%
 
-REM You can change the hotkey in scripts/run.ahk
+REM Capture PID to ahk/pid.txt
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$proc = Get-Process AutoHotkey64 | Sort-Object StartTime -Descending | Select-Object -First 1; if ($proc) { $proc.Id } else { exit 1 }" > ahk\pid.txt 2>nul
+
 echo Fast YouTrack running in background...
