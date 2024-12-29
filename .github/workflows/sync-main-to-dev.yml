@@ -3,27 +3,46 @@ name: Sync Main to Dev
 on:
   push:
     branches:
-      - main  
+      - main
+
+permissions:
+  contents: write
 
 jobs:
   merge-back:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  
+          fetch-depth: 0
 
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Fetch all branches
-        run: git fetch --all
+      - name: Fetch branches
+        run: |
+          git fetch origin
+          git checkout dev || git checkout -b dev origin/dev
+
+      - name: Check if dev is already up-to-date
+        id: check_sync
+        run: |
+          git fetch origin main
+          # Check if dev already contains all commits from main
+          if git merge-base --is-ancestor origin/main dev; then
+            echo "Dev is already up-to-date with main. Skipping merge."
+            echo "should_skip=true" >> $GITHUB_ENV
+          else
+            echo "Dev is behind main. Merge needed."
+            echo "should_skip=false" >> $GITHUB_ENV
+          fi
 
       - name: Merge main into dev
+        if: env.should_skip == 'false'
         run: |
-          git checkout dev
           git merge origin/main --no-edit
           git push origin dev
