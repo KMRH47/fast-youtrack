@@ -35,7 +35,7 @@ if %ERRORLEVEL% neq 0 (
     pip install -q -r requirements.txt
 )
 
-REM Download and set up AutoHotkey portable version
+REM Download and set up AutoHotkey portable
 if not exist %AHK_DIR% (
     echo Creating directory for AutoHotkey...
     mkdir %AHK_DIR%
