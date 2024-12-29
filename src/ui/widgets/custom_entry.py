@@ -1,8 +1,8 @@
 import logging
-import tkinter as tk
 import re
-
 from typing import Callable, Optional
+
+import tkinter as tk
 
 from ui.widgets.base_widget_config import BaseWidgetConfig
 
@@ -19,25 +19,28 @@ class CustomEntryConfig(BaseWidgetConfig):
 
 class CustomEntry(tk.Entry):
     __break_chars: list[str]
-    text_var: tk.StringVar
 
     def __init__(
         self, master=None, config: Optional[CustomEntryConfig] = None, **kwargs
     ):
         super().__init__(master=master, **kwargs)
-        self.text_var = tk.StringVar()
         self.config = config or CustomEntryConfig()
         self.__break_chars = self.config.break_chars or []
-        self.configure(textvariable=self.text_var)
+
+        if config:
+            if config.initial_value:
+                self.insert(0, config.initial_value)
+            if config.on_change:
+                self.bind("<KeyRelease>", config.on_change)
 
         self.bind("<Control-BackSpace>", self._on_backspace)
 
     def _validate(self, validation_func: Callable[[str], bool]):
-        return validation_func(self.text_var.get())
+        return validation_func(self.get())
 
-    def _on_backspace(self, event):
+    def _on_backspace(self, _):
         cursor_pos = self.index(tk.INSERT)
-        text_up_to_cursor = self.text_var.get()[:cursor_pos]
+        text_up_to_cursor = self.get()[:cursor_pos]
 
         if not self.__break_chars:
             self._delete_word(cursor_pos, text_up_to_cursor)

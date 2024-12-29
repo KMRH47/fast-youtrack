@@ -1,54 +1,64 @@
 import logging
-import tkinter as tk
-from datetime import datetime
 from typing import Optional
 
-from tkcalendar import DateEntry
+import tkinter as tk
+
 from ui.widgets.custom_combobox import CustomCombobox, CustomComboboxConfig
 from ui.widgets.custom_entry import CustomEntry, CustomEntryConfig
+from ui.widgets.custom_date_entry import CustomDateEntry, CustomDateEntryConfig
 
 logger = logging.getLogger(__name__)
-
-DATE_FORMAT_MAP = {
-    "dd/mm/yyyy": "%d/%m/%Y",
-    "mm/dd/yyyy": "%m/%d/%Y",
-    "yyyy/mm/dd": "%Y/%m/%d",
-    "dd-mm-yyyy": "%d-%m-%Y",
-    "mm-dd-yyyy": "%m-%d-%Y",
-    "yyyy-mm-dd": "%Y-%m-%d",
-}
-
-
-class CustomDateEntryConfig(CustomEntryConfig):
-    date_format: Optional[str] = "yyyy-mm-dd"
 
 
 def create_labeled_entry(
     parent: tk.Tk, label: str = "", config: Optional[CustomEntryConfig] = None, **kwargs
-) -> tk.StringVar:
-    """Creates a labeled CustomEntry widget, packs it, and returns the entry."""
-    label_widget = tk.Label(parent, text=label)
-    label_widget.pack(anchor="w", padx=10, pady=5)
+) -> CustomEntry:
+    tk.Label(parent, text=label).pack(anchor="w", padx=10, pady=5)
+    entry = CustomEntry(master=parent, config=config, **kwargs)
+    entry.pack(anchor="w", padx=10, fill="x", expand=True)
 
-    custom_entry = CustomEntry(master=parent, config=config, **kwargs)
-    custom_entry.pack(anchor="w", padx=10, fill="x", expand=True)
+    if not config:
+        return entry
 
-    if config:
-        custom_entry.text_var.set(config.initial_value or "")
-        config.on_change and custom_entry.text_var.trace_add("write", config.on_change)
-        config.force_focus and parent.after(0, custom_entry.focus_force)
-        config.cursor_end and custom_entry.icursor(tk.END)
+    if config.initial_value:
+        entry.delete(0, tk.END)
+        entry.insert(0, config.initial_value)
+    config.force_focus and parent.after(0, entry.focus_force)
+    config.cursor_end and entry.icursor(tk.END)
 
-        if config.validation_func:
-            validate_command = (
-                custom_entry.register(lambda v: config.validation_func(v)),
-                "%P",
+    if not (config.validation_func or config.on_change):
+        return entry
+
+    was_invalid = False
+    if config.validation_func:
+        initial_border = entry["highlightbackground"]
+
+        def validate(value):
+            nonlocal was_invalid
+            is_valid = config.validation_func(value)
+            entry.configure(
+                highlightthickness=1 if not is_valid else 0,
+                highlightbackground="red" if not is_valid else initial_border,
+                highlightcolor="red" if not is_valid else initial_border,
             )
-            custom_entry.configure(
-                validate="focusout", validatecommand=validate_command
-            )
+            was_invalid = not is_valid
+            logger.info(f"Validation result for '{value}': {is_valid}")
+            return True
 
-    return custom_entry.text_var
+        def on_change(event):
+            was_invalid and validate(entry.get())
+            config.on_change and config.on_change(event)
+
+        entry.configure(
+            validate="focusout",
+            validatecommand=(entry.register(validate), "%P"),
+        )
+        entry.bind("<Return>", lambda _: validate(entry.get()))
+        entry.bind("<KeyRelease>", on_change)
+    elif config.on_change:
+        entry.bind("<KeyRelease>", config.on_change)
+
+    return entry
 
 
 def create_labeled_date_entry(
@@ -56,45 +66,21 @@ def create_labeled_date_entry(
     label: Optional[str] = None,
     config: Optional[CustomDateEntryConfig] = None,
     **kwargs,
-) -> tk.StringVar:
+) -> CustomDateEntry:
     label_widget = tk.Label(parent, text=label)
     label_widget.pack(anchor="w", padx=10, pady=5)
 
-    text_var = tk.StringVar()
-    date_format = (
-        config.date_format.lower() if config and config.date_format else "yyyy-mm-dd"
-    )
-    strptime_format = DATE_FORMAT_MAP.get(date_format, "%Y-%m-%d")
-
-    date_entry = DateEntry(
-        parent, textvariable=text_var, date_pattern=date_format, **kwargs
-    )
-
-    if config and config.initial_value:
-        try:
-            initial_date = datetime.strptime(config.initial_value, strptime_format)
-            date_entry.set_date(initial_date)
-        except ValueError as e:
-            logger.error(f"Error parsing initial date: {e}")
-
+    date_entry = CustomDateEntry(parent, config=config, **kwargs)
     date_entry.pack(anchor="w", padx=10, fill="x", expand=True)
 
-    if config and config.on_change:
-        text_var.trace_add("write", config.on_change)
-
-    return text_var
+    return date_entry
 
 
 def create_labeled_combobox(
     parent, label: Optional[str] = None, config: Optional[CustomComboboxConfig] = None
-) -> tk.StringVar:
-    logger.debug("Creating labeled combobox, config: %s", config)
+) -> CustomCombobox:
     label_widget = tk.Label(parent, text=label)
     label_widget.pack(anchor="w", padx=10, pady=5)
-
-    text_var = tk.StringVar(value=config.initial_value)
-    combobox = CustomCombobox(master=parent, config=config, textvariable=text_var)
-
+    combobox = CustomCombobox(master=parent, config=config)
     combobox.pack(anchor="w", padx=10, fill="x", expand=True)
-
-    return text_var
+    return combobox
