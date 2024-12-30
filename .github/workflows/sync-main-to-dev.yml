@@ -42,6 +42,7 @@ jobs:
           else
             echo "Dev is behind main. Merge needed."
             echo "should_skip=false" >> $GITHUB_OUTPUT
+          fi
 
   merge-back:
     name: Merge main into dev
