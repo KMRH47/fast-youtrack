@@ -13,8 +13,8 @@ T = TypeVar("T")
 
 
 class CustomComboboxConfig(CustomEntryConfig, Generic[T]):
-    values: list[str]
-    value_map: Optional[dict[str, T]] = None
+    values: dict[str, T]
+    initial_value: str
 
 
 class CustomCombobox(ttk.Combobox, Generic[T]):
@@ -22,16 +22,16 @@ class CustomCombobox(ttk.Combobox, Generic[T]):
     def __init__(
         self, master, config: Optional[CustomComboboxConfig[T]] = None, **kwargs
     ):
-        super().__init__(
-            master=master, **kwargs, values=config.values if config else []
-        )
+        values = list(config.values.keys()) if config and config.values else []
+        super().__init__(master=master, **kwargs, values=values)
+        
         if config:
             self.set(config.initial_value or "")
-        self.__value_map = config.value_map if config else None
+        self.__values = config.values if config else {}
 
     def get(self) -> T | str:
-        """Get the mapped value if a mapper exists, otherwise return the display value."""
+        """Get the mapped value if values exist, otherwise return the display value."""
         display_value = super().get()
-        if self.__value_map is not None:
-            return self.__value_map.get(display_value, display_value)
+        if self.__values:
+            return self.__values.get(display_value, display_value)
         return display_value

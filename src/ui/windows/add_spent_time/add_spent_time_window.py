@@ -28,9 +28,6 @@ class AddSpentTimeWindow(CustomWindow):
     ):
         super().__init__(config=config, **kwargs)
         self.__issue_id_change_callback: Optional[Callable] = None
-        self.__work_item_type_mapping: dict[str, str] = (
-            config.work_item_types if config else {}
-        )
 
         initial_issue_id = (
             f"{config.project}{config.issue_separator}{config.initial_issue_id}"
@@ -41,6 +38,8 @@ class AddSpentTimeWindow(CustomWindow):
             label="Issue ID:",
             config=CustomEntryConfig(
                 initial_value=initial_issue_id or "",
+                initial_value=f"{config.project}{config.issue_separator}{config.initial_issue_id}"
+                or "",
                 break_chars=["-"],
                 force_focus=True,
                 cursor_end=True,
@@ -68,9 +67,8 @@ class AddSpentTimeWindow(CustomWindow):
             parent=self,
             label="Type:",
             config=CustomComboboxConfig(
-                values=list(self.__work_item_type_mapping.keys()),
+                values=config.work_item_types,
                 initial_value=config.initial_type or "",
-                value_map=self.__work_item_type_mapping,
             ),
         )
 
