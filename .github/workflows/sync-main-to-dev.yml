@@ -9,9 +9,46 @@ permissions:
   contents: write
 
 jobs:
-  merge-back:
+  check-if-dev-behind-main:
+    name: Check if dev is behind main
     runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.check.outputs.should_skip }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch branches
+        run: |
+          git fetch origin
+          # Make sure dev is checked out
+          git checkout dev || git checkout -b dev origin/dev
+
+      - name: Check if dev is already up-to-date
+        id: check
+        run: |
+          git fetch origin main
+          # Check if dev already contains all commits from main
+          if git merge-base --is-ancestor origin/main dev; then
+            echo "Dev is already up-to-date with main. Skipping merge."
+            echo "should_skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "Dev is behind main. Merge needed."
+            echo "should_skip=false" >> $GITHUB_OUTPUT
+
+  merge-back:
+    name: Merge main into dev
+    runs-on: ubuntu-latest
+    needs: [check-if-dev-behind-main]
+    # Only run this job if the check job signals "should_skip == false"
+    if: ${{ needs.check-if-dev-behind-main.outputs.should_skip == 'false' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -28,21 +65,7 @@ jobs:
           git fetch origin
           git checkout dev || git checkout -b dev origin/dev
 
-      - name: Check if dev is already up-to-date
-        id: check_sync
-        run: |
-          git fetch origin main
-          # Check if dev already contains all commits from main
-          if git merge-base --is-ancestor origin/main dev; then
-            echo "Dev is already up-to-date with main. Skipping merge."
-            echo "should_skip=true" >> $GITHUB_ENV
-          else
-            echo "Dev is behind main. Merge needed."
-            echo "should_skip=false" >> $GITHUB_ENV
-          fi
-
       - name: Merge main into dev
-        if: env.should_skip == 'false'
         run: |
           git merge origin/main --no-edit
           git push origin dev
