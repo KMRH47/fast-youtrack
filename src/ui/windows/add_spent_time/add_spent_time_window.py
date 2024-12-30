@@ -29,15 +29,10 @@ class AddSpentTimeWindow(CustomWindow):
         super().__init__(config=config, **kwargs)
         self.__issue_id_change_callback: Optional[Callable] = None
 
-        initial_issue_id = (
-            f"{config.project}{config.issue_separator}{config.initial_issue_id}"
-        )
-
         self.__issue_id_entry = create_labeled_entry(
             parent=self,
             label="Issue ID:",
             config=CustomEntryConfig(
-                initial_value=initial_issue_id or "",
                 initial_value=f"{config.project}{config.issue_separator}{config.initial_issue_id}"
                 or "",
                 break_chars=["-"],
