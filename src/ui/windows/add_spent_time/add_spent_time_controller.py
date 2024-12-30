@@ -24,11 +24,13 @@ class AddSpentTimeController:
         self.__youtrack_service = youtrack_service
         self.__debounce_id: Optional[int] = None
         self.__window.bind_issue_id_change(self._on_issue_id_changed)
+        self.__window.bind_submit(self._on_submit)
 
     def add_spent_time(self) -> None:
         self.__window.show()
-        issue_id = self.__window._get_issue_id()
 
+    def _on_submit(self) -> None:
+        issue_id = self.__window._get_issue_id()
         time_short_format = self.__window._get_time()
 
         add_spent_time_request = AddSpentTimeRequest(

@@ -1,6 +1,6 @@
 import logging
 
-from typing import Optional
+from typing import Optional, Callable
 
 from errors.user_cancelled_error import UserCancelledError
 from ui.constants.tk_events import TkEvents
@@ -21,6 +21,7 @@ class CustomWindow(CustomWindowAttachMixin):
         self.withdraw()  # Hide window initially
         self._config = config
         self.__cancelled = True
+        self.__submit_callback = None
 
         self.bind(TkEvents.WINDOW_UNMAPPED, self._on_minimize)
         self.bind(TkEvents.WINDOW_MAPPED, self._on_restore)
@@ -49,10 +50,13 @@ class CustomWindow(CustomWindowAttachMixin):
         self.update_idletasks()
         self.deiconify()
         self.focus_force()
-        
+
         self.mainloop()
         if self.__cancelled:
             raise UserCancelledError()
+
+    def bind_submit(self, handler: Callable) -> None:
+        self.__submit_callback = handler
 
     def _set_window_geometry(self):
         """Set window size and position in the center of the screen."""
@@ -62,10 +66,12 @@ class CustomWindow(CustomWindowAttachMixin):
         pos_down = int(self.winfo_screenheight() / 2 - height / 2)
         self.geometry(f"{width}x{height}+{pos_right}+{pos_down}")
 
-    def _destroy(self, event=None):
+    def _destroy(self, _):
         self.destroy()
 
-    def _submit(self, event=None):
+    def _submit(self, _):
+        if self.__submit_callback:
+            self.__submit_callback()
         self.__cancelled = False
         self.destroy()
 
