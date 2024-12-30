@@ -30,7 +30,6 @@ class CustomWindow(CustomWindowAttachMixin):
         if self._config.text_color:
             self.option_add("*Foreground", self._config.text_color)
 
-        self.title(self._config.title)
         self.attributes("-topmost", self._config.topmost)
         self.configure(bg=self._config.bg_color)
 
