@@ -24,6 +24,9 @@ class Config(BaseModel):
     timer_view_config: CustomViewConfig = CustomViewConfig(
         width=300, height=40, position="top"
     )
+    update_issue_view_config: CustomViewConfig = CustomViewConfig(
+        width=300, height=325, position="right"
+    )
 
     def get_logging_level(self) -> int:
         import logging

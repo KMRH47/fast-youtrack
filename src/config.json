@@ -41,5 +41,16 @@
     "topmost": true,
     "cancel_key": null,
     "submit_key": null
+  },
+  "update_issue_view_config": {
+    "width": 300,
+    "height": 330,
+    "bg_color": null,
+    "text_color": null,
+    "resizable": false,
+    "position": "left",
+    "topmost": true,
+    "cancel_key": null,
+    "submit_key": null
   }
 }
