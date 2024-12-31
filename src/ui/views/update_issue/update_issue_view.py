@@ -1,15 +1,20 @@
-from typing import Optional
-from tkinter import ttk
-import tkinter as tk
 import logging
+from typing import Optional
+
+import tkinter as tk
+from tkinter import ttk
 
 from services.youtrack_service import YouTrackService
-from models.general_responses import Issue, StateBundleElement
-from models.general_requests import IssueUpdateRequest, WorkItemField
+from models.youtrack import Issue, StateIssueCustomField, IssueFieldNames, IssueUpdateRequest
 from ui.views.base.custom_view_config import CustomViewConfig
 from ui.views.base.custom_view import CustomView
 
 logger = logging.getLogger(__name__)
+
+# Constants
+ERROR_COLOR = "red"
+SUCCESS_COLOR = "green"
+LOADING_MESSAGE = "Loading..."
 
 
 class BundleEnums:
@@ -20,7 +25,7 @@ class UpdateIssueView(CustomView):
     def __init__(
         self,
         youtrack_service: YouTrackService,
-        config: Optional[CustomViewConfig] = None
+        config: Optional[CustomViewConfig] = None,
     ):
         super().__init__(config=config)
         self.__youtrack_service = youtrack_service
@@ -28,105 +33,121 @@ class UpdateIssueView(CustomView):
         self.__issue_update_request: Optional[IssueUpdateRequest] = None
         self.selected_issue_state_var: Optional[tk.StringVar] = None
         self.issue_state_combobox: Optional[ttk.Combobox] = None
-
-    def update_value(self, issue: Optional[Issue] = None) -> None:
-        """Update the view with new issue details."""
-        self.__issue = issue
-        self._build_ui()
-        self.update_idletasks()
-        self._flash_update(flash_color="red" if issue is None else "green")
+        self.submit_button: Optional[tk.Button] = None
+        self.error_label: Optional[tk.Label] = None
 
     def _populate_widgets(self, parent: tk.Frame) -> None:
         """Build the UI components."""
         parent.config(bg=self._config.bg_color)
-        
+
         # Issue State ComboBox
-        tk.Label(parent, text="Current State:", bg=self._config.bg_color).pack(anchor="w", padx=10)
+        tk.Label(parent, text="Current State:", bg=self._config.bg_color).pack(
+            anchor="w", padx=10
+        )
         self.selected_issue_state_var = tk.StringVar()
         self.issue_state_combobox = ttk.Combobox(
             parent,
-            values=self._get_available_issue_states(),
+            values=[LOADING_MESSAGE],
             textvariable=self.selected_issue_state_var,
+            state=tk.DISABLED,
         )
-        self.issue_state_combobox.pack(anchor="w", padx=10, pady=5, fill="x", expand=True)
-        
+        self.issue_state_combobox.pack(
+            anchor="w", padx=10, pady=5, fill="x", expand=True
+        )
+
         # Bind events
-        self.issue_state_combobox.bind("<<ComboboxSelected>>", self._on_issue_state_change)
-        
-        # Submit Button
-        submit_button = tk.Button(
-            parent, text="Update", command=self._on_submit, width=10
+        self.issue_state_combobox.bind("<<ComboboxSelected>>", self._on_submit)
+
+        # Submit Button (initially disabled)
+        self.submit_button = tk.Button(
+            parent, text="Update", command=self._on_submit, width=10, state=tk.DISABLED
         )
-        submit_button.pack(pady=5)
+        self.submit_button.pack(pady=5)
 
-    def _get_available_issue_states(self) -> list[str]:
-        """Get available issue states from YouTrack."""
-        try:
-            issue_states: list[StateBundleElement] = self.__youtrack_service.get_bundle(
-                BundleEnums.STATE
-            )
-            return sorted([state.name for state in issue_states if state.name])
-        except Exception as e:
-            logger.error(f"Failed to get issue states: {e}")
-            return []
-
-    def _on_issue_state_change(self, _) -> None:
-        """Handle state change in the combobox."""
-        if not self._state_valid():
-            self._apply_error_style(self.issue_state_combobox)
-        else:
-            self._reset_style(self.issue_state_combobox)
-
-    def _state_valid(self) -> bool:
-        """Validate the selected state."""
-        current_state = self.selected_issue_state_var.get()
-        return (
-            not current_state
-            or current_state in self.issue_state_combobox["values"]
+        # Error Label
+        self.error_label = tk.Label(
+            parent, text="", fg=ERROR_COLOR, bg=self._config.bg_color
         )
+        self.error_label.pack()
 
-    def _apply_error_style(self, widget: ttk.Widget) -> None:
-        """Apply error styling to a widget."""
-        style = ttk.Style()
-        style.theme_use("clam")
-        style.configure(
-            "Error.TCombobox",
-            fieldbackground="white",
-            bordercolor="red",
-            borderwidth=2
-        )
-        widget.config(style="Error.TCombobox")
+        # Load states after UI is built
+        self._get_available_issue_states()
 
-    def _reset_style(self, widget: ttk.Widget) -> None:
-        """Reset widget style to default."""
-        widget.config(style="TCombobox")
+    def update_value(self, issue: Optional[Issue] = None) -> None:
+        """Update the view with new issue details."""
+        self.__issue = issue
+        if hasattr(self, "selected_issue_state_var"):
+            self.selected_issue_state_var.set("")
+        if hasattr(self, "error_label"):
+            self.error_label.config(text="")
+
+        self._build_ui()
+        if issue:
+            self.update_idletasks()
+            self._flash_update(flash_color=SUCCESS_COLOR)
 
     def _on_submit(self) -> None:
         """Handle form submission."""
         try:
-            if not self.__issue:
-                logger.error("No issue loaded")
-                return
-
-            current_state = self.selected_issue_state_var.get()
-            if not current_state or not self._state_valid():
-                return
-
-            # Create field update for state change
-            state_field = WorkItemField(
-                name="State",
-                value={"name": current_state}
-            )
+            selected_state = self.selected_issue_state_var.get()
+            states = self.__youtrack_service.get_bundle(BundleEnums.STATE)
+            state_bundle = next(s for s in states if s.name == selected_state)
 
             self.__issue_update_request = IssueUpdateRequest(
-                summary=self.__issue.summary,
-                description=self.__issue.description,
-                fields=[state_field],
-                usesMarkdown=True
+                fields=[
+                    {
+                        "name": "State",
+                        "$type": "StateIssueCustomField",
+                        "value": {
+                            "name": state_bundle.name,
+                            "id": state_bundle.id,
+                            "$type": "StateBundleElement",
+                        },
+                    }
+                ]
             )
-            
+
+            self.__youtrack_service.update_issue(
+                self.__issue.id, self.__issue_update_request
+            )
+            self._flash_update(flash_color=SUCCESS_COLOR)
             self.master.destroy()
+
         except Exception as e:
             logger.error(f"Error submitting issue update: {e}")
-            self.master.destroy()
-            raise
+            self.error_label.config(text=f"Error: {str(e)}")
+            self._flash_update(flash_color=ERROR_COLOR)
+
+    def _get_available_issue_states(self) -> None:
+        """Get available states and update the combobox."""
+        try:
+            states = self.__youtrack_service.get_bundle(BundleEnums.STATE)
+            state_names = [state.name for state in states]
+            self.issue_state_combobox["values"] = state_names
+            self.issue_state_combobox["state"] = "readonly"
+
+            if not self.__issue or not self.__issue.fields:
+                return
+
+            state_field = next(
+                (
+                    field
+                    for field in self.__issue.fields
+                    if isinstance(field, StateIssueCustomField)
+                    and field.projectCustomField
+                    and field.projectCustomField.field
+                    and field.projectCustomField.field.name == IssueFieldNames.STATE
+                ),
+                None,
+            )
+
+            if (
+                state_field
+                and state_field.value
+                and state_field.value.name in state_names
+            ):
+                self.selected_issue_state_var.set(state_field.value.name)
+
+        except Exception as e:
+            logger.error(f"Error fetching issue states: {e}")
+            self.error_label.config(text=f"Error: {str(e)}")

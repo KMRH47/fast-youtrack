@@ -1,8 +1,10 @@
 import logging
-from pydantic import BaseModel, Field
-from typing import List, Optional, Union, Literal
+import time
+from enum import StrEnum
 from datetime import datetime, UTC
-from pydantic import field_validator
+from typing import List, Optional, Union, Literal
+
+from pydantic import BaseModel, Field, field_validator
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +93,7 @@ class CustomField(WorkItem):
 
 
 class IssueWatchers(WorkItem):
-    hasStar: bool = None
+    hasStar: Optional[bool] = None
 
 
 class ProjectVcsIntegrationSettings(WorkItem):
@@ -338,7 +340,8 @@ class IssueVoters(WorkItem):
 
 
 class UnlimitedVisibility(WorkItem):
-    pass
+    permittedGroups: Optional[List] = None
+    permittedUsers: Optional[List[User]] = None
 
 
 class Channel(WorkItem):
@@ -397,3 +400,71 @@ class Issue(WorkItem):
         ]
     ] = None
     channel: Optional[Union[str, Channel]] = None
+
+
+class FieldStyle(WorkItem):
+    background: Optional[str]
+    foreground: Optional[str]
+
+
+class Value(WorkItem):
+    color: Optional[FieldStyle]
+
+
+class WorkItemField(WorkItem):
+    name: str = "State"
+    value: StateBundleElement
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
+class IssueUpdateRequest(BaseModel):
+    fields: List[dict] = Field(default_factory=list)
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
+class Type(WorkItem):
+    localizedName: Optional[str] = None
+    isDefault: Optional[bool] = None
+    isAutoAttached: Optional[bool] = None
+    presentation: Optional[str] = None
+
+
+class Duration(WorkItem):
+    minutes: int
+    presentation: Optional[str] = None
+
+
+class AddSpentTimeRequest(BaseModel):
+    duration: Duration
+    date: int = Field(
+        default_factory=lambda: int(time.time() * 1000), alias="date_millis"
+    )
+    text: Optional[str] = Field(default=None, alias="description")
+
+    model_config = {"arbitrary_types_allowed": True}
+
+
+class RecentIssueRequest(WorkItem):
+    date: int = Field(
+        default_factory=lambda: int(time.time() * 1000), alias="date_millis"
+    )
+    issue: Issue
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
+class IssueFieldNames(StrEnum):
+    STATE = "State"
+    PRIORITY = "Priority"
+    TYPE = "Type"
+    ASSIGNEE = "Assignee"
+    FIX_VERSIONS = "Fix versions"
+    AFFECTED_VERSIONS = "Affected versions"
+    FIXED_IN_BUILD = "Fixed in build"
+    ESTIMATION = "Estimation"
+    SPENT_TIME = "Spent time"

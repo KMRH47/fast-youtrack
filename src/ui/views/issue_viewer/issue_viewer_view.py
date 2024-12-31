@@ -1,10 +1,10 @@
+import logging
+from typing import Optional
+
 import tkinter as tk
 from tkinter import ttk
-from typing import Optional
-import logging
 
-from models.general_responses import Issue
-
+from models.youtrack import Issue
 from ui.views.base.custom_view import CustomView
 from ui.views.base.custom_view_config import CustomViewConfig
 
