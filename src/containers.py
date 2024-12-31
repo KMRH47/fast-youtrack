@@ -1,4 +1,5 @@
 from config import Config
+from ui.views.update_issue.update_issue_view import UpdateIssueView
 from ui.windows.add_spent_time.add_spent_time_controller import (
     AddSpentTimeController,
 )
@@ -66,6 +67,12 @@ class Container(containers.DeclarativeContainer):
         config=config.provided.timer_view_config,
     )
 
+    update_issue_view_factory: providers.Provider[UpdateIssueView] = providers.Factory(
+        UpdateIssueView,
+        config=config.provided.update_issue_view_config,
+        youtrack_service=youtrack_service,
+    )
+
     add_spent_time_config = providers.Factory(
         lambda config, youtrack_service, clipboard_value: config.add_spent_time_config.copy(
             update={
@@ -85,7 +92,11 @@ class Container(containers.DeclarativeContainer):
     add_spent_time_window = providers.Singleton(
         AddSpentTimeWindow,
         config=add_spent_time_config,
-        attached_views=[issue_view_factory, timer_view_factory],
+        attached_views=[
+            issue_view_factory,
+            timer_view_factory,
+            update_issue_view_factory,
+        ],
     )
 
     add_spent_time_controller = providers.Singleton(
