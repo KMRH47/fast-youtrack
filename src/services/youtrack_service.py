@@ -1,4 +1,5 @@
-from typing import List, Optional, TypeVar
+from typing import List, Optional, TypeVar, Union
+import time
 
 from services.http.http_client import HttpClient
 from models.youtrack import (
@@ -33,10 +34,14 @@ class YouTrackService:
         )
 
     def update_issue(
-        self, issue_id: str, update_request: IssueUpdateRequest
+        self, issue_id: str, update_request: Union[IssueUpdateRequest, dict]
     ) -> Optional[Issue]:
         """Update an issue with the given changes and update recent issues list."""
-        data = update_request.model_dump(exclude_none=True, by_alias=True)
+        data = (
+            update_request.model_dump(exclude_none=True, by_alias=True)
+            if isinstance(update_request, IssueUpdateRequest)
+            else update_request
+        )
         result = self._request(
             method="post",
             endpoint=f"issues/{issue_id}",
@@ -45,9 +50,9 @@ class YouTrackService:
             response_model=Issue,
         )
 
-        # update recent issues list
-        self._update_recent_issues(RecentIssueRequest(issue=result))
-
+        if result:
+           self._update_recent_issues(RecentIssueRequest(issue=result))
+           
         return result
 
     def get_user_info(self) -> Optional[User]:
@@ -88,5 +93,5 @@ class YouTrackService:
         self._request(
             method="post",
             endpoint="users/me/recent/issues",
-            json=request.model_dump(exclude_none=True),
+            json=request.model_dump(exclude_none=True)
         )

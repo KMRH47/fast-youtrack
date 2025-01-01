@@ -2,9 +2,8 @@ import logging
 import random
 from typing import Optional
 
-from models.general_requests import AddSpentTimeRequest, Duration
-from models.general_responses import WorkItem
 from services.youtrack_service import YouTrackService
+from models.youtrack import AddSpentTimeRequest, Duration, WorkItem
 from ui.windows.add_spent_time.add_spent_time_window import AddSpentTimeWindow
 from utils.youtrack import convert_time_to_minutes, id_valid
 
@@ -39,6 +38,10 @@ class AddSpentTimeController:
             type=WorkItem(id=self.__window._get_issue_type()),
             date_millis=self.__window._get_date_millis(),
         )
+
+        logger.info(f"Adding spent time for issue {issue_id}: {add_spent_time_request}")
+
+        return
 
         self.__youtrack_service.add_spent_time(issue_id, add_spent_time_request)
 

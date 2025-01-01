@@ -2,38 +2,38 @@ import logging
 import time
 from enum import StrEnum
 from datetime import datetime, UTC
-from typing import List, Optional, Union, Literal
+from typing import List, Optional, Union
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field as PydanticField, field_validator
 
 logger = logging.getLogger(__name__)
 
 
-def convert_to_iso_if_timestamp(v):
+def convert_to_iso_if_timestamp(value):
     """Convert integer timestamps to ISO format strings while preserving other values."""
-    if isinstance(v, int):
+    if isinstance(value, int):
         try:
-            return datetime.fromtimestamp(v / 1000.0, UTC).isoformat()
+            return datetime.fromtimestamp(value / 1000.0, UTC).isoformat()
         except Exception as e:
-            logger.warning(f"Failed timestamp conversion: {v} - {e}")
-            return str(v)
-    return v
+            logger.warning(f"Failed timestamp conversion: {value} - {e}")
+            return str(value)
+    return value
 
 
-YoutrackResponseField = Literal[
-    "State", "Priority", "Type", "Assignee", "Fix versions", "Affected versions"
-]
+def datetime_to_unix_timestamp(datetime: datetime) -> int:
+    """Convert datetime to Unix timestamp in milliseconds."""
+    return int(datetime.timestamp() * 1000)
 
 
 class WorkItem(BaseModel):
     id: Optional[str] = None
     name: Optional[str] = None
-    type_: Optional[str] = Field(None, alias="$type")
+    type_: Optional[str] = PydanticField(default=None, alias="$type")
 
-
-class WorkItemResponse(BaseModel):
-    id: str
-    name: str
+    model_config = {
+        "populate_by_name": True,
+        "json_encoders": {datetime: datetime_to_unix_timestamp},
+    }
 
 
 class UserType(WorkItem):
@@ -145,8 +145,8 @@ class Project(WorkItem):
 
 
 class FieldStyle(WorkItem):
-    foreground: Optional[str] = None
-    background: Optional[str] = None
+    background: Optional[str]
+    foreground: Optional[str]
 
 
 class EnumBundle(WorkItem):
@@ -407,30 +407,21 @@ class FieldStyle(WorkItem):
     foreground: Optional[str]
 
 
-class Value(WorkItem):
-    color: Optional[FieldStyle]
+class StateValue(WorkItem):
+    kind: str = PydanticField(default="enum")
+    id: str
 
 
-class WorkItemField(WorkItem):
-    name: str = "State"
-    value: StateBundleElement
-
-    class Config:
-        arbitrary_types_allowed = True
+class StateField(WorkItem):
+    type_: str = PydanticField(default="StateIssueCustomField", alias="$type")
+    id: str = "130-2"
+    value: StateValue
 
 
-class IssueUpdateRequest(BaseModel):
-    fields: List[dict] = Field(default_factory=list)
-
-    class Config:
-        arbitrary_types_allowed = True
-
-
-class Type(WorkItem):
-    localizedName: Optional[str] = None
-    isDefault: Optional[bool] = None
-    isAutoAttached: Optional[bool] = None
-    presentation: Optional[str] = None
+class IssueUpdateRequest(WorkItem):
+    fields: List[StateField]
+    usesMarkdown: bool = PydanticField(default=True)
+    markdownEmbeddings: List = PydanticField(default_factory=list)
 
 
 class Duration(WorkItem):
@@ -438,24 +429,19 @@ class Duration(WorkItem):
     presentation: Optional[str] = None
 
 
-class AddSpentTimeRequest(BaseModel):
+class AddSpentTimeRequest(WorkItem):
     duration: Duration
-    date: int = Field(
-        default_factory=lambda: int(time.time() * 1000), alias="date_millis"
-    )
-    text: Optional[str] = Field(default=None, alias="description")
+    date: int = PydanticField(default_factory=lambda: int(time.time() * 1000))
+    text: Optional[str] = PydanticField(default=None, alias="description")
 
     model_config = {"arbitrary_types_allowed": True}
 
 
 class RecentIssueRequest(WorkItem):
-    date: int = Field(
-        default_factory=lambda: int(time.time() * 1000), alias="date_millis"
-    )
+    date: int = PydanticField(default_factory=lambda: int(time.time() * 1000))
     issue: Issue
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = {"arbitrary_types_allowed": True}
 
 
 class IssueFieldNames(StrEnum):
@@ -468,3 +454,15 @@ class IssueFieldNames(StrEnum):
     FIXED_IN_BUILD = "Fixed in build"
     ESTIMATION = "Estimation"
     SPENT_TIME = "Spent time"
+
+
+class BundleEnums:
+    STATE = "110-0"
+    TYPE = "108-1"
+    CATEGORY = "108-269"
+    FIX_VERSIONS = "113-23"
+    PROJECT_ID = "108-35"
+    SUBSYSTEMS = "132-7"
+    RESOLUTION = "108-198"
+    BUILD_NUMBER = "133-1"
+    PRIORITY = "108-0"
