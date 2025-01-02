@@ -22,7 +22,6 @@ class IssueViewerView(CustomView):
         """Update the view with new issue details."""
         self.__issue = issue
         self._build_ui()
-        self.update_idletasks()
         self._flash_update(flash_color="red" if issue is None else "green")
 
     def _populate_widgets(self, parent: tk.Frame) -> None:

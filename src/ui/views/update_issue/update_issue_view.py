@@ -34,12 +34,12 @@ class UpdateIssueView(CustomView):
         self.selected_issue_state = tk.StringVar()
         self.issue_state_combobox = None
 
-        self._build_ui()
         self._update_view_state()
 
     def update_value(self, issue: Optional[Issue] = None) -> None:
         """Update the view with new issue details."""
         self.__issue = issue
+        self._build_ui()
         self._update_view_state()
         self._flash_update(flash_color="red" if issue is None else "green")
 

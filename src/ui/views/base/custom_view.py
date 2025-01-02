@@ -66,7 +66,6 @@ class CustomView(tk.Toplevel):
         container_frame.pack(fill="both", expand=True)
         self._populate_widgets(container_frame)
 
-        self.update_idletasks()
         if isinstance(self.master, tk.Tk):
             # Notify parent window that geometry has changed to trigger repositioning
             self.master.event_generate(TkEvents.GEOMETRY_CHANGED)
