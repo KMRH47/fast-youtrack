@@ -2,11 +2,13 @@ import logging
 import math
 import tkinter as tk
 
-from typing import Literal, Optional, TypeVar
+from typing import TYPE_CHECKING, Literal, Optional, TypeVar, cast, Any
 
 from ui.views.base.custom_view_config import CustomViewConfig
 from ui.constants.tk_events import TkEvents
 
+if TYPE_CHECKING:
+    from ui.windows.base.custom_window import CustomWindow
 
 logger = logging.getLogger(__name__)
 
@@ -16,12 +18,16 @@ T = TypeVar("T")
 class CustomView(tk.Toplevel):
     def __init__(
         self,
-        parent_window: Optional[tk.Tk] = None,
+        parent_window: Optional["CustomWindow"] = None,
         config: CustomViewConfig = CustomViewConfig(),
     ):
         super().__init__(master=parent_window)
         self._config = config
-        self._hide()  # Hide view to avoid flickering
+        self._hide()  # hide view to avoid flickering
+
+    @property
+    def window(self) -> "CustomWindow":
+        return cast("CustomWindow", self.master)
 
     def update_value(self, value: T) -> None:
         """Update the view with a new value.
@@ -44,10 +50,10 @@ class CustomView(tk.Toplevel):
 
     def _create_view(self, parent_window: tk.Tk) -> None:
         self.master = parent_window
-        
+
         geometry = f"{self._config.width}x{self._config.height}"
         self.geometry(geometry)
-        self.overrideredirect(True) # hides title bar
+        self.overrideredirect(True)  # hides title bar
         self.wm_attributes("-topmost", self._config.topmost)
         self.resizable(self._config.resizable, self._config.resizable)
 
