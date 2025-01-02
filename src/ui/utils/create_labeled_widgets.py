@@ -82,5 +82,5 @@ def create_labeled_combobox(
     label_widget = tk.Label(parent, text=label)
     label_widget.pack(anchor="w", padx=10, pady=5)
     combobox = CustomCombobox(master=parent, config=config)
-    combobox.pack(anchor="w", padx=10, fill="x", expand=True)
+    combobox.pack(anchor="w", padx=10, fill="x")
     return combobox
