@@ -2,21 +2,20 @@ import logging
 from typing import Optional
 
 import tkinter as tk
-from tkinter import ttk
 
 from services.youtrack_service import YouTrackService
 from models.youtrack import (
+    BundleEnums,
     Issue,
-    StateIssueCustomField,
-    IssueFieldNames,
     IssueUpdateRequest,
     StateField,
+    StateIssueCustomField,
     StateValue,
-    BundleEnums,
 )
 from ui.views.base.custom_view_config import CustomViewConfig
 from ui.views.base.custom_view import CustomView
-from ui.windows.base.custom_window import CustomWindow
+from ui.widgets.custom_combobox import CustomComboboxConfig
+from ui.utils.create_labeled_widgets import create_labeled_combobox
 
 logger = logging.getLogger(__name__)
 
@@ -30,107 +29,78 @@ class UpdateIssueView(CustomView):
     ):
         super().__init__(config=config)
         self.__youtrack_service = youtrack_service
-        self.__issue: Optional[Issue] = issue
-        self.selected_issue_state = tk.StringVar()
-        self.issue_state_combobox = None
-
-        self._update_view_state()
+        self.__issue = issue
 
     def update_value(self, issue: Optional[Issue] = None) -> None:
-        """Update the view with new issue details."""
         self.__issue = issue
-        self._build_ui()
-        self._update_view_state()
+        self._update_issue_state_combobox()
         self._flash_update(flash_color="red" if issue is None else "green")
 
-    def _update_view_state(self) -> None:
-        """Update the view's state based on the current issue."""
-        if not self.issue_state_combobox:
-            return
-
-        if self.__issue is None:
-            self.issue_state_combobox["values"] = []
-            self.selected_issue_state.set("")
-            self.issue_state_combobox.state(["disabled"])
-        else:
-            self.issue_state_combobox.state(["!disabled"])
-            self._get_available_issue_states()
-
     def _populate_widgets(self, parent: tk.Frame) -> None:
-        parent.grid_columnconfigure(0, weight=1)
-        self._setup_ui(parent)
-
-    def _setup_ui(self, parent: tk.Frame) -> None:
-        self.issue_state_combobox = ttk.Combobox(
-            parent,
-            textvariable=self.selected_issue_state,
-            state="readonly",
+        self.__issue_state_combobox = create_labeled_combobox(
+            parent=parent,
+            label="State:",
+            config=CustomComboboxConfig(values={}, initial_value=""),
         )
-        self.issue_state_combobox.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
-        self.issue_state_combobox.bind("<<ComboboxSelected>>", self._on_state_changed)
-        self._update_view_state()
+        self.__issue_state_combobox.state(["disabled"])
+        self.__issue_state_combobox.bind(
+            "<<ComboboxSelected>>", lambda _: self._on_issue_state_changed()
+        )
 
-    def _on_state_changed(self, _=None) -> None:
-        if not self.__issue or not (selected_state := self.selected_issue_state.get()):
+    def _on_issue_state_changed(self) -> None:
+        selected_state = self.__issue_state_combobox.get()
+        if not self.__issue or not selected_state:
             return
 
-        try:
-            self._update_issue_state(selected_state)
-        except Exception as e:
-            logger.error(f"Error updating issue state: {e}")
+        if not (updated_issue := self._update_issue_state(selected_state)):
+            return
 
-    def _update_issue_state(self, selected_state: str) -> None:
+        self.__issue = updated_issue
+        self._notify_views(updated_issue)
+
+    def _update_issue_state(self, new_state: str) -> Optional[Issue]:
         states = self.__youtrack_service.get_bundle(BundleEnums.STATE)
-        state_bundle = next(state for state in states if state.name == selected_state)
+        state_bundle = next(
+            (state for state in states if state.name == new_state), None
+        )
+        if not state_bundle:
+            return None
 
         request = IssueUpdateRequest(
             fields=[StateField(value=StateValue(id=state_bundle.id))]
         )
 
         if not self.__youtrack_service.update_issue(self.__issue.id, request):
-            return
+            return None
 
-        updated_issue = self.__youtrack_service.get_issue(self.__issue.id)
-        if not updated_issue:
-            return
+        return self.__youtrack_service.get_issue(self.__issue.id)
 
-        self.__issue = updated_issue
+    def _notify_views(self, issue: Issue) -> None:
+        for view in self.window.get_attached_views():
+            view.update_value(issue)
 
-        if not isinstance(self.master, CustomWindow):
-            return
+    def _update_issue_state_combobox(self) -> None:
+        states = self.__youtrack_service.get_bundle(BundleEnums.STATE)
+        state_names = [state.name for state in states]
+        current_state = self._get_current_issue_state(state_names)
 
-        for view in self.master.get_attached_views():
-            view.update_value(updated_issue)
+        self.__issue_state_combobox["values"] = state_names
+        self.__issue_state_combobox.set(current_state or "")
+        self.__issue_state_combobox.configure(
+            state="readonly" if self.__issue and self.__issue.fields else "disabled"
+        )
 
-    def _get_available_issue_states(self) -> None:
-        if not self.issue_state_combobox:
-            return
+    def _get_current_issue_state(self, valid_states: list[str]) -> Optional[str]:
+        if not self.__issue or not self.__issue.fields:
+            return None
 
-        try:
-            states = self.__youtrack_service.get_bundle(BundleEnums.STATE)
-            self.issue_state_combobox["values"] = [state.name for state in states]
+        for field in self.__issue.fields:
+            if not isinstance(field, StateIssueCustomField):
+                continue
 
-            if not self.__issue or not self.__issue.fields:
-                return
+            if not field.value or field.value.name not in valid_states:
+                continue
 
-            def is_state_field(field):
-                return (
-                    isinstance(field, StateIssueCustomField)
-                    and field.projectCustomField
-                    and field.projectCustomField.field
-                    and field.projectCustomField.field.name == IssueFieldNames.STATE
-                )
+            return field.value.name
 
-            current_state = next(
-                (field for field in self.__issue.fields if is_state_field(field)), None
-            )
-
-            if (
-                current_state
-                and current_state.value
-                and current_state.value.name in self.issue_state_combobox["values"]
-            ):
-                self.selected_issue_state.set(current_state.value.name)
-
-        except Exception as e:
-            logger.error(f"Error fetching issue states: {e}")
+        return None
