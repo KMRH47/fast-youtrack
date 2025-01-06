@@ -418,12 +418,6 @@ class StateField(WorkItem):
     value: StateValue
 
 
-class IssueUpdateRequest(WorkItem):
-    fields: List[StateField]
-    usesMarkdown: bool = PydanticField(default=True)
-    markdownEmbeddings: List = PydanticField(default_factory=list)
-
-
 class Duration(WorkItem):
     minutes: int
     presentation: Optional[str] = None
@@ -466,3 +460,19 @@ class BundleEnums:
     RESOLUTION = "108-198"
     BUILD_NUMBER = "133-1"
     PRIORITY = "108-0"
+
+
+class AssigneeValue(WorkItem):
+    ringId: str
+
+
+class AssigneeField(WorkItem):
+    type_: str = PydanticField(default="SingleUserIssueCustomField", alias="$type")
+    id: str = "131-0"
+    value: AssigneeValue
+
+
+class IssueUpdateRequest(WorkItem):
+    fields: List[Union[StateField, AssigneeField]]
+    usesMarkdown: bool = PydanticField(default=True)
+    markdownEmbeddings: List = PydanticField(default_factory=list)

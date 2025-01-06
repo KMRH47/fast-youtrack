@@ -8,6 +8,7 @@ from errors.user_error import UserError
 from errors.user_cancelled_error import UserCancelledError
 from config import Config
 from app_args import AppArgs
+from utils.clipboard import get_number_from_clipboard
 from ui.windows.add_spent_time.add_spent_time_controller import AddSpentTimeController
 from infrastructure import initialize_infrastructure
 from utils.logging_utils import format_error_message

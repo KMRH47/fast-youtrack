@@ -55,3 +55,9 @@ bundle_query = (
     "buildIntegration,"
     "buildLink"
 )
+
+user_query = (
+    "issueRelatedGroup(id,name,ringId,allUsersGroup,icon,teamForProject(name,shortName)),"
+    "id,ringId,login,name,email,isEmailVerified,guest,fullName,avatarUrl,online,banned,"
+    "banBadge,canReadProfile,isLocked,userType(id)"
+)

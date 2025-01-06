@@ -29,6 +29,8 @@ class AddSpentTimeWindow(CustomWindow):
         super().__init__(config=config, **kwargs)
         self.__issue_id_change_callback: Optional[Callable] = None
 
+        logger.info(f"AddSpentTimeWindow config: {config.project}{config.issue_separator}{config.initial_issue_id}")
+
         self.__issue_id_entry = create_labeled_entry(
             parent=self,
             label="Issue ID:",

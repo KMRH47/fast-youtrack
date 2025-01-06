@@ -11,6 +11,8 @@ from models.youtrack import (
     StateField,
     StateIssueCustomField,
     StateValue,
+    AssigneeField,
+    AssigneeValue,
 )
 from ui.views.base.custom_view_config import CustomViewConfig
 from ui.views.base.custom_view import CustomView
@@ -30,10 +32,13 @@ class UpdateIssueView(CustomView):
         super().__init__(config=config)
         self.__youtrack_service = youtrack_service
         self.__issue = issue
+        self.__issue_state_combobox = None
+        self.__issue_assignee_combobox = None
 
     def update_value(self, issue: Optional[Issue] = None) -> None:
         self.__issue = issue
         self._update_issue_state_combobox()
+        self._update_issue_assignee_combobox()
         self._flash_update(flash_color="red" if issue is None else "green")
 
     def _populate_widgets(self, parent: tk.Frame) -> None:
@@ -44,10 +49,20 @@ class UpdateIssueView(CustomView):
         )
         self.__issue_state_combobox.state(["disabled"])
         self.__issue_state_combobox.bind(
-            "<<ComboboxSelected>>", lambda _: self._on_issue_state_changed()
+            "<<ComboboxSelected>>", lambda _: self._on_state_changed()
         )
 
-    def _on_issue_state_changed(self) -> None:
+        self.__issue_assignee_combobox = create_labeled_combobox(
+            parent=parent,
+            label="Assignee:",
+            config=CustomComboboxConfig(values={}, initial_value=""),
+        )
+        self.__issue_assignee_combobox.state(["disabled"])
+        self.__issue_assignee_combobox.bind(
+            "<<ComboboxSelected>>", lambda _: self._on_assignee_changed()
+        )
+
+    def _on_state_changed(self) -> None:
         selected_state = self.__issue_state_combobox.get()
         if not self.__issue or not selected_state:
             return
@@ -57,6 +72,24 @@ class UpdateIssueView(CustomView):
 
         self.__issue = updated_issue
         self._notify_views(updated_issue)
+
+    def _on_assignee_changed(self) -> None:
+        if not self.__issue:
+            return
+
+        selected_assignee = self.__issue_assignee_combobox.get()
+        if not selected_assignee:
+            return
+
+        request = IssueUpdateRequest(
+            fields=[AssigneeField(value=AssigneeValue(ringId=selected_assignee))]
+        )
+
+        if updated_issue := self.__youtrack_service.update_issue(
+            self.__issue.id, request
+        ):
+            self.__issue = updated_issue
+            self._notify_views(updated_issue)
 
     def _update_issue_state(self, new_state: str) -> Optional[Issue]:
         states = self.__youtrack_service.get_bundle(BundleEnums.STATE)
@@ -104,3 +137,17 @@ class UpdateIssueView(CustomView):
             return field.value.name
 
         return None
+
+    def _update_issue_assignee_combobox(self) -> None:
+        if not self.__issue or not self.__issue.project:
+            self.__issue_assignee_combobox.configure(state="disabled")
+            return
+
+        logger.debug(f"Project from issue: {self.__issue.project.id}")
+        users = self.__youtrack_service.get_users(self.__issue.project.id)
+        user_values = {user.name: user.ringId for user in users}
+
+        self.__issue_assignee_combobox["values"] = list(user_values.keys())
+        self.__issue_assignee_combobox.configure(
+            state="readonly" if self.__issue and self.__issue.fields else "disabled"
+        )
