@@ -12,9 +12,8 @@ if %ERRORLEVEL% neq 0 (
     exit /b 1
 )
 
-REM Paths for AutoHotkey and the virtual environment
+REM Paths for AutoHotkey
 set VENV_DIR=venv
-set VENV_ACTIVATE=%VENV_DIR%\Scripts\activate
 set AHK_PATH=ahk\AutoHotkey64.exe
 set AHK_SCRIPT=scripts\run.ahk
 

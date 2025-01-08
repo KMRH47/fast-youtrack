@@ -9,5 +9,5 @@
     }
 
     CreateKey(activeSubdomain.passphrase, activeSubdomain.subdomain)
-    Run('pythonw "../src/main.py" "' activeSubdomain.passphrase '" "' activeSubdomain.subdomain '"')
+    Run(A_WorkingDir '\..\venv\Scripts\pythonw.exe ../src/main.py "' activeSubdomain.passphrase '" "' activeSubdomain.subdomain '"')
 }

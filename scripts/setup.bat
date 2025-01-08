@@ -3,7 +3,6 @@ setlocal
 
 REM Paths for the virtual environment and AutoHotkey
 set VENV_DIR=venv
-set VENV_ACTIVATE=%VENV_DIR%\Scripts\activate
 set AHK_DIR=ahk
 set AHK_URL=https://www.autohotkey.com/download/ahk-v2.zip
 set AHK_ZIP=%AHK_DIR%\ahk-v2.zip
@@ -24,9 +23,6 @@ if not exist %VENV_DIR% (
         exit /b 1
     )
 )
-
-REM Activate the virtual environment
-call %VENV_ACTIVATE%
 
 REM Check if requirements need to be installed
 pip list --format=freeze | findstr /X /I /G:requirements.txt >nul 2>&1
