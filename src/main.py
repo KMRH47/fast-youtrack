@@ -4,7 +4,6 @@ import sys
 from dependency_injector.wiring import Provide
 
 from containers import Container
-from errors.user_error import UserError
 from errors.user_cancelled_error import UserCancelledError
 from config import Config
 from app_args import AppArgs
@@ -37,15 +36,10 @@ if __name__ == "__main__":
         container.wire(modules=[__name__])
         main()
     except UserCancelledError as e:
-        if logging.getLogger().handlers:
-            logger.info(f"Cancelled by user. {e}")
+        logger.info(f"Cancelled by user. {e}")
         sys.exit(0)
-    except UserError as e:
-        e.display()
     except Exception as e:
         error_details = format_error_message(e)
-        if logging.getLogger().handlers:
-            logger.error(error_details)
-        UserError(error_details).display()
+        logger.error(error_details)
     finally:
         logging.shutdown()

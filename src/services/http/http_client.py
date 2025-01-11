@@ -119,6 +119,10 @@ class HttpClient:
 
             if response.status_code == 401:
                 raise UserError("Unauthorized. Please check subdomain and token.")
+
+            if response.request.method == "POST":
+                raise UserError(formatted_response)
+
             elif response.status_code == 404:
                 logger.warning(f"Resource not found at {url}")
                 return None

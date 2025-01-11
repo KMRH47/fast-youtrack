@@ -6,6 +6,8 @@ from errors.user_cancelled_error import UserCancelledError
 from ui.constants.tk_events import TkEvents
 from ui.views.base.custom_window_config import CustomWindowConfig
 from ui.windows.base.custom_window_attach_mixin import CustomWindowAttachMixin
+from errors.user_error import UserError
+
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +20,7 @@ class CustomWindow(CustomWindowAttachMixin):
     ):
         attached_views = kwargs.pop("attached_views", None)
         super().__init__(attached_views=attached_views)
-        self.withdraw()  # Hide window initially
+        self.withdraw()  # hide window initially to avoid flickering
         self._config = config
         self.__cancelled = True
         self.__submit_callback = None
@@ -59,6 +61,13 @@ class CustomWindow(CustomWindowAttachMixin):
 
     def bind_submit(self, handler: Callable) -> None:
         self.__submit_callback = handler
+
+    def report_callback_exception(self, exc, val, tb):
+        """Override Tkinter's error handling function"""
+
+        # display error dialog on UserError
+        if isinstance(val, UserError):
+            val.display()
 
     def _set_window_geometry(self):
         """Set window size and position in the center of the screen."""
