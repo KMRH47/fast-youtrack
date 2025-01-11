@@ -36,7 +36,7 @@ class AddSpentTimeController:
         add_spent_time_request = AddSpentTimeRequest(
             description=self.__window._get_description(),
             duration=Duration(minutes=convert_time_to_minutes(time_short_format)),
-            type=WorkItem(id=self.__window._get_issue_type()),
+            type=WorkItem(id=self.__window._get_selected_issue_type()),
             date_millis=self.__window._get_date_millis(),
         )
 
@@ -64,6 +64,12 @@ class AddSpentTimeController:
 
     def _fetch_and_propagate_issue(self, issue_id: str):
         issue = self.__youtrack_service.get_issue(issue_id)
+
+        if issue and issue.project:
+            work_item_types = self.__youtrack_service.get_project_work_item_types(
+                issue.project.id
+            )
+            self.__window._set_issue_types(work_item_types)
 
         for view in self.__window.get_attached_views():
             view.update_value(issue)

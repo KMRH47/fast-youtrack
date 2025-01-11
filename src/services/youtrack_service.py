@@ -48,6 +48,14 @@ class YouTrackService:
             response_model=List[WorkItem],
         )
 
+    def get_project_work_item_types(self, project_id: str) -> List[WorkItem]:
+        """Get work item types available for a specific project."""
+        return self._request(
+            endpoint=f"admin/projects/{project_id}/timeTrackingSettings/workItemTypes",
+            fields="id,name",
+            response_model=List[WorkItem],
+        )
+
     def get_bundle(self, bundle_id: str) -> List[StateBundleElement]:
         return self._request(
             endpoint=f"admin/customFieldSettings/bundles/state/{bundle_id}/values",

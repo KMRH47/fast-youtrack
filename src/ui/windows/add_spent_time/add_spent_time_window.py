@@ -1,8 +1,9 @@
 import logging
-from typing import Callable, Optional
+from typing import Callable, List, Optional
 
 import tkinter as tk
 
+from models.general_responses import WorkItem
 from ui.widgets.custom_combobox import CustomComboboxConfig
 from ui.widgets.custom_entry import CustomEntryConfig
 from ui.windows.add_spent_time.add_spent_time_window_config import (
@@ -80,7 +81,6 @@ class AddSpentTimeWindow(CustomWindow):
         ok_button.pack(pady=5)
 
     def bind_issue_id_change(self, callback):
-        """Bind a callback function to the issue ID change event."""
         self.__issue_id_change_callback = callback
         if self.__issue_id_entry.get():
             self._on_issue_id_changed()
@@ -103,8 +103,21 @@ class AddSpentTimeWindow(CustomWindow):
     def _get_description(self) -> str:
         return self.__description_entry.get()
 
-    def _get_issue_type(self) -> str:
+    def _get_selected_issue_type(self) -> str:
         return self.__type_combobox.get()
 
     def _get_date_millis(self) -> Optional[int]:
         return self.__date_entry.get_date_millis()
+
+    def _set_issue_types(self, work_item_types: List[WorkItem]):
+        updated_work_item_types = [
+            work_item_type.name for work_item_type in work_item_types
+        ]
+
+        if updated_work_item_types == self.__type_combobox["values"]:
+            return
+
+        if self._get_selected_issue_type() not in [wt.id for wt in work_item_types]:
+            self.__type_combobox.set("")
+
+        self.__type_combobox.configure(values=updated_work_item_types)
