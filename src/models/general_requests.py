@@ -45,6 +45,6 @@ class AddSpentTimeRequest(WorkItem):
     duration: Duration
     date: int = Field(alias="date_millis")
     text: Optional[str] = Field(None, alias="description")
-
+    type: Optional[WorkItem] = None
     class Config:
         arbitrary_types_allowed = True
