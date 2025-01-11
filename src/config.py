@@ -7,11 +7,14 @@ from pydantic import BaseModel
 
 from errors.user_error import UserError
 from ui.views.base.custom_view_config import CustomViewConfig
-from ui.windows.add_spent_time.add_spent_time_window_config import AddSpentTimeWindowConfig
+from ui.windows.add_spent_time.add_spent_time_window_config import (
+    AddSpentTimeWindowConfig,
+)
 
 logger = logging.getLogger(__name__)
 
 LogLevel = Literal["minimal", "normal", "debug"]
+
 
 class Config(BaseModel):
     token_file_name: str = ".token"

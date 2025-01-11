@@ -4,7 +4,7 @@ from typing import Optional, Callable
 
 from errors.user_cancelled_error import UserCancelledError
 from ui.constants.tk_events import TkEvents
-from ui.views.base.custom_view_config import CustomViewConfig
+from ui.views.base.custom_window_config import CustomWindowConfig
 from ui.windows.base.custom_window_attach_mixin import CustomWindowAttachMixin
 
 logger = logging.getLogger(__name__)
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class CustomWindow(CustomWindowAttachMixin):
     def __init__(
         self,
-        config: Optional[CustomViewConfig] = CustomViewConfig(),
+        config: Optional[CustomWindowConfig] = CustomWindowConfig(),
         **kwargs,
     ):
         attached_views = kwargs.pop("attached_views", None)
@@ -22,6 +22,8 @@ class CustomWindow(CustomWindowAttachMixin):
         self._config = config
         self.__cancelled = True
         self.__submit_callback = None
+
+        self.title(self._config.title)
 
         self.bind(TkEvents.WINDOW_UNMAPPED, self._on_minimize)
         self.bind(TkEvents.WINDOW_MAPPED, self._on_restore)

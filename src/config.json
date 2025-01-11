@@ -9,7 +9,6 @@
     "topmost": true,
     "cancel_key": "Escape",
     "submit_key": "Return",
-    "title": "Add Spent Time",
     "project": "DEMO",
     "issue_separator": "-",
     "initial_issue_id": "",
