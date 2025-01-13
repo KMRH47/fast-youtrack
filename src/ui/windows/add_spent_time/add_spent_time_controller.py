@@ -36,7 +36,11 @@ class AddSpentTimeController:
         add_spent_time_request = AddSpentTimeRequest(
             description=self.__window._get_description(),
             duration=Duration(minutes=convert_time_to_minutes(time_short_format)),
-            type=WorkItem(id=self.__window._get_selected_issue_type()),
+            type=(
+                WorkItem(id=self.__window._get_selected_issue_type())
+                if self.__window._get_selected_issue_type()
+                else None
+            ),
             date_millis=self.__window._get_date_millis(),
         )
 
