@@ -1,11 +1,12 @@
 import logging
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Optional
 
 import tkinter as tk
 from tkcalendar import DateEntry
 
 from ui.widgets.custom_entry import CustomEntryConfig
+from ui.constants.tk_events import TkEvents
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +49,17 @@ class CustomDateEntry(DateEntry):
                 self.set_date(initial_date)
             except ValueError as e:
                 logger.error(f"Error parsing initial date: {e}")
+
+        # bind arrow keys for going back and forth 1 day
+        self.bind(TkEvents.LEFT_ARROW, lambda e: self._adjust_date(-1))
+        self.bind(TkEvents.RIGHT_ARROW, lambda e: self._adjust_date(1))
+
+    def _adjust_date(self, days: int) -> str:
+        """Adjust date by given number of days, not allowing future dates."""
+        new_date = self.get_date() + timedelta(days=days)
+        if new_date <= date.today():
+            self.set_date(new_date)
+        return TkEvents.BREAK
 
     def get_date_millis(self) -> Optional[int]:
         """Returns the selected date in milliseconds since epoch."""
