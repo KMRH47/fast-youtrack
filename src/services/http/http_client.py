@@ -86,15 +86,15 @@ class HttpClient:
     def _get_cached_response(self, endpoint: str) -> Optional[dict]:
         if not self._config_store:
             return None
-        cache = self._config_store.get("http_cache") or {}
+        cache = self._config_store.read("http_cache") or {}
         return cache.get(endpoint)
 
     def _cache_response(self, endpoint: str, response: dict) -> None:
         if not self._config_store:
             return
-        cache = self._config_store.get("http_cache") or {}
+        cache = self._config_store.read("http_cache") or {}
         cache[endpoint] = response
-        self._config_store.set("http_cache", cache)
+        self._config_store.write("http_cache", cache)
 
     def _log_request(self, method: str, url: str, params_or_data: dict = None):
         logger.info(f"{method} Request URL: {url}")

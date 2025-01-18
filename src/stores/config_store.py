@@ -2,22 +2,22 @@ import logging
 import json
 
 from abc import ABC
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from stores.store import Store
 
 logger = logging.getLogger(__name__)
 
 
-class ConfigStore(ABC):
+class ConfigStore(Store[Dict[str, Any]]):
     """Handles all persistent storage with JSON serialization."""
 
-    def __init__(self, store: Store):
+    def __init__(self, store: Store[str]):
         self._store = store
-        self._cache: Dict[str, Dict[str, Any]] = {}
+        self._cache: Dict[str, Any] = {}
 
-    def get(self, key: str) -> Dict[str, Any]:
-        """Get data by key."""
+    def read(self, key: str) -> Optional[Dict[str, Any]]:
+        """Read data by key."""
         if key not in self._cache:
             raw_data = self._store.read(f"{key}.json")
             if raw_data:
@@ -26,10 +26,10 @@ class ConfigStore(ABC):
                 self._cache[key] = {}
         return self._cache[key]
 
-    def set(self, key: str, data: Dict[str, Any]) -> None:
-        """Set data by key."""
+    def write(self, key: str, data: Dict[str, Any]) -> None:
+        """Write data by key."""
         try:
-            current = self.get(key)
+            current = self.read(key) or {}
             current.update(data)
             json_string = json.dumps(current, indent=2)
             self._store.write(f"{key}.json", json_string)

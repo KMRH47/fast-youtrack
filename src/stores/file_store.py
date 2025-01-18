@@ -9,7 +9,9 @@ from stores.store import Store
 logger = logging.getLogger(__name__)
 
 
-class FileStore(Store):
+class FileStore(Store[str]):
+    """Handles raw string data storage in files."""
+
     def __init__(self, base_dir: str):
         self.base_directory = base_dir
 
@@ -43,4 +45,3 @@ class FileStore(Store):
 
     def _get_log_path(self, file_path: str) -> str:
         return posixpath.normpath(file_path.replace(os.sep, '/'))
-
