@@ -7,3 +7,4 @@ __pycache__/
 /venv
 *.log
 ahk/pid.txt
+/src/config.json
