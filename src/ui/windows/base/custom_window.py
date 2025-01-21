@@ -1,6 +1,7 @@
 import logging
 
 from typing import Optional, Callable
+import tkinter as tk
 
 from errors.user_cancelled_error import UserCancelledError
 from ui.constants.tk_events import TkEvents
@@ -45,6 +46,7 @@ class CustomWindow(CustomWindowAttachMixin):
             f"<{self._config.submit_key}>", self._submit
         )
 
+        self._set_window_geometry()
         self.resizable(self._config.resizable, self._config.resizable)
 
     def show(self):
@@ -85,7 +87,7 @@ class CustomWindow(CustomWindowAttachMixin):
         if self.__submit_callback:
             self.__submit_callback()
         self.__cancelled = False
-        self._destroy()
+        self._on_window_close()
 
     def _emit_value(self, value):
         return value
