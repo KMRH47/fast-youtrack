@@ -66,3 +66,7 @@ class CustomDateEntry(DateEntry):
         date_object: date = self.get_date()
         datetime_object = datetime.combine(date_object, datetime.min.time())
         return int(datetime_object.timestamp() * 1000)
+
+    def reset(self):
+        """Reset the date to today."""
+        self.set_date(date.today())

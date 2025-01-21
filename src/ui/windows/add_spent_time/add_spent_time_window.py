@@ -86,8 +86,11 @@ class AddSpentTimeWindow(CustomWindow):
             self._on_issue_id_changed()
 
     def _submit(self, event=None):
-        if time_valid(self.__time_entry.get()):
-            super()._submit(event)
+        if not time_valid(self.__time_entry.get()):
+            return
+
+        super()._submit(event)
+        self._reset()
 
     def _on_issue_id_changed(self, *_):
         issue_id = self.__issue_id_entry.get().upper()
@@ -121,3 +124,18 @@ class AddSpentTimeWindow(CustomWindow):
             self.__type_combobox.set("")
 
         self.__type_combobox.configure(values=updated_work_item_types)
+
+    def _reset(self):
+        self.__issue_id_entry.delete(0, tk.END)
+        self.__issue_id_entry.insert(
+            0, f"{self._config.project}{self._config.issue_separator}"
+        )
+        self.__issue_id_entry.focus_set()
+
+        self.__date_entry.reset()
+
+        self.__time_entry.delete(0, tk.END)
+
+        self.__description_entry.delete(0, tk.END)
+
+        self.__type_combobox.set("")
