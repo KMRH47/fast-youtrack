@@ -49,3 +49,33 @@ GetTimeStamp() {
     ms := Format("{:03d}", A_MSec)
     return FormatTime(A_Now, "yyyy-MM-dd HH:mm:ss") " " ms "ms"
 }
+
+/** @param {String} pidFile
+ * @return {Boolean} Activates the main window if it exists
+ */
+ActivateExistingWindow(pidFile) {
+    if !(FileExist(pidFile) && hwnd := GetMainWindow(FileRead(pidFile))) {
+        FileExist(pidFile) && FileDelete(pidFile)
+        return false
+    }
+
+    WinShow("ahk_id " hwnd)
+    WinRestore("ahk_id " hwnd)
+    WinActivate("ahk_id " hwnd)
+    return true
+}
+
+/** @param {Number} parentPID
+ * @return {Number} First child window handle or 0
+ */
+GetMainWindow(parentPID) {
+    try {
+        for process in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Process Where ParentProcessId=" parentPID) {
+            if winList := WinGetList("ahk_pid " process.ProcessId)
+                return winList[1]
+        }
+    } catch {
+        LogError(A_ThisFunc, "GetMainWindow")
+    }
+    return 0
+}

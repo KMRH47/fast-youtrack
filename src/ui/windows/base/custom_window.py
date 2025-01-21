@@ -39,13 +39,11 @@ class CustomWindow(CustomWindowAttachMixin):
         self.configure(bg=self._config.bg_color)
 
         self._config.cancel_key and self.bind(
-            f"<{self._config.cancel_key}>", self._destroy
+            f"<{self._config.cancel_key}>", self._on_window_close
         )
         self._config.submit_key and self.bind(
             f"<{self._config.submit_key}>", self._submit
         )
-
-        self._set_window_geometry()
 
         self.resizable(self._config.resizable, self._config.resizable)
 
@@ -55,7 +53,10 @@ class CustomWindow(CustomWindowAttachMixin):
         self.deiconify()
         self.focus_force()
 
-        self.mainloop()
+        if not hasattr(self, '_mainloop_running'):
+            self._mainloop_running = True
+            self.mainloop()
+
         if self.__cancelled:
             raise UserCancelledError()
 
@@ -84,7 +85,11 @@ class CustomWindow(CustomWindowAttachMixin):
         if self.__submit_callback:
             self.__submit_callback()
         self.__cancelled = False
-        self.destroy()
+        self._destroy()
 
     def _emit_value(self, value):
         return value
+
+    def _on_window_close(self, event=None):
+        self.hide_all_attached_views()
+        self.iconify()
