@@ -25,7 +25,7 @@ if not exist %VENV_DIR% (
 )
 
 REM Check if requirements need to be installed
-pip list --format=freeze | findstr /X /I /G:requirements.txt >nul 2>&1
+pip install -q -r requirements.txt
 if %ERRORLEVEL% neq 0 (
     echo Installing dependencies...
     pip install -q -r requirements.txt
