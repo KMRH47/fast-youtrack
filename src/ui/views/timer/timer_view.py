@@ -56,3 +56,8 @@ class TimerView(CustomView):
             fg=self._config.text_color,
         )
         self.after(1000, self._update_elapsed_time)
+
+    def _reset(self):
+        """Reset the timer to zero."""
+        self.__start_time = int(time.time())
+        self._update_elapsed_time()
