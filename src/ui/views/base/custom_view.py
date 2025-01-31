@@ -44,10 +44,10 @@ class CustomView(tk.Toplevel):
 
     def _create_view(self, parent_window: tk.Tk) -> None:
         self.master = parent_window
-        
+
         geometry = f"{self._config.width}x{self._config.height}"
         self.geometry(geometry)
-        self.overrideredirect(True) # hides title bar
+        self.overrideredirect(True)  # hides title bar
         self.wm_attributes("-topmost", self._config.topmost)
         self.resizable(self._config.resizable, self._config.resizable)
 
@@ -83,6 +83,10 @@ class CustomView(tk.Toplevel):
         pass
 
     def _on_show(self) -> None:
+        pass
+
+    def _reset(self) -> None:
+        """Reset the view to its initial state."""
         pass
 
     def _flash_update(
