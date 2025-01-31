@@ -1,15 +1,14 @@
 from datetime import date
 
-from ui.views.base.custom_view_config import CustomViewConfig
+from ui.views.base.custom_window_config import CustomWindowConfig
 
 
-class AddSpentTimeWindowConfig(CustomViewConfig):
+class AddSpentTimeWindowConfig(CustomWindowConfig):
     width: int = 300
     height: int = 325
     title: str = "Add Spent Time"
     cancel_key: str = "Escape"
     submit_key: str = "Return"
-    
     project: str = ""
     issue_separator: str = "-"
     initial_issue_id: str = ""
