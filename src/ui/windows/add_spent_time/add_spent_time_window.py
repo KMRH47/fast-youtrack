@@ -135,3 +135,5 @@ class AddSpentTimeWindow(CustomWindow):
         self.__time_entry.delete(0, tk.END)
         self.__description_entry.delete(0, tk.END)
         self.__type_combobox.set("")
+
+        self._reset_attached_views()
