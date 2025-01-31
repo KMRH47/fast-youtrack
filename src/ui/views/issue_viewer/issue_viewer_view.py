@@ -148,3 +148,6 @@ class IssueViewerView(CustomView):
                 fg=self._config.text_color,
             )
             value_label.grid(row=0, column=1, sticky="nw", padx=5)
+
+    def _reset(self) -> None:
+        self.update_value(None)
