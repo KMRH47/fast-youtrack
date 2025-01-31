@@ -131,11 +131,7 @@ class AddSpentTimeWindow(CustomWindow):
             0, f"{self._config.project}{self._config.issue_separator}"
         )
         self.__issue_id_entry.focus_set()
-
         self.__date_entry.reset()
-
         self.__time_entry.delete(0, tk.END)
-
         self.__description_entry.delete(0, tk.END)
-
         self.__type_combobox.set("")
