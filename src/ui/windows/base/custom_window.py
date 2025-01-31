@@ -1,7 +1,9 @@
 import logging
 
 from typing import Optional, Callable
-import tkinter as tk
+from pystray import Icon, MenuItem, Menu
+from PIL import Image, ImageDraw
+import threading
 
 from errors.user_cancelled_error import UserCancelledError
 from ui.constants.tk_events import TkEvents
@@ -25,6 +27,7 @@ class CustomWindow(CustomWindowAttachMixin):
         self._config = config
         self.__cancelled = True
         self.__submit_callback = None
+        self.__tray_icon = self._create_tray_icon()
 
         self.title(self._config.title)
 
@@ -37,6 +40,7 @@ class CustomWindow(CustomWindowAttachMixin):
             self.option_add("*Foreground", self._config.text_color)
 
         self.attributes("-topmost", self._config.topmost)
+        self.attributes("-toolwindow", self._config.minimize_to_tray)
         self.configure(bg=self._config.bg_color)
 
         self._config.cancel_key and self.bind(
@@ -55,7 +59,7 @@ class CustomWindow(CustomWindowAttachMixin):
         self.deiconify()
         self.focus_force()
 
-        if not hasattr(self, '_mainloop_running'):
+        if not hasattr(self, "_mainloop_running"):
             self._mainloop_running = True
             self.mainloop()
 
@@ -80,9 +84,6 @@ class CustomWindow(CustomWindowAttachMixin):
         pos_down = int(self.winfo_screenheight() / 2 - height / 2)
         self.geometry(f"{width}x{height}+{pos_right}+{pos_down}")
 
-    def _destroy(self, _):
-        self.destroy()
-
     def _submit(self, _):
         if self.__submit_callback:
             self.__submit_callback()
@@ -93,9 +94,51 @@ class CustomWindow(CustomWindowAttachMixin):
         return value
 
     def _on_window_close(self, event=None):
-        self.hide_all_attached_views()
-        self.iconify()
+        logger.debug("Minimizing to tray")
+        self.withdraw()  # Hide window instead of minimizing
+        self.attributes("-toolwindow", True)  # Hide from taskbar
+        self._show_tray_icon()  # Show system tray icon
+
 
     def _reset_attached_views(self):
         for view in self.get_attached_views():
             view._reset()
+
+
+    def _restore_window(self, icon, item):
+        """Restore window from system tray."""
+        logger.debug("Restoring window from system tray")
+        self.__tray_icon.stop()  # Stop tray icon
+        self.deiconify()  # Show window again
+        self.lift()  # Bring window to front
+        self.focus_force()
+
+
+    def _exit_app(self, icon, item):
+        """Exit the application cleanly."""
+        self.__tray_icon.stop()
+        self.destroy()
+
+    def _show_tray_icon(self):
+        """Start the system tray icon in a separate thread."""
+        if not hasattr(self, "tray_icon") or self.tray_icon is None:
+            self.tray_icon = self._create_tray_icon()
+
+        if not hasattr(self, "tray_thread") or not self.tray_thread.is_alive():
+            logger.debug("Starting tray icon thread")
+            self.tray_thread = threading.Thread(target=self.tray_icon.run, daemon=True)
+            self.tray_thread.start()
+
+    def _create_tray_icon(self):
+        """Create system tray icon with menu options."""
+        icon_size = (64, 64)
+        image = Image.new("RGB", icon_size, (0, 0, 0))
+        draw = ImageDraw.Draw(image)
+        draw.ellipse((10, 10, 54, 54), fill=(255, 0, 0))
+
+        menu = Menu(
+            MenuItem("Show", self._restore_window),
+            MenuItem("Exit", self._exit_app),
+        )
+
+        return Icon(self._config.app_name, image, self._config.title, menu)
