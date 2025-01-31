@@ -95,3 +95,7 @@ class CustomWindow(CustomWindowAttachMixin):
     def _on_window_close(self, event=None):
         self.hide_all_attached_views()
         self.iconify()
+
+    def _reset_attached_views(self):
+        for view in self.get_attached_views():
+            view._reset()
