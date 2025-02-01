@@ -74,8 +74,8 @@ GetMainWindow(parentPID) {
             if winList := WinGetList("ahk_pid " process.ProcessId)
                 return winList[1]
         }
-    } catch {
-        LogError(A_ThisFunc, "GetMainWindow")
+    } catch Error as e {
+        LogError(e, "GetMainWindow")
     }
     return 0
 }
