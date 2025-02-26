@@ -1,8 +1,15 @@
 from typing import List, Optional, TypeVar
 
 from services.http.http_client import HttpClient
-from models.general_responses import Issue, Project, StateBundleElement, User, WorkItem
-from constants.youtrack_queries import issue_query, bundle_query
+from models.general_responses import (
+    Issue,
+    Link,
+    Project,
+    StateBundleElement,
+    User,
+    WorkItem,
+)
+from constants.youtrack_queries import issue_query, bundle_query, link_query
 from models.general_requests import AddSpentTimeRequest
 from stores.store import Store
 
@@ -64,4 +71,13 @@ class YouTrackService:
             skip=0,
             includeArchived=False,
             response_model=List[StateBundleElement],
+        )
+
+    def _get_issue_links(self, issue_id: str) -> List[Link]:
+        return self._request(
+            endpoint=f"issues/{issue_id}/links",
+            fields=link_query,
+            topLinks=25,
+            customFields="Priority",
+            response_model=List[Link],
         )
