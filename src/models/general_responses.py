@@ -397,3 +397,44 @@ class Issue(WorkItem):
         ]
     ] = None
     channel: Optional[Union[str, Channel]] = None
+
+
+class IssueLinkType(WorkItem):
+    direction: Literal['BOTH', 'OUTWARD', 'INWARD']
+    directed: bool
+    sourceToTarget: str
+    targetToSource: str
+    localizedSourceToTarget: Optional[str] = None
+    localizedTargetToSource: Optional[str] = None
+    aggregation: bool
+
+
+class LinkIssue(WorkItem):
+    watchers: Optional[IssueWatchers]
+    visibility: Optional[UnlimitedVisibility]
+    idReadable: str
+    summary: str
+    resolved: Optional[int] = None
+    reporter: Optional[User]
+    project: Optional[Project]
+    fields: Optional[
+        List[
+            Union[
+                SingleEnumIssueCustomField,
+                StateIssueCustomField,
+                SingleUserIssueCustomField,
+                MultiVersionIssueCustomField,
+                PeriodIssueCustomField,
+                MultiOwnedIssueCustomField,
+                SimpleIssueCustomField,
+                DateIssueCustomField,
+                MultiBuildIssueCustomField,
+            ]
+        ]
+    ]
+
+
+class Link(WorkItem):
+    linkType: IssueLinkType
+    issuesSize: int
+    trimmedIssues: List[LinkIssue]
