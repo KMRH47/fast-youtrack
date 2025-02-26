@@ -400,7 +400,7 @@ class Issue(WorkItem):
 
 
 class IssueLinkType(WorkItem):
-    direction: Literal['BOTH', 'OUTWARD', 'INWARD']
+    direction: Optional[str] = None
     directed: bool
     sourceToTarget: str
     targetToSource: str
