@@ -45,6 +45,27 @@ issue_query = (
     "foreground;@markdownEmbeddings:key,settings,widget(id);@textRange:startOffset,endOffset"
 )
 
+link_query = (
+    "id,direction(),linkType(id,directed,aggregation,sourceToTarget,targetToSource,"
+    "localizedSourceToTarget,localizedTargetToSource),issuesSize,trimmedIssues("
+    "reporter(issueRelatedGroup(@permittedGroups),id,ringId,login,name,email,isEmailVerified,guest,"
+    "fullName,avatarUrl,online,banned,banBadge,canReadProfile,isLocked,userType(id)),resolved,"
+    "fields(value(id,minutes,presentation,isEstimation,isSpentTime,name,description,localizedName,"
+    "isResolved,color(id,background,foreground),buildIntegration,buildLink,text,issueRelatedGroup(@permittedGroups),"
+    "ringId,login,email,isEmailVerified,guest,fullName,avatarUrl,online,banned,banBadge,canReadProfile,isLocked,"
+    "userType(id),allUsersGroup,icon,teamForProject(name,shortName)),id,$type,hasStateMachine,isUpdatable,"
+    "projectCustomField($type,id,field(id,name,ordinal,aliases,localizedName,fieldType(id,presentation,isBundleType,"
+    "valueType,isMultiValue)),bundle(id,$type),canBeEmpty,emptyFieldText,hasRunningJob,ordinal,isSpentTime,"
+    "isEstimation,isPublic),searchResults(id,textSearchResult(highlightRanges(@textRange),textRange(@textRange))),pausedTime),"
+    "project(id,ringId,name,shortName,iconUrl,template,pinned,archived,isDemo,hasArticles,team(@permittedGroups),"
+    "fieldsSorted,restricted,plugins(timeTrackingSettings(id,enabled),helpDeskSettings(id,enabled,defaultForm(uuid,title)),"
+    "vcsIntegrationSettings(hasVcsIntegrations),grazie(disabled))),visibility($type,implicitPermittedUsers(@permittedUsers),"
+    "permittedGroups(@permittedGroups),permittedUsers(@permittedUsers)),watchers(hasStar),id,idReadable,summary);"
+    "@permittedUsers:id,ringId,login,name,email,isEmailVerified,guest,fullName,avatarUrl,online,banned,banBadge,"
+    "canReadProfile,isLocked,userType(id);@permittedGroups:id,name,ringId,allUsersGroup,icon,teamForProject(name,shortName);"
+    "@textRange:startOffset,endOffset"
+)
+
 bundle_query = (
     "id,"
     "name,"
