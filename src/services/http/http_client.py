@@ -2,7 +2,7 @@ import logging
 import requests
 import json
 
-from typing import Literal, Optional, TypeVar, Type, List
+from typing import Literal, Optional, TypeVar, Type, List, Dict, Any
 from pydantic import BaseModel
 
 from errors.user_error import UserError
@@ -27,9 +27,9 @@ class HttpClient:
         self,
         endpoint: str,
         response_model: Optional[Type[T]] = None,
-        fields: str | None = None,
         method: Literal["get", "post", "put", "delete"] = "get",
         json: Optional[dict] = None,
+        params: Optional[Dict[str, Any]] = None,
     ) -> Optional[T] | dict:
         if method == "get":
             cached = self._get_cached_response(endpoint)
@@ -41,7 +41,7 @@ class HttpClient:
                     else cached
                 )
 
-        response = self._make_request(endpoint, method, fields, json)
+        response = self._make_request(endpoint, method, json=json, params=params)
 
         if method == "get":
             self._cache_response(endpoint, response)
@@ -56,19 +56,20 @@ class HttpClient:
         self,
         endpoint: str,
         method: str,
-        fields: Optional[str] = None,
         json: Optional[dict] = None,
+        params: Optional[Dict[str, Any]] = None,
     ) -> dict:
         headers = self._get_headers()
-        params = {"fields": fields} if method == "get" and fields else None
+        base_params: Optional[Dict[str, Any]] = params.copy() if params else None
+
         data = json if method in ["post", "put", "delete"] and json else None
 
         url = f"{self._base_url}/{endpoint}"
-        self._log_request(method.upper(), url, params or data)
+        self._log_request(method.upper(), url, base_params or data)
 
         try:
             response = self.session.request(
-                method=method, url=url, headers=headers, params=params, json=data
+                method=method, url=url, headers=headers, params=base_params, json=data
             )
             return self._handle_response(url, response)
         except requests.RequestException as e:

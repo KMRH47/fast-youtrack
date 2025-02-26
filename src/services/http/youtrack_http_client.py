@@ -34,5 +34,7 @@ class YouTrackHttpClient(HttpClient):
         if not cached_data or cached_data.get("id") is None:
             return False
 
-        current = self._make_request(endpoint=endpoint, method="get", fields="updated")
+        current = self._make_request(
+            endpoint=endpoint, method="get", params={"fields": "updated"}
+        )
         return current.get("updated") == cached_data.get("updated")

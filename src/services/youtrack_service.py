@@ -34,12 +34,16 @@ class YouTrackService:
 
     def get_user_info(self) -> Optional[User]:
         return self._request(
-            endpoint="users/me", fields="id,name,login,email", response_model=User
+            endpoint="users/me",
+            params={"fields": "id,name,login,email"},
+            response_model=User,
         )
 
     def get_issue(self, issue_id: str) -> Optional[CustomIssue]:
         issue = self._request(
-            endpoint=f"issues/{issue_id}", fields=issue_query, response_model=Issue
+            endpoint=f"issues/{issue_id}",
+            params={"fields": issue_query},
+            response_model=Issue,
         )
         links = self._get_issue_links(issue_id)
         return CustomIssue(**issue.model_dump(), links=links)
@@ -47,14 +51,14 @@ class YouTrackService:
     def get_all_projects(self) -> List[Project]:
         return self._request(
             endpoint="admin/projects",
-            fields="id,name,shortName",
+            params={"fields": "id,name,shortName"},
             response_model=List[Project],
         )
 
     def get_work_item_types(self) -> List[WorkItem]:
         return self._request(
             endpoint="admin/timeTrackingSettings/workItemTypes",
-            fields="id,name",
+            params={"fields": "id,name"},
             response_model=List[WorkItem],
         )
 
@@ -62,25 +66,20 @@ class YouTrackService:
         """Get work item types available for a specific project."""
         return self._request(
             endpoint=f"admin/projects/{project_id}/timeTrackingSettings/workItemTypes",
-            fields="id,name",
+            params={"fields": "id,name"},
             response_model=List[WorkItem],
         )
 
     def get_bundle(self, bundle_id: str) -> List[StateBundleElement]:
         return self._request(
             endpoint=f"admin/customFieldSettings/bundles/state/{bundle_id}/values",
-            fields=bundle_query,
-            sort=True,
-            skip=0,
-            includeArchived=False,
+            params={"fields": bundle_query},
             response_model=List[StateBundleElement],
         )
 
     def _get_issue_links(self, issue_id: str) -> List[Link]:
         return self._request(
             endpoint=f"issues/{issue_id}/links",
-            fields=link_query,
-            topLinks=25,
-            customFields="Priority",
+            params={"fields": link_query, "topLinks": 25, "customFields": "Priority"},
             response_model=List[Link],
         )
