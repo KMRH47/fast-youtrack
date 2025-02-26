@@ -3,8 +3,7 @@ from tkinter import ttk
 from typing import Optional
 import logging
 
-from models.general_responses import Issue
-
+from models.custom_models import CustomIssue
 from ui.views.base.custom_view import CustomView
 from ui.views.base.custom_view_config import CustomViewConfig
 
@@ -13,12 +12,14 @@ logger = logging.getLogger(__name__)
 
 class IssueViewerView(CustomView):
     def __init__(
-        self, issue: Optional[Issue] = None, config: Optional[CustomViewConfig] = None
+        self,
+        issue: Optional[CustomIssue] = None,
+        config: Optional[CustomViewConfig] = None,
     ):
         super().__init__(config=config)
-        self.__issue: Optional[Issue] = issue
+        self.__issue: Optional[CustomIssue] = issue
 
-    def update_value(self, issue: Optional[Issue] = None) -> None:
+    def update_value(self, issue: Optional[CustomIssue] = None) -> None:
         """Update the view with new issue details."""
         self.__issue = issue
         self._build_ui()
@@ -57,6 +58,9 @@ class IssueViewerView(CustomView):
 
         if self.__issue.fields:
             self._add_fields_section(parent, row)
+
+        if self.__issue.links:
+            row = self._add_subtasks_section(parent, row)
 
     def _add_label(self, parent: tk.Frame, text: str, row: int) -> None:
         label = tk.Label(
@@ -148,3 +152,60 @@ class IssueViewerView(CustomView):
                 fg=self._config.text_color,
             )
             value_label.grid(row=0, column=1, sticky="nw", padx=5)
+
+    def _add_subtasks_section(self, parent: tk.Frame, row: int) -> int:
+        if not hasattr(self.__issue, "links") or not self.__issue.links:
+            return row
+
+        subtask_texts = [
+            f"{linked_issue.idReadable} - {linked_issue.summary}\n"
+            for link in self.__issue.links
+            if "subtask of" in link.linkType.targetToSource
+            for linked_issue in link.trimmedIssues
+        ]
+
+        if not subtask_texts:
+            return row
+
+        frame = tk.Frame(parent, bg=self._config.bg_color)
+        frame.grid(row=row, column=0, sticky="nsew", padx=10, pady=5)
+        frame.grid_columnconfigure(0, weight=1)
+
+        header_label = tk.Label(
+            frame,
+            text=f"Subtasks ({len(subtask_texts)}):",
+            font=("Segoe UI", 10, "bold"),
+            bg=self._config.bg_color,
+        )
+        header_label.grid(row=0, column=0, sticky="w")
+
+        text_frame = tk.Frame(frame)
+        text_frame.grid(row=1, column=0, sticky="nsew")
+        text_frame.grid_columnconfigure(0, weight=1)
+        text_frame.grid_rowconfigure(0, weight=1)
+
+        v_scrollbar = ttk.Scrollbar(text_frame, orient="vertical")
+        h_scrollbar = ttk.Scrollbar(text_frame, orient="horizontal")
+
+        text_widget = tk.Text(
+            text_frame,
+            height=min(6, len(subtask_texts)),
+            wrap=tk.NONE,
+            font=("Segoe UI", 10),
+            bg="white",
+            state=tk.DISABLED,
+            xscrollcommand=h_scrollbar.set,
+            yscrollcommand=v_scrollbar.set,
+        )
+        text_widget.grid(row=0, column=0, sticky="nsew")
+        v_scrollbar.grid(row=0, column=1, sticky="ns")
+        h_scrollbar.grid(row=1, column=0, sticky="ew")
+
+        v_scrollbar.config(command=text_widget.yview)
+        h_scrollbar.config(command=text_widget.xview)
+
+        text_widget.config(state=tk.NORMAL)
+        text_widget.insert("1.0", "".join(subtask_texts))
+        text_widget.config(state=tk.DISABLED)
+
+        return row + 1
