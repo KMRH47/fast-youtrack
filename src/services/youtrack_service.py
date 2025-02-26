@@ -11,6 +11,7 @@ from models.general_responses import (
 )
 from constants.youtrack_queries import issue_query, bundle_query, link_query
 from models.general_requests import AddSpentTimeRequest
+from models.custom_models import CustomIssue
 from stores.store import Store
 
 T = TypeVar("T")
@@ -36,10 +37,12 @@ class YouTrackService:
             endpoint="users/me", fields="id,name,login,email", response_model=User
         )
 
-    def get_issue(self, issue_id: str) -> Optional[Issue]:
-        return self._request(
+    def get_issue(self, issue_id: str) -> Optional[CustomIssue]:
+        issue = self._request(
             endpoint=f"issues/{issue_id}", fields=issue_query, response_model=Issue
         )
+        links = self._get_issue_links(issue_id)
+        return CustomIssue(**issue.model_dump(), links=links)
 
     def get_all_projects(self) -> List[Project]:
         return self._request(
