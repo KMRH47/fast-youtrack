@@ -10,6 +10,7 @@ from app_args import AppArgs
 from ui.windows.add_spent_time.add_spent_time_controller import AddSpentTimeController
 from infrastructure import initialize_infrastructure
 from utils.logging_utils import format_error_message
+from utils.pid_utils import cleanup_pids_folder
 
 logger = logging.getLogger(__name__)
 
@@ -42,4 +43,5 @@ if __name__ == "__main__":
         error_details = format_error_message(e)
         logger.error(error_details)
     finally:
+        cleanup_pids_folder()
         logging.shutdown()

@@ -1,14 +1,16 @@
 import logging
-from typing import Optional, Callable
-from pystray import Icon, MenuItem, Menu
-from PIL import Image, ImageDraw
 import threading
+from typing import Optional, Callable
+
+from PIL import Image, ImageDraw
+from pystray import Icon, MenuItem, Menu
 
 from errors.user_cancelled_error import UserCancelledError
 from ui.constants.tk_events import TkEvents
 from ui.views.base.custom_window_config import CustomWindowConfig
 from ui.windows.base.custom_window_attach_mixin import CustomWindowAttachMixin
 from errors.user_error import UserError
+from utils.pid_utils import cleanup_pids_folder
 
 logger = logging.getLogger(__name__)
 
@@ -112,6 +114,8 @@ class CustomWindow(CustomWindowAttachMixin):
         if self.tray_icon:
             self.tray_icon.stop()
             self.tray_icon = None
+
+        cleanup_pids_folder()
         self.destroy()
 
     def _show_tray_icon(self):
