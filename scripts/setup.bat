@@ -35,6 +35,7 @@ REM Check if requirements need to be installed
 echo Installing dependencies...
 pip install -q -r requirements.txt
 if %ERRORLEVEL% neq 0 (
+    echo Failed to install dependencies.
     exit /b 1
 )
 
