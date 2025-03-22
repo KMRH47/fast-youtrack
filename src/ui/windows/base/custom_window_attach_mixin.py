@@ -109,4 +109,3 @@ class CustomWindowAttachMixin(tk.Tk):
     def _on_restore(self, event=None):
         for attached_view in self.__attached_views:
             attached_view.deiconify()
-        self._set_window_geometry()
