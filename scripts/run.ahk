@@ -6,22 +6,23 @@
 ^+t:: {
     projectRoot := A_ScriptDir "\..\"
     pidFile := projectRoot "pids\python.pid"
+    pidDir := projectRoot "pids"
 
-    ; Activate existing window if PID file exists
+    ; activate existing window if PID file exists
     if (FileExist(pidFile) && ActivateExistingWindow(pidFile)) {
         return
     }
 
-    ; Get or prompt for the active subdomain
+    ; get or prompt for the active subdomain
     activeSubdomain := GetActiveSubdomain() || DisplaySubdomainPicker()
     if (!activeSubdomain) {
         return
     }
 
-    ; Create passphrase key file
+    ; create passphrase key file
     CreateKey(activeSubdomain.passphrase, activeSubdomain.subdomain)
     
-    ; Run the Python script
+    ; run script
     Run(Format('"{1}" "{2}" "{3}" "{4}"',
         projectRoot "venv\Scripts\pythonw.exe",
         projectRoot "src\main.py",
@@ -31,6 +32,11 @@
         ,
         ,
         &pid)
+
+    ; ensure pid dir exists
+    if (!DirExist(pidDir)) {
+        DirCreate(pidDir)
+    }
 
     if FileExist(pidFile)
         FileDelete(pidFile)
