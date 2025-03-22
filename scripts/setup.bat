@@ -24,11 +24,18 @@ if not exist %VENV_DIR% (
     )
 )
 
+REM Activate the virtual environment
+call %VENV_DIR%\Scripts\activate.bat
+if %ERRORLEVEL% neq 0 (
+    echo Failed to activate virtual environment.
+    exit /b 1
+)
+
 REM Check if requirements need to be installed
+echo Installing dependencies...
 pip install -q -r requirements.txt
 if %ERRORLEVEL% neq 0 (
-    echo Installing dependencies...
-    pip install -q -r requirements.txt
+    exit /b 1
 )
 
 REM Download and set up AutoHotkey portable
@@ -51,4 +58,3 @@ if not exist %AHK_DIR% (
     )
     echo AutoHotkey v2 portable setup complete!
 )
-
