@@ -6,5 +6,5 @@ __pycache__/
 /logs
 /venv
 *.log
-ahk/pid.txt
+/pids
 /src/config.json

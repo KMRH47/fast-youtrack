@@ -5,7 +5,7 @@
 ; CTRL + SHIFT + T
 ^+t:: {
     projectRoot := A_ScriptDir "\..\"
-    pidFile := projectRoot "user\pids\python.pid"
+    pidFile := projectRoot "pids\python.pid"
 
     ; Activate existing window if PID file exists
     if (FileExist(pidFile) && ActivateExistingWindow(pidFile)) {

@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-set PID_DIR=user\pids
+set PID_DIR=pids
 if not exist %PID_DIR% mkdir %PID_DIR%
 
 REM Kill previous Fast YouTrack AutoHotkey process if exists, suppress output
@@ -23,7 +23,7 @@ set AHK_SCRIPT=scripts\run.ahk
 REM Run the AutoHotkey script
 start "" /b %AHK_PATH% /restart %AHK_SCRIPT%
 
-REM Capture PID to user/pids/ahk.txt
+REM Capture PID to pids/ahk.txt
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$proc = Get-Process AutoHotkey64 | Sort-Object StartTime -Descending | Select-Object -First 1; if ($proc) { $proc.Id } else { exit 1 }" > %PID_DIR%\ahk.txt 2>nul
 
 echo Fast YouTrack running in background...
