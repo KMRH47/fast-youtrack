@@ -23,16 +23,29 @@ GetFolderNames(dir) {
  * Specify two asterisks (**) in FileName to send Text to standard error output (stderr).
  * */
 LogError(err, fileName) {
+    scriptDir := RegExReplace(A_ScriptDir, "\\scripts\\ahk$", "")
+    logsDir := A_ScriptDir "\..\logs"
+    logFile := logsDir "\error.log"
+    
+    if !DirExist(logsDir)
+        DirCreate(logsDir)
+    
+    ; Get clean stack trace
+    stackInfo := RegExReplace(err.Stack, ".*\) : ", "")
+    
     logMessage := Format(
-        "{1} - ERROR - Unhandled exception`nTraceback (most recent call last):`n{2}{3}: {4}`n`n",
+        "{1} - ERROR - Unhandled exception:`n`n{2}`n{3}:{4}`n{5}`n`n{6}: {7}`n`n",
         GetTimeStamp(),
-        err.Stack,
+        fileName,
+        err.File,
+        err.Line,
+        stackInfo,
         err.What,
         err.Message)
-    FileAppend(logMessage, fileName)
+    FileAppend(logMessage, logFile)
 }
 
 GetTimeStamp() {
     ms := Format("{:03d}", A_MSec)
-    return FormatTime(A_Now, "yyyy-MM-dd HH:mm:ss," ms)
+    return FormatTime(A_Now, "yyyy-MM-dd HH:mm:ss") " " ms "ms"
 }
