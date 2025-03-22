@@ -54,14 +54,29 @@ GetTimeStamp() {
  * @return {Boolean} Activates the main window if it exists
  */
 ActivateExistingWindow(pidFile) {
-    if !(FileExist(pidFile) && hwnd := GetMainWindow(FileRead(pidFile))) {
-        FileExist(pidFile) && FileDelete(pidFile)
+    if (!FileExist(pidFile)) {
         return false
     }
-
+    
+    ; read PID from file
+    pid := FileRead(pidFile)
+    if (!pid || !IsInteger(pid)) {
+        FileDelete(pidFile)
+        return false
+    }
+    
+    ; get window handle
+    hwnd := GetMainWindow(pid)
+    if (!hwnd) {
+        FileDelete(pidFile)
+        return false
+    }
+    
+    ; activate the window using the handle
     WinShow("ahk_id " hwnd)
     WinRestore("ahk_id " hwnd)
     WinActivate("ahk_id " hwnd)
+    MsgBox("Window found by handle")
     return true
 }
 
@@ -70,9 +85,16 @@ ActivateExistingWindow(pidFile) {
  */
 GetMainWindow(parentPID) {
     try {
+        DetectHiddenWindows(true)
         for process in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Process Where ParentProcessId=" parentPID) {
-            if winList := WinGetList("ahk_pid " process.ProcessId)
-                return winList[1]
+            if (process && process.ProcessId) {
+                winList := WinGetList("ahk_pid " process.ProcessId)
+                
+                ; return the first window handle (AHK arrays are 1-based)
+                if (winList && winList.Length > 0) {
+                    return winList[1]
+                }
+            }
         }
     } catch Error as e {
         LogError(e, "GetMainWindow")
