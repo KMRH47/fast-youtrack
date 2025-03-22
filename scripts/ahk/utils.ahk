@@ -76,7 +76,6 @@ ActivateExistingWindow(pidFile) {
     WinShow("ahk_id " hwnd)
     WinRestore("ahk_id " hwnd)
     WinActivate("ahk_id " hwnd)
-    MsgBox("Window found by handle")
     return true
 }
 
