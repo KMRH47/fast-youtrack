@@ -24,6 +24,7 @@ class AddSpentTimeController:
         self.__window = window
         self.__youtrack_service = youtrack_service
         self.__debounce_id: Optional[int] = None
+        self.__fetch_cancelled = False
         self.__window.bind_issue_id_change(self._on_issue_id_changed)
         self.__window.bind_submit(self._on_submit)
 
@@ -65,13 +66,18 @@ class AddSpentTimeController:
             return
 
         def debounce():
+            self.__fetch_cancelled = True
             self._fetch_and_propagate_issue(issue_id)
 
         self.__debounce_id = self.__window.after(
             random.randint(253, 333), debounce)
 
     def _fetch_and_propagate_issue(self, issue_id: str):
+        self.__fetch_cancelled = False
+
         def fetch_issue_thread():
+            is_cancelled = False
+            
             issue = self.__youtrack_service.get_issue(issue_id)
             work_item_types = []
 
@@ -79,9 +85,11 @@ class AddSpentTimeController:
                 work_item_types = self.__youtrack_service.get_project_work_item_types(
                     issue.project.id
                 )
-
-            self.__window.after(
-                0, lambda: self._update_ui_with_issue(issue, work_item_types))
+                
+            is_cancelled = self.__fetch_cancelled
+            if not is_cancelled:
+                self.__window.after(
+                    0, lambda: self._update_ui_with_issue(issue, work_item_types))
 
         thread = threading.Thread(target=fetch_issue_thread)
         thread.daemon = True
