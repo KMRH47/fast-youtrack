@@ -1,5 +1,6 @@
 import logging
 import random
+import threading
 from typing import Optional
 
 from models.general_requests import AddSpentTimeRequest, Duration
@@ -35,7 +36,8 @@ class AddSpentTimeController:
 
         add_spent_time_request = AddSpentTimeRequest(
             description=self.__window._get_description(),
-            duration=Duration(minutes=convert_time_to_minutes(time_short_format)),
+            duration=Duration(
+                minutes=convert_time_to_minutes(time_short_format)),
             type=(
                 WorkItem(id=self.__window._get_selected_issue_type())
                 if self.__window._get_selected_issue_type()
@@ -44,7 +46,8 @@ class AddSpentTimeController:
             date_millis=self.__window._get_date_millis(),
         )
 
-        self.__youtrack_service.add_spent_time(issue_id, add_spent_time_request)
+        self.__youtrack_service.add_spent_time(
+            issue_id, add_spent_time_request)
 
     def _on_issue_id_changed(self, issue_id: str):
         """
@@ -64,15 +67,29 @@ class AddSpentTimeController:
         def debounce():
             self._fetch_and_propagate_issue(issue_id)
 
-        self.__debounce_id = self.__window.after(random.randint(253, 333), debounce)
+        self.__debounce_id = self.__window.after(
+            random.randint(253, 333), debounce)
 
     def _fetch_and_propagate_issue(self, issue_id: str):
-        issue = self.__youtrack_service.get_issue(issue_id)
+        def fetch_issue_thread():
+            issue = self.__youtrack_service.get_issue(issue_id)
+            work_item_types = []
 
-        if issue and issue.project:
-            work_item_types = self.__youtrack_service.get_project_work_item_types(
-                issue.project.id
-            )
+            if issue and issue.project:
+                work_item_types = self.__youtrack_service.get_project_work_item_types(
+                    issue.project.id
+                )
+
+            self.__window.after(
+                0, lambda: self._update_ui_with_issue(issue, work_item_types))
+
+        thread = threading.Thread(target=fetch_issue_thread)
+        thread.daemon = True
+        thread.start()
+
+    def _update_ui_with_issue(self, issue, work_item_types):
+        """Update the UI with the fetched issue data."""
+        if work_item_types:
             self.__window._set_issue_types(work_item_types)
 
         for view in self.__window.get_attached_views():
