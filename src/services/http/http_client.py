@@ -1,6 +1,5 @@
 import logging
 import requests
-import json
 
 from typing import Literal, Optional, TypeVar, Type, List, Dict, Any
 from pydantic import BaseModel
@@ -111,18 +110,21 @@ class HttpClient:
         logger.info(f"{method} Request URL: {url}")
         if params_or_data:
             try:
-                content_str = json.dumps(params_or_data, indent=2)
-                logger.info(f"Request body:\n{content_str}")
+                data_type = type(params_or_data).__name__
+                data_size = len(str(params_or_data))
+                logger.info(
+                    f"Request body: {data_type} (length: {data_size} chars)")
             except (TypeError, ValueError):
-                content_str = str(params_or_data)
-                logger.info(f"Request body:\n{content_str}")
+                logger.info(f"Request body: {type(params_or_data).__name__}")
 
     def _handle_response(self, url: str, response: requests.Response) -> Optional[dict]:
         try:
             response_content = response.json()
-            formatted_response = json.dumps(response_content, indent=2)
+            data_type = type(response_content).__name__
+            data_size = len(str(response_content))
+            formatted_response = f"{data_type} (length: {data_size} chars)"
         except ValueError:
-            formatted_response = response.text or "No Response Body"
+            formatted_response = "No Response Body" if not response.text else f"Text (length: {len(response.text)} chars)"
 
         if response.status_code >= 400:
             message = f"Request to {url} failed with status {response.status_code}:\n{formatted_response}"
@@ -141,7 +143,7 @@ class HttpClient:
             else:
                 response.raise_for_status()
         else:
-            logger.info(f"Response body:\n{formatted_response}")
+            logger.info(f"Response body: {formatted_response}")
 
         return response.json() if response.text else {}
 
