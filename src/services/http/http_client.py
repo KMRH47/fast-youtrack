@@ -41,7 +41,8 @@ class HttpClient:
                     else cached
                 )
 
-        response = self._make_request(endpoint, method, json=json, params=params)
+        response = self._make_request(
+            endpoint, method, json=json, params=params)
 
         if method == "get":
             self._cache_response(endpoint, response)
@@ -60,7 +61,8 @@ class HttpClient:
         params: Optional[Dict[str, Any]] = None,
     ) -> dict:
         headers = self._get_headers()
-        base_params: Optional[Dict[str, Any]] = params.copy() if params else None
+        base_params: Optional[Dict[str, Any]
+                              ] = params.copy() if params else None
 
         data = json if method in ["post", "put", "delete"] and json else None
 
@@ -91,9 +93,17 @@ class HttpClient:
         return cache.get(endpoint)
 
     def _cache_response(self, endpoint: str, response: dict) -> None:
-        if not self._config_store:
+        if not self._config_store or response is None:
             return
         cache = self._config_store.read("http_cache") or {}
+
+        if endpoint in cache:
+            del cache[endpoint]
+
+        if len(cache) >= 20:
+            oldest_key = next(iter(cache))
+            del cache[oldest_key]
+
         cache[endpoint] = response
         self._config_store.write("http_cache", cache)
 
@@ -119,7 +129,8 @@ class HttpClient:
             logger.error(message)
 
             if response.status_code == 401:
-                raise UserError("Unauthorized. Please check subdomain and token.")
+                raise UserError(
+                    "Unauthorized. Please check subdomain and token.")
 
             if response.request.method == "POST":
                 raise UserError(formatted_response)
