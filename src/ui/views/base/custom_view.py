@@ -21,13 +21,29 @@ class CustomView(tk.Toplevel):
     ):
         super().__init__(master=parent_window)
         self._config = config
-        self._hide()  # Hide view to avoid flickering
+        self._hide()  # hide view to avoid flickering
+        self.__is_loading = False
+        self.__loading_overlay = None
 
     def update_value(self, value: T) -> None:
         """Update the view with a new value.
         Note: This method is expected to be overridden by subclasses to use `value`.
         """
         pass
+
+    def set_is_loading(self, is_loading: bool) -> None:
+        if is_loading == self.__is_loading:
+            return
+
+        self.__is_loading = is_loading
+
+        if is_loading:
+            self._create_loading_overlay()
+        else:
+            self._destroy_loading_overlay()
+
+    def get_is_loading(self) -> bool:
+        return self.__is_loading
 
     def _show(self, parent_window: tk.Tk) -> None:
         self._create_view(parent_window)
@@ -68,7 +84,6 @@ class CustomView(tk.Toplevel):
 
         self.update_idletasks()
         if isinstance(self.master, tk.Tk):
-            # Notify parent window that geometry has changed to trigger repositioning
             self.master.event_generate(TkEvents.GEOMETRY_CHANGED)
 
     def _set_position(
@@ -104,12 +119,10 @@ class CustomView(tk.Toplevel):
                 "yellow": "#FFFFCC",
             }
 
-            target_color = FLASH_COLOR_MAP.get(flash_color, FLASH_COLOR_MAP["yellow"])
-            bg_color = self._config.bg_color or self.cget(
-                "bg"
-            )  # Use default Tkinter bg
+            target_color = FLASH_COLOR_MAP.get(
+                flash_color, FLASH_COLOR_MAP["yellow"])
+            bg_color = self._config.bg_color or self.cget("bg")
 
-            # Convert system color name to hex if necessary
             if not bg_color.startswith("#"):
                 rgb_tuple = self.winfo_rgb(bg_color)
                 bg_color = f"#{rgb_tuple[0]//256:02x}{rgb_tuple[1]//256:02x}{rgb_tuple[2]//256:02x}"
@@ -118,10 +131,10 @@ class CustomView(tk.Toplevel):
                 """Interpolate between background and target color."""
                 try:
                     bg_rgb = [
-                        int(bg_color.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4)
+                        int(bg_color.lstrip("#")[i: i + 2], 16) for i in (0, 2, 4)
                     ]
                     target_rgb = [
-                        int(target_color.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4)
+                        int(target_color.lstrip("#")[i: i + 2], 16) for i in (0, 2, 4)
                     ]
                     current_rgb = [
                         int(bg_rgb[i] + (target_rgb[i] - bg_rgb[i]) * ratio)
@@ -171,3 +184,36 @@ class CustomView(tk.Toplevel):
                 highlightbackground=bg_color,
                 highlightcolor=bg_color,
             )
+
+    def _create_loading_overlay(self) -> None:
+        """Create and show a loading overlay."""
+        if self.__loading_overlay:
+            return
+
+        self.__loading_overlay = tk.Frame(
+            self,
+            bg=self._config.bg_color,
+            borderwidth=0,
+        )
+
+        self.__loading_overlay.place(
+            relx=0, rely=0,
+            relwidth=1, relheight=1,
+        )
+
+        label = tk.Label(
+            self.__loading_overlay,
+            text="Loading...",
+            font=("Segoe UI", 12, "bold"),
+            bg=self._config.bg_color,
+            fg=self._config.text_color,
+        )
+        label.place(relx=0.5, rely=0.5, anchor="center")
+
+        self.__loading_overlay.lift()
+
+    def _destroy_loading_overlay(self) -> None:
+        """Remove the loading overlay."""
+        if self.__loading_overlay:
+            self.__loading_overlay.destroy()
+            self.__loading_overlay = None

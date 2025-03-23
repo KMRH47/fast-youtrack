@@ -77,6 +77,8 @@ class AddSpentTimeController:
 
         def fetch_issue_thread():
             is_cancelled = False
+
+            self.__window.set_is_loading(True)
             
             issue = self.__youtrack_service.get_issue(issue_id)
             work_item_types = []
@@ -102,3 +104,6 @@ class AddSpentTimeController:
 
         for view in self.__window.get_attached_views():
             view.update_value(issue)
+        
+        self.__window.set_is_loading(False)
+

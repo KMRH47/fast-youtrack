@@ -74,6 +74,10 @@ class CustomWindow(CustomWindowAttachMixin):
         if isinstance(val, UserError):
             val.display()
 
+    def set_is_loading(self, is_loading: bool) -> None:
+        for view in self.get_attached_views():
+            view.set_is_loading(is_loading)
+
     def _set_window_geometry(self):
         width = self._config.width
         height = self._config.height
