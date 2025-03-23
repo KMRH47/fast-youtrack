@@ -25,7 +25,3 @@ start "" /b %AHK_PATH% /restart %AHK_SCRIPT%
 
 REM Capture PID to pids/ahk.txt
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$proc = Get-Process AutoHotkey64 | Sort-Object StartTime -Descending | Select-Object -First 1; if ($proc) { $proc.Id } else { exit 1 }" > %PID_DIR%\ahk.txt 2>nul
-
-echo Fast YouTrack running in background...
-echo Press any key to continue...
-pause >nul

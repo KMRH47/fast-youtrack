@@ -2,8 +2,14 @@
 #Include ahk/youtrack.ahk
 #Include ahk/utils.ahk
 
+RunApp()
+
 ; CTRL + SHIFT + T
 ^+t:: {
+    RunApp()
+}
+
+RunApp() {
     projectRoot := A_ScriptDir "\..\"
     pidFile := projectRoot "pids\python.pid"
     pidDir := projectRoot "pids"
