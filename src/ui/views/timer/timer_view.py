@@ -25,14 +25,31 @@ class TimerView(CustomView):
         """Populate widgets into the parent frame with timer details."""
         parent.config(bg=self._config.bg_color)
 
+        # grid
+        parent.grid_columnconfigure(0, weight=0, minsize=50)
+        parent.grid_columnconfigure(1, weight=1)
+        parent.grid_columnconfigure(2, weight=0, minsize=50)
+
+        # timer text
         self.__timer_label = tk.Label(
             parent,
-            text="Elapsed Time: 00:00:00",
+            text="00:00:00",
             font=("Arial", 14, "bold"),
             bg=self._config.bg_color,
             fg=self._config.text_color,
         )
-        self.__timer_label.pack()
+        self.__timer_label.grid(row=0, column=1, sticky="nsew")
+
+        # reset button
+        self.__reset_button = tk.Button(
+            parent,
+            text="Reset",
+            command=self._reset,
+            bg=self._config.bg_color,
+            fg=self._config.text_color,
+            takefocus=False,
+        )
+        self.__reset_button.grid(row=0, column=2, sticky="e", padx=5)
 
     def _on_show(self) -> None:
         if self.__start_time is not None:
@@ -51,7 +68,7 @@ class TimerView(CustomView):
         time_string = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
 
         self.__timer_label.config(
-            text=f"Elapsed Time: {time_string}",
+            text=f"{time_string}",
             bg=self._config.bg_color,
             fg=self._config.text_color,
         )
