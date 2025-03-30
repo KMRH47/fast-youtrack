@@ -42,7 +42,8 @@ class FileStore(Store[str]):
             raise
 
     def _get_file_path(self, file_name: str) -> str:
-        return str(Path(self.base_directory) / file_name)
+        file_path = os.path.join(self.base_directory, file_name)
+        return file_path
 
     def _get_log_path(self, file_path: str) -> str:
         return posixpath.normpath(file_path.replace(os.sep, '/'))
