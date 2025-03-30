@@ -16,5 +16,5 @@ class AddSpentTimeWindowConfig(CustomWindowConfig):
     initial_description: str = ""
     initial_type: str = ""
     work_item_types: dict[str, str] = {}
-    date_format: str = "yyyy-mm-dd"
+    date_format: str = "%Y-%m-%d"
     initial_date: str = date.today().strftime(date_format)
