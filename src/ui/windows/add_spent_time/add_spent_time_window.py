@@ -48,7 +48,7 @@ class AddSpentTimeWindow(CustomWindow):
             label="Enter Time (e.g., 1h30m):",
             config=CustomEntryConfig(
                 initial_value=config.initial_time or "",
-                break_chars=["w", "d", "h", "m"],
+                break_chars=["w", "d", "h", "m"],   
                 validation_func=lambda time: time_valid(time),
             ),
         )
@@ -125,6 +125,10 @@ class AddSpentTimeWindow(CustomWindow):
 
         self.__type_combobox.configure(values=updated_work_item_types)
 
+    def _on_window_close(self, event=None):
+        self._reset()
+        super()._on_window_close(event)
+
     def _reset(self):
         self.__issue_id_entry.delete(0, tk.END)
         self.__issue_id_entry.insert(
@@ -132,8 +136,8 @@ class AddSpentTimeWindow(CustomWindow):
         )
         self.__issue_id_entry.focus_set()
         self.__date_entry.reset()
-        self.__time_entry.delete(0, tk.END)
-        self.__description_entry.delete(0, tk.END)
+        self.__time_entry.reset()
+        self.__description_entry.reset()
         self.__type_combobox.set("")
 
         self._reset_attached_views()

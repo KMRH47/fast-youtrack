@@ -20,43 +20,8 @@ def create_labeled_entry(
     if not config:
         return entry
 
-    if config.initial_value:
-        entry.delete(0, tk.END)
-        entry.insert(0, config.initial_value)
     config.force_focus and parent.after(0, entry.focus_force)
     config.cursor_end and entry.icursor(tk.END)
-
-    if not (config.validation_func or config.on_change):
-        return entry
-
-    was_invalid = False
-    if config.validation_func:
-        initial_border = entry["highlightbackground"]
-
-        def validate(value):
-            nonlocal was_invalid
-            is_valid = config.validation_func(value)
-            entry.configure(
-                highlightthickness=1 if not is_valid else 0,
-                highlightbackground="red" if not is_valid else initial_border,
-                highlightcolor="red" if not is_valid else initial_border,
-            )
-            was_invalid = not is_valid
-            logger.info(f"Validation result for '{value}': {is_valid}")
-            return True
-
-        def on_change(event):
-            was_invalid and validate(entry.get())
-            config.on_change and config.on_change(event)
-
-        entry.configure(
-            validate="focusout",
-            validatecommand=(entry.register(validate), "%P"),
-        )
-        entry.bind("<Return>", lambda _: validate(entry.get()))
-        entry.bind("<KeyRelease>", on_change)
-    elif config.on_change:
-        entry.bind("<KeyRelease>", config.on_change)
 
     return entry
 
