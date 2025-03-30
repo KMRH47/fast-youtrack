@@ -18,6 +18,7 @@ class FileStore(Store[str]):
     def read(self, key: str) -> Optional[str]:
         """Read raw data from file."""
         file_path = self._get_file_path(key)
+        logging.debug(f"Reading file from: {file_path}")
         try:
             with open(file_path, "r", encoding="utf-8") as file:
                 return file.read().strip()
