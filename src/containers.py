@@ -67,19 +67,17 @@ class Container(containers.DeclarativeContainer):
     )
 
     add_spent_time_config = providers.Factory(
-        lambda config, youtrack_service, clipboard_value: config.add_spent_time_config.copy(
+        lambda config, youtrack_service: config.add_spent_time_config.copy(
             update={
                 "work_item_types": config.add_spent_time_config.work_item_types
                 or {
                     item.name: item.id
                     for item in youtrack_service.get_work_item_types()
                 },
-                "initial_issue_id": clipboard_value,
             }
         ),
         config,
         youtrack_service,
-        providers.Factory(get_number_from_clipboard),
     )
 
     add_spent_time_window = providers.Singleton(
