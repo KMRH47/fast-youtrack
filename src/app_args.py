@@ -1,4 +1,5 @@
 import sys
+import os
 from pathlib import Path
 
 from pydantic import BaseModel
@@ -17,7 +18,11 @@ class AppArgs(BaseModel):
 
     @property
     def base_dir(self) -> str:
-        project_root = Path(__file__).parent.parent.absolute()
+        if getattr(sys, 'frozen', False):
+            project_root = Path(sys.executable).parent
+        else:
+            project_root = Path(__file__).parent.parent.absolute()
+
         return str(project_root / "user" / self.subdomain)
 
     @classmethod

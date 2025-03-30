@@ -1,5 +1,6 @@
 import logging
 import sys
+from pathlib import Path
 
 from dependency_injector.wiring import Provide
 
@@ -27,7 +28,8 @@ def main(
 if __name__ == "__main__":
     try:
         args = AppArgs.from_sys_args()
-        config = Config.load_config()
+        base_directory = Path(args.base_dir)
+        config = Config.load_config(base_dir=base_directory)
         initialize_infrastructure(args, config)
 
         container = Container()

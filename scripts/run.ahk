@@ -1,18 +1,19 @@
 #Requires AutoHotkey v2.0
-#Include ahk/youtrack.ahk
-#Include ahk/utils.ahk
 
-RunApp()
+; Define AND initialize globals first
+global UserSettingsDir := A_ScriptDir "\..\user"
+global LogDir := A_ScriptDir "\..\logs"
 
-; CTRL + SHIFT + T
-^+t:: {
-    RunApp()
-}
+RunApp(baseDir := A_ScriptDir "\..")  {
+    ; Update globals for current context
+    UserSettingsDir := baseDir "\user"
+    LogDir := baseDir "\logs"
 
-RunApp() {
-    projectRoot := A_ScriptDir "\..\"
-    pidFile := projectRoot "pids\python.pid"
-    pidDir := projectRoot "pids"
+    entryPath := A_IsCompiled ? 
+        baseDir . "\python_app.exe" : 
+        Format('"{1}" "{2}"', baseDir . "\venv\Scripts\pythonw.exe", baseDir . "\src\main.py")
+    pidFile := baseDir . "\pids\python.pid"
+    pidDir := baseDir . "\pids"
 
     ; activate existing window if PID file exists
     if (FileExist(pidFile) && ActivateExistingWindow(pidFile)) {
@@ -24,16 +25,13 @@ RunApp() {
     if (!activeSubdomain) {
         return
     }
-
     ; create passphrase key file
     CreateKey(activeSubdomain.passphrase, activeSubdomain.subdomain)
     
     ; run script
-    Run(Format('"{1}" "{2}" "{3}" "{4}"',
-        projectRoot "venv\Scripts\pythonw.exe",
-        projectRoot "src\main.py",
-        activeSubdomain.passphrase,
-        activeSubdomain.subdomain)
+    Run(A_IsCompiled ? 
+        Format('"{1}" "{2}" "{3}"', entryPath, activeSubdomain.passphrase, activeSubdomain.subdomain) :
+        Format('{1} "{2}" "{3}"', entryPath, activeSubdomain.passphrase, activeSubdomain.subdomain)
         ,
         ,
         ,
@@ -47,4 +45,14 @@ RunApp() {
     if FileExist(pidFile)
         FileDelete(pidFile)
     FileAppend(pid, pidFile)
+}
+
+; Include after globals are defined and initialized
+#Include %A_ScriptDir%\ahk\youtrack.ahk
+#Include %A_ScriptDir%\ahk\utils.ahk
+
+; CTRL + SHIFT + T
+^+t:: {
+    rootDir := RegExReplace(A_ScriptDir, "\\scripts$", "")
+    RunApp(rootDir)
 }

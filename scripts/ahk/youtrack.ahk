@@ -2,11 +2,6 @@
 #include utils.ahk
 #Include gui.ahk
 
-global UserSettingsDir := A_WorkingDir "\..\user"
-global LogDir := A_WorkingDir "\..\logs"
-
-OnExit DeleteKeys
-
 /** @return {ActiveSubdomain|false} */
 DisplaySubdomainPicker() {
 
