@@ -1,6 +1,7 @@
 from datetime import date
 
 from ui.views.base.custom_window_config import CustomWindowConfig
+from ui.widgets.custom_date_entry import CustomDateEntry
 
 
 class AddSpentTimeWindowConfig(CustomWindowConfig):
@@ -16,5 +17,9 @@ class AddSpentTimeWindowConfig(CustomWindowConfig):
     initial_description: str = ""
     initial_type: str = ""
     work_item_types: dict[str, str] = {}
-    date_format: str = "%Y-%m-%d"
-    initial_date: str = date.today().strftime(date_format)
+    date_format: str = "yyyy-mm-dd"
+    
+    @property
+    def initial_date(self) -> str:
+        python_format = CustomDateEntry.DATE_FORMAT_MAP.get(self.date_format.lower(), "%Y-%m-%d")
+        return date.today().strftime(python_format)

@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class CustomDateEntryConfig(CustomEntryConfig):
-    date_format: Optional[str] = "yyyy-mm-dd"
+    date_format: Optional[str]
 
 
 class CustomDateEntry(DateEntry):
@@ -31,8 +31,6 @@ class CustomDateEntry(DateEntry):
         self.text_var = tk.StringVar()
         date_format = (
             config.date_format.lower()
-            if config and config.date_format
-            else "yyyy-mm-dd"
         )
 
         super().__init__(
@@ -45,10 +43,14 @@ class CustomDateEntry(DateEntry):
         if config and config.initial_value:
             try:
                 strptime_format = self.DATE_FORMAT_MAP.get(date_format, "%Y-%m-%d")
-                initial_date = datetime.strptime(config.initial_value, strptime_format)
+                if config.initial_value == date_format:
+                    initial_date = datetime.now()
+                else:
+                    initial_date = datetime.strptime(config.initial_value, strptime_format)
                 self.set_date(initial_date)
             except ValueError as e:
                 logger.error(f"Error parsing initial date: {e}")
+                self.set_date(datetime.now())
 
         # bind arrow keys for going back and forth 1 day
         self.bind(TkEvents.LEFT_ARROW, lambda e: self._adjust_date(-1))
