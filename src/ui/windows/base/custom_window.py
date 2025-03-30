@@ -105,7 +105,6 @@ class CustomWindow(CustomWindowAttachMixin):
 
     def _restore_window(self, icon, item=None):
         """Restore window from system tray."""
-        logger.debug("Restoring window from system tray")
         if self.tray_icon:
             self.tray_icon.stop()
             self.tray_icon = None
