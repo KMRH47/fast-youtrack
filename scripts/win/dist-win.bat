@@ -4,7 +4,8 @@ SETLOCAL ENABLEDELAYEDEXPANSION
 :: paths
 set "AHK_COMPILER=C:\Program Files\AutoHotkey\Compiler\Ahk2Exe.exe"
 set "AHK_BASE=C:\Program Files\AutoHotkey\v2\AutoHotkey.exe"
-set "PROJECT_ROOT=%~dp0"
+set "SCRIPT_DIR=%~dp0"
+set "PROJECT_ROOT=%SCRIPT_DIR%..\.."
 if "%PROJECT_ROOT:~-1%" == "\" set "PROJECT_ROOT=%PROJECT_ROOT:~0,-1%"
 set "DIST_DIR=%PROJECT_ROOT%\dist"
 set "TEMP_DIR=%DIST_DIR%\temp"
@@ -72,11 +73,15 @@ pyinstaller --onefile --clean --windowed ^
 echo Compiling AHK launcher...
 
 :: create necessary directories for compilation
-mkdir "%TEMP_DIR%\ahk" 2>nul
+mkdir "%TEMP_DIR%" 2>nul
 
 :: copy AHK files to temp directory
-copy "%PROJECT_ROOT%\scripts\ahk\*.ahk" "%TEMP_DIR%\ahk\" /Y >nul
-copy "%PROJECT_ROOT%\scripts\run.ahk" "%TEMP_DIR%\" /Y >nul
+echo Copying AHK files...
+copy "%PROJECT_ROOT%\scripts\win\ahk\utils.ahk" "%TEMP_DIR%\" /Y >nul
+copy "%PROJECT_ROOT%\scripts\win\ahk\youtrack.ahk" "%TEMP_DIR%\" /Y >nul
+copy "%PROJECT_ROOT%\scripts\win\ahk\run.ahk" "%TEMP_DIR%\" /Y >nul
+copy "%PROJECT_ROOT%\scripts\win\ahk\gui.ahk" "%TEMP_DIR%\" /Y >nul
+copy "%PROJECT_ROOT%\scripts\win\ahk\gui-utils.ahk" "%TEMP_DIR%\" /Y >nul
 
 :: Create the main combined script in temp root
 echo Creating combined AHK script...
@@ -89,17 +94,17 @@ echo ; Define and Initialize globals for compiled context
 echo global UserSettingsDir := A_ScriptDir "\user"
 echo global LogDir := A_ScriptDir "\logs"
 echo.
-echo ; Include all components from the 'ahk' subfolder relative to this script
-echo #Include ahk\utils.ahk
-echo #Include ahk\gui-utils.ahk
-echo #Include ahk\gui.ahk
-echo #Include ahk\youtrack.ahk
+echo ; Include all components
+echo #Include utils.ahk
+echo #Include gui-utils.ahk
+echo #Include gui.ahk
+echo #Include youtrack.ahk
 echo #Include run.ahk
 echo.
 echo ; Register OnExit
-echo OnExit DeleteKeys
+echo OnExit^(DeleteKeys^)
 echo.
-echo ; Call the main function
+echo ; Call the main function with correct paths
 echo RunApp^(A_ScriptDir^)
 )>"%TEMP_DIR%\combined.ahk"
 
