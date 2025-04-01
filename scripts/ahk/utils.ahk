@@ -100,3 +100,50 @@ GetMainWindow(parentPID) {
     }
     return 0
 }
+
+/** @param {String} text
+ *  Show a custom splash screen with text */
+ShowSplash(text) {
+    static splash := ""
+    
+    try {
+        if (splash != "" && IsObject(splash)) {
+            splash.Destroy()
+        }
+    }
+    
+    splash := Gui("-Caption +AlwaysOnTop +ToolWindow")
+    splash.BackColor := "2E8B57"
+    
+    splash.SetFont("s13 bold", "Segoe UI")
+    splash.AddText("cE0FFE0 Center w200 h60", text)
+    
+    splash.Show("NoActivate")
+    
+    return splash
+}
+
+/** @param {Number} pid
+ *  @param {String} text
+ *  Show splash screen until application's main window appears */
+ShowStartupSplash(pid, text := "Starting Fast YouTrack...") {
+    static attempts := 0
+    static splash := ""
+    
+    if (attempts == 0) {
+        splash := ShowSplash(text)
+    }
+    
+    attempts++
+    
+    if (GetMainWindow(pid) || attempts > 300) {
+        try {
+            if (splash != "" && IsObject(splash)) {
+                splash.Destroy()
+            }
+        }
+        SetTimer(, 0)
+        attempts := 0
+        return
+    }
+}
