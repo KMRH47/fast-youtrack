@@ -24,7 +24,7 @@ GetFolderNames(dir) {
  * */
 LogError(err, fileName) {
     scriptDir := RegExReplace(A_ScriptDir, "\\scripts\\ahk$", "")
-    logsDir := A_ScriptDir "\..\logs"
+    logsDir := scriptDir "\..\logs"
     logFile := logsDir "\error.log"
     
     if !DirExist(logsDir)

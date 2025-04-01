@@ -9,7 +9,7 @@ set /p PID=<%PID_DIR%\ahk.txt <nul >nul 2>&1
 taskkill /F /PID %PID% 2>nul
 
 REM Run setup.bat to ensure venv and dependencies are installed
-call scripts\setup.bat
+call scripts\win\setup.bat
 if %ERRORLEVEL% neq 0 (
     echo Setup failed. Exiting...
     exit /b 1
@@ -18,10 +18,11 @@ if %ERRORLEVEL% neq 0 (
 REM Paths for AutoHotkey
 set VENV_DIR=venv
 set AHK_PATH=ahk\AutoHotkey64.exe
-set AHK_SCRIPT=scripts\run.ahk
+set AHK_SCRIPT=scripts\win\ahk\run.ahk
 
 REM Run the AutoHotkey script
 start "" /b %AHK_PATH% /restart %AHK_SCRIPT%
 
 REM Capture PID to pids/ahk.txt
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$proc = Get-Process AutoHotkey64 | Sort-Object StartTime -Descending | Select-Object -First 1; if ($proc) { $proc.Id } else { exit 1 }" > %PID_DIR%\ahk.txt 2>nul
+

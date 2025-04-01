@@ -1,10 +1,10 @@
 #Requires AutoHotkey v2.0
 
 ; define and initialize globals first
-global UserSettingsDir := A_ScriptDir "\..\user"
-global LogDir := A_ScriptDir "\..\logs"
+global UserSettingsDir := RegExReplace(A_ScriptDir, "\\scripts\\win\\ahk$", "\\user")
+global LogDir := RegExReplace(A_ScriptDir, "\\scripts\\win\\ahk$", "\\logs")
 
-RunApp(baseDir := A_ScriptDir "\..") {
+RunApp(baseDir := RegExReplace(A_ScriptDir, "\\scripts\\win\\ahk$", "")) {
     ; update globals for current context
     UserSettingsDir := baseDir "\user"
     LogDir := baseDir "\logs"
@@ -51,11 +51,11 @@ RunApp(baseDir := A_ScriptDir "\..") {
 }
 
 ; include after globals are defined and initialized (ignore errors)
-#Include %A_ScriptDir%\ahk\youtrack.ahk
-#Include %A_ScriptDir%\ahk\utils.ahk
+#Include youtrack.ahk
+#Include utils.ahk
 
 ; CTRL + SHIFT + T
 ^+t:: {
-    rootDir := RegExReplace(A_ScriptDir, "\\scripts$", "")
+    rootDir := RegExReplace(A_ScriptDir, "\\scripts\\win\\ahk$", "")
     RunApp(rootDir)
 }

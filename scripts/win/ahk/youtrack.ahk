@@ -2,11 +2,22 @@
 #include utils.ahk
 #Include gui.ahk
 
+; delete keys on exit
+OnExit(DeleteKeys)
+
+/**
+ * Get the correct user settings directory regardless of execution context
+ * @return {String} Path to user settings directory
+ */
+GetUserSettingsDir() {
+    global UserSettingsDir
+    return A_IsCompiled ? A_ScriptDir "\user" : UserSettingsDir
+}
+
 /** @return {ActiveSubdomain|false} */
 DisplaySubdomainPicker() {
-
     subdomainTitle := "Select a subdomain:"
-    subdomains := GetFolderNames(UserSettingsDir)
+    subdomains := GetFolderNames(GetUserSettingsDir())
 
     passphraseTitle := "Enter passphrase:"
     result := CreatePassAndListWindow(passphraseTitle, subdomainTitle, subdomains)
@@ -22,9 +33,10 @@ DisplaySubdomainPicker() {
  * Retrieves the currently active subdomain and its corresponding passphrase.
  * @return {ActiveSubdomain|false} */
 GetActiveSubdomain() {
-    subdomains := GetFolderNames(UserSettingsDir)
+    userDir := GetUserSettingsDir()
+    subdomains := GetFolderNames(userDir)
     for subdomain in subdomains {
-        keyFilePath := UserSettingsDir "\" subdomain "\.key"
+        keyFilePath := userDir "\" subdomain "\.key"
         if FileExist(keyFilePath) {
             passphrase := FileRead(keyFilePath)
             return ActiveSubdomain(subdomain, passphrase)
@@ -39,7 +51,8 @@ GetActiveSubdomain() {
  * @param {String} subdomain
  */
 CreateKey(passphrase, subdomain) {
-    subdomainPath := UserSettingsDir "\" subdomain
+    userDir := GetUserSettingsDir()
+    subdomainPath := userDir "\" subdomain
     DirCreate(subdomainPath)
 
     keyFilePath := subdomainPath "\.key"
@@ -58,9 +71,11 @@ CreateKey(passphrase, subdomain) {
  * @param {Number} ExitCode
  */
 DeleteKeys(ExitReason, ExitCode) {
-    subdomains := GetFolderNames(UserSettingsDir)
+    global LogDir
+    userDir := GetUserSettingsDir()
+    subdomains := GetFolderNames(userDir)
     for subdomain in subdomains {
-        keyFilePath := UserSettingsDir "\" subdomain "\.key"
+        keyFilePath := userDir "\" subdomain "\.key"
         if FileExist(keyFilePath) {
             try {
                 FileDelete(keyFilePath)
