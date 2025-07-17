@@ -1,4 +1,5 @@
 import logging
+import platform
 import threading
 from typing import Optional, Callable
 
@@ -41,7 +42,11 @@ class CustomWindow(CustomWindowAttachMixin):
             self.option_add("*Foreground", self._config.text_color)
 
         self.attributes("-topmost", self._config.topmost)
-        self.attributes("-toolwindow", self._config.minimize_to_tray)
+        # -toolwindow attribute only exists on Windows
+        try:
+            self.attributes("-toolwindow", self._config.minimize_to_tray)
+        except Exception:
+            pass  # macOS/Linux don't support this attribute
         self.configure(bg=self._config.bg_color)
 
         if self._config.cancel_key:
@@ -95,9 +100,15 @@ class CustomWindow(CustomWindowAttachMixin):
         return value
 
     def _on_window_close(self, event=None):
-        logger.debug("Minimizing to tray")
-        self.withdraw()
-        self._show_tray_icon()
+        if platform.system() == "Darwin":
+            # macOS: just iconify to dock (don't withdraw)
+            logger.debug("Minimizing to dock")
+            self.iconify()
+        else:
+            # Windows/Linux: minimize to system tray
+            logger.debug("Minimizing to tray")
+            self.withdraw()
+            self._show_tray_icon()
 
     def _reset_attached_views(self):
         for view in self.get_attached_views():
