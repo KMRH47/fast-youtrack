@@ -70,6 +70,34 @@ def check_setup():
     
     return False
 
+def check_tkinter(venv_dir):
+    # Find the correct python executable
+    python_path = venv_dir / "bin" / "python"
+    if not python_path.exists():
+        python_path = venv_dir / "Scripts" / "python.exe"
+    if not python_path.exists():
+        return  # Can't check, fallback to default error
+
+    # Actually check for tkinter
+    result = subprocess.run(
+        [str(python_path), "-c", "import tkinter"],
+        capture_output=True
+    )
+    if result.returncode != 0:
+        import platform
+        sysname = platform.system()
+        print("\n❌ tkinter (Python Tk GUI) is NOT installed in your environment.")
+        if sysname == "Linux":
+            print("   Install with: sudo apt-get install python3-tk  # or your distro's equivalent")
+        elif sysname == "Darwin":
+            print("   Try: brew install python-tk@3.13  # for Homebrew Python")
+            print("   Or reinstall Python from python.org")
+        elif sysname == "Windows":
+            print("   Reinstall Python from https://www.python.org/ and ensure Tcl/Tk is selected.")
+        else:
+            print("   Please install Tkinter for your platform.")
+        sys.exit(2)
+
 
 def run_direct_mode():
     """Run the application directly with setup"""
@@ -85,8 +113,13 @@ def run_direct_mode():
         print(f"Error: Main script not found: {main_py}")
         sys.exit(1)
     
+    # Check for tkinter before running main.py
+    check_tkinter(venv_dir)
+
     # Run the application
     python_path = venv_dir / "bin" / "python"
+    if not python_path.exists():
+        python_path = venv_dir / "Scripts" / "python.exe"
     if python_path.exists():
         # Pass through any additional arguments (excluding --direct)
         args = [arg for arg in sys.argv[1:] if arg != "--direct"]
@@ -94,6 +127,7 @@ def run_direct_mode():
     else:
         print(f"Error: Venv python not found: {python_path}")
         sys.exit(1)
+
 
 
 if __name__ == "__main__":
