@@ -76,8 +76,7 @@ def setup_venv(project_root):
     if not venv_dir.exists():
         print("   📦 Creating virtual environment...")
         try:
-            subprocess.run([sys.executable, "-m", "venv", "--system-site-packages", str(venv_dir)], 
-                         check=True)
+            subprocess.run([sys.executable, "-m", "venv", str(venv_dir)], check=True)
             print("   ✓ Virtual environment created")
         except subprocess.CalledProcessError as e:
             print(f"   ❌ Failed to create virtual environment: {e}")
