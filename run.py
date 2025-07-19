@@ -37,8 +37,17 @@ def main():
                 sys.exit(1)
     
     elif system == "Linux":
-        # Linux - direct mode only for now
-        run_direct_mode()
+        # Linux - use shell script with GUI subdomain picker
+        if direct_mode:
+            run_direct_mode()
+        else:
+            script_path = Path("scripts/linux/run.sh")
+            if script_path.exists():
+                subprocess.run([str(script_path)])
+            else:
+                print("Error: Linux launcher not found")
+                print("Use --direct flag for command line mode")
+                sys.exit(1)
     
     else:
         print("Unsupported operating system")
