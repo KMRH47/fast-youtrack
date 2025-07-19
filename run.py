@@ -97,7 +97,7 @@ def check_tkinter(venv_dir):
                             break
             except Exception:
                 pass
-            if distro_id in ("ubuntu", "debian"):
+            if distro_id in ("ubuntu", "debian", "linuxmint"):
                 print("   Install with: sudo apt-get install python3-tk")
             elif distro_id == "fedora":
                 print("   Install with: sudo dnf install python3-tkinter")
