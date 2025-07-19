@@ -18,7 +18,7 @@ Darwin*)
     exit 1
   fi
   ;;
-# linux - NOT SUPPORTED YET
+# linux
 Linux*)
   echo "Creating Linux distribution..."
   if [ -f "scripts/linux/dist-linux.sh" ]; then

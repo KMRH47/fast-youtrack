@@ -7,7 +7,7 @@ set "AHK_BASE=C:\Program Files\AutoHotkey\v2\AutoHotkey.exe"
 set "SCRIPT_DIR=%~dp0"
 set "PROJECT_ROOT=%SCRIPT_DIR%..\.."
 if "%PROJECT_ROOT:~-1%" == "\" set "PROJECT_ROOT=%PROJECT_ROOT:~0,-1%"
-set "DIST_DIR=%PROJECT_ROOT%\dist"
+set "DIST_DIR=%PROJECT_ROOT%\dist\windows"
 set "TEMP_DIR=%DIST_DIR%\temp"
 
 echo Creating FastYouTrack distribution...
