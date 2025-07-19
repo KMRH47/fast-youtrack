@@ -18,8 +18,8 @@ VERSION="1.0.0"  # TODO: Extract from project
 echo -e "${BLUE}Creating Fast YouTrack .deb package...${NC}"
 
 # Check if distribution exists
-if [ ! -f "$DIST_DIR/fast-youtrack-app" ]; then
-    echo -e "${RED}Error: Distribution not found. Run ./dist.sh first${NC}"
+if [ ! -f "$DIST_DIR/fast-youtrack-app" ] || [ ! -f "$DIST_DIR/subdomain_picker" ]; then
+    echo -e "${RED}Error: Distribution not found. Run ./dist-linux.sh first${NC}"
     exit 1
 fi
 
@@ -34,9 +34,10 @@ mkdir -p "$DEB_DIR/usr/share/applications"
 mkdir -p "$DEB_DIR/usr/share/doc/fast-youtrack"
 mkdir -p "$DEB_DIR/usr/share/fast-youtrack"
 
-# Copy binaries
+# Copy executables
 echo -e "${YELLOW}Copying application files...${NC}"
 cp "$DIST_DIR/fast-youtrack-app" "$DEB_DIR/usr/share/fast-youtrack/"
+cp "$DIST_DIR/subdomain_picker" "$DEB_DIR/usr/share/fast-youtrack/"
 cp "$DIST_DIR/fast-youtrack" "$DEB_DIR/usr/share/fast-youtrack/"
 
 # Create wrapper script in /usr/bin
@@ -49,14 +50,15 @@ cd "$HOME/.local/share/fast-youtrack" || {
     cd "$HOME/.local/share/fast-youtrack"
 }
 
-# Copy launcher if it doesn't exist locally
-if [ ! -f "fast-youtrack" ]; then
-    cp /usr/share/fast-youtrack/fast-youtrack .
-    chmod +x fast-youtrack
-fi
+# Always copy fresh files from system installation (force update)
+rm -f fast-youtrack fast-youtrack-app subdomain_picker
+cp /usr/share/fast-youtrack/fast-youtrack .
+cp /usr/share/fast-youtrack/fast-youtrack-app .
+cp /usr/share/fast-youtrack/subdomain_picker .
+chmod +x fast-youtrack fast-youtrack-app subdomain_picker
 
 # Run the application
-exec /usr/share/fast-youtrack/fast-youtrack
+exec ./fast-youtrack
 EOF
 
 chmod +x "$DEB_DIR/usr/bin/fast-youtrack"
@@ -184,6 +186,7 @@ find "$DEB_DIR" -type d -exec chmod 755 {} \;
 chmod +x "$DEB_DIR/usr/bin/fast-youtrack"
 chmod +x "$DEB_DIR/usr/share/fast-youtrack/fast-youtrack"
 chmod +x "$DEB_DIR/usr/share/fast-youtrack/fast-youtrack-app"
+chmod +x "$DEB_DIR/usr/share/fast-youtrack/subdomain_picker"
 chmod +x "$DEB_DIR/DEBIAN/postinst"
 chmod +x "$DEB_DIR/DEBIAN/prerm"
 

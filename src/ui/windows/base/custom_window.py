@@ -84,11 +84,9 @@ class CustomWindow(CustomWindowAttachMixin):
             view.set_is_loading(is_loading)
 
     def _set_window_geometry(self):
-        width = self._config.width
-        height = self._config.height
-        pos_right = int(self.winfo_screenwidth() / 2 - width / 2)
-        pos_down = int(self.winfo_screenheight() / 2 - height / 2)
-        self.geometry(f"{width}x{height}+{pos_right}+{pos_down}")
+        from utils.window_utils import center_window_on_primary_monitor
+
+        center_window_on_primary_monitor(self, self._config.width, self._config.height)
 
     def _submit(self, _):
         if self.__submit_callback:
@@ -139,8 +137,7 @@ class CustomWindow(CustomWindowAttachMixin):
 
         if not self.tray_thread or not self.tray_thread.is_alive():
             logger.debug("Starting tray icon thread")
-            self.tray_thread = threading.Thread(
-                target=self.tray_icon.run, daemon=True)
+            self.tray_thread = threading.Thread(target=self.tray_icon.run, daemon=True)
             self.tray_thread.start()
 
     def _create_tray_icon(self):
@@ -151,8 +148,7 @@ class CustomWindow(CustomWindowAttachMixin):
         draw.ellipse((10, 10, 54, 54), fill=(255, 0, 0))
 
         menu = Menu(
-            MenuItem("Show", self._restore_window,
-                     default=True, visible=False),
+            MenuItem("Show", self._restore_window, default=True, visible=False),
             MenuItem("Exit", self._exit_app),
         )
 
