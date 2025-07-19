@@ -102,19 +102,19 @@ def setup_venv(project_root):
 
 
 def setup_macos(project_root):
-    """macOS-specific setup"""
     print("\n🍎 macOS setup...")
-    
-    # Check for tkinter
+
     print("   🔍 Checking for tkinter...")
     try:
-        subprocess.run([sys.executable, "-c", "import tkinter"], 
-                      check=True, capture_output=True)
+        subprocess.run([sys.executable, "-c", "import tkinter"],
+                       check=True, capture_output=True)
         print("   ✓ tkinter available")
     except subprocess.CalledProcessError:
-        print("   ⚠️  tkinter not found")
-        print("   💡 You may need to install python-tk:")
-        print("      brew install python-tk@3.13")
+        print("   ❌ tkinter NOT FOUND")
+        print("   This application REQUIRES tkinter, which is not available.")
+        print("   If you use Homebrew Python, run: brew install python-tk@3.13")
+        print("   Or reinstall Python from python.org (includes tkinter by default).")
+        sys.exit(2)
     
     # Make AppleScript files executable
     script_dir = project_root / "scripts" / "mac"
@@ -131,20 +131,23 @@ def setup_windows(project_root):
 
 
 def setup_linux(project_root):
-    """Linux-specific setup"""
     print("\n🐧 Linux setup...")
-    
+
     # Check for tkinter
     print("   🔍 Checking for tkinter...")
     try:
-        subprocess.run([sys.executable, "-c", "import tkinter"], 
-                      check=True, capture_output=True)
+        subprocess.run([sys.executable, "-c", "import tkinter"],
+                       check=True, capture_output=True)
         print("   ✓ tkinter available")
     except subprocess.CalledProcessError:
-        print("   ⚠️  tkinter not found")
-        print("   💡 You may need to install python3-tk:")
-        print("      sudo apt-get install python3-tk  # Ubuntu/Debian")
-        print("      sudo yum install tkinter          # CentOS/RHEL")
+        print("   ❌ tkinter NOT FOUND")
+        print("   This application REQUIRES tkinter, which is not installed.")
+        print("   Install it and re-run setup:")
+        print("      sudo apt-get install python3-tk       # Ubuntu/Debian")
+        print("      sudo dnf install python3-tkinter       # Fedora")
+        print("      sudo pacman -S tk                      # Arch")
+        print("      sudo yum install tkinter               # CentOS/RHEL")
+        sys.exit(2)  # Abort setup immediately
 
 
 if __name__ == "__main__":
