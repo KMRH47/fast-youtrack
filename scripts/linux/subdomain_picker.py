@@ -121,6 +121,7 @@ class SubdomainPicker:
         
         # Bind Enter key to OK button
         self.root.bind('<Return>', lambda e: self.ok_clicked())
+        self.root.bind('<KP_Enter>', lambda e: self.ok_clicked())  # Numpad Enter
         self.root.bind('<Escape>', lambda e: self.cancel())
         
         # Set focus to subdomain field if empty, otherwise passphrase
