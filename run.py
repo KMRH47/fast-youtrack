@@ -71,14 +71,12 @@ def check_setup():
     return False
 
 def check_tkinter(venv_dir):
-    # Find the correct python executable
     python_path = venv_dir / "bin" / "python"
     if not python_path.exists():
         python_path = venv_dir / "Scripts" / "python.exe"
     if not python_path.exists():
         return  # Can't check, fallback to default error
 
-    # Actually check for tkinter
     result = subprocess.run(
         [str(python_path), "-c", "import tkinter"],
         capture_output=True
@@ -88,7 +86,27 @@ def check_tkinter(venv_dir):
         sysname = platform.system()
         print("\n❌ tkinter (Python Tk GUI) is NOT installed in your environment.")
         if sysname == "Linux":
-            print("   Install with: sudo apt-get install python3-tk  # or your distro's equivalent")
+            # Distro detection
+            distro_id = None
+            try:
+                # Try /etc/os-release first
+                with open("/etc/os-release") as f:
+                    for line in f:
+                        if line.startswith("ID="):
+                            distro_id = line.strip().split("=")[1].strip('"')
+                            break
+            except Exception:
+                pass
+            if distro_id in ("ubuntu", "debian"):
+                print("   Install with: sudo apt-get install python3-tk")
+            elif distro_id == "fedora":
+                print("   Install with: sudo dnf install python3-tkinter")
+            elif distro_id == "arch":
+                print("   Install with: sudo pacman -S tk")
+            elif distro_id in ("centos", "rhel"):
+                print("   Install with: sudo yum install tkinter")
+            else:
+                print("   Please install python3-tk via your package manager.")
         elif sysname == "Darwin":
             print("   Try: brew install python-tk@3.13  # for Homebrew Python")
             print("   Or reinstall Python from python.org")
