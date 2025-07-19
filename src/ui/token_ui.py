@@ -10,14 +10,10 @@ def display_bearer_token_prompt() -> Optional[str]:
         root.title("Enter Token")
         root.attributes("-topmost", True)
 
+        from utils.window_utils import center_window_on_primary_monitor
+
         root.update_idletasks()
-        window_width = 300
-        window_height = 150
-        position_right = int(root.winfo_screenwidth() / 2 - window_width / 2)
-        position_down = int(root.winfo_screenheight() / 2 - window_height / 2)
-        root.geometry(
-            f"{window_width}x{window_height}+{position_right}+{position_down}"
-        )
+        center_window_on_primary_monitor(root, 300, 150)
 
         tk.Label(
             root, text="Enter your YouTrack permanent token", font=("Arial", 12)
@@ -59,8 +55,12 @@ def display_bearer_token_prompt() -> Optional[str]:
             error_window.update_idletasks()
             window_width = error_window.winfo_width()
             window_height = error_window.winfo_height()
-            position_right = int(root.winfo_screenwidth() / 2 - window_width / 2)
-            position_down = int(root.winfo_screenheight() / 2 - window_height / 2)
+
+            from utils.window_utils import get_primary_monitor_geometry
+
+            monitor_x, monitor_y, monitor_w, monitor_h = get_primary_monitor_geometry()
+            position_right = monitor_x + (monitor_w - window_width) // 2
+            position_down = monitor_y + (monitor_h - window_height) // 2
             error_window.geometry(f"+{position_right}+{position_down}")
 
             def ensure_focus():
