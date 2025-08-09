@@ -45,8 +45,19 @@ def _guess_desktop_title_bar_height() -> Optional[int]:
     return None
 
 
+def _macos_title_bar_height(window: tk.Tk) -> Optional[int]:
+    try:
+        probe = tk.Frame(window, width=1, height=1)
+        probe.place(x=0, y=0)
+        window.update_idletasks()
+        offset = probe.winfo_rooty() - window.winfo_rooty()
+        probe.destroy()
+        return int(offset) if offset and offset > 0 else None
+    except Exception:
+        return None
+
+
 class CustomWindowAttachMixin(tk.Tk):
-    """Mixin that it possible to attach any Tkinter window to the left, top, right or bottom of other Tkinter views."""
 
     def __init__(
         self,
@@ -58,29 +69,25 @@ class CustomWindowAttachMixin(tk.Tk):
         )
 
     def attach_views(self, custom_views: List[CustomView]) -> None:
-        """
-        Attach multiple views with specified positions.
-        Accepts a list of (CustomTopLevel, position) tuples.
-        """
         self.__attached_views = custom_views
 
     def get_attached_views(self) -> List[CustomView]:
-        """Return a list of attached top-level views."""
         return self.__attached_views
 
     def show_all_attached_views(self) -> None:
-        """Show and position all attached views."""
         for attached_view in self.__attached_views:
             self._bind_update_position(attached_view)
             attached_view._show(self)  # pyright: ignore[reportPrivateUsage]
+            try:
+                self.after(0, lambda v=attached_view: self._update_position(v))
+            except Exception:
+                pass
 
     def hide_all_attached_views(self) -> None:
-        """Hide all attached views."""
         for attached_view in self.__attached_views:
             attached_view._hide()  # pyright: ignore[reportPrivateUsage]
 
     def destroy_all_attached_views(self) -> None:
-        """Destroy all attached views and clear the list."""
         for attached_view in self.__attached_views:
             attached_view.destroy()
         self.__attached_views.clear()
@@ -103,11 +110,17 @@ class CustomWindowAttachMixin(tk.Tk):
 
     def _calculate_title_bar_height(self) -> int:
         try:
+            self.update_idletasks()
             window_y = self.winfo_rooty()
             client_y = self.winfo_y()
             delta = window_y - client_y
             if delta > 0:
                 return delta
+
+            if platform.system() == "Darwin":
+                mac_delta = _macos_title_bar_height(self)
+                if mac_delta:
+                    return mac_delta
 
             extents = _get_extents_title_bar_height(self.winfo_id())
             if extents:
@@ -119,10 +132,14 @@ class CustomWindowAttachMixin(tk.Tk):
 
         except Exception:
             pass
+
+        if platform.system() == "Darwin":
+            return 28
+        if platform.system() == "Windows":
+            return 30
         return 35
 
     def _parent_geometry(self) -> Tuple[int, int, int, int]:
-        """Return (x, y, width, height) of parent."""
         return (
             self.winfo_rootx(),
             self.winfo_rooty(),
@@ -131,8 +148,6 @@ class CustomWindowAttachMixin(tk.Tk):
         )
 
     def _title_bar_correction(self) -> int:
-        if platform.system() != "Linux":
-            return 0
         return self._calculate_title_bar_height()
 
     def _content_area_y(self, parent_y: int) -> int:
@@ -150,8 +165,22 @@ class CustomWindowAttachMixin(tk.Tk):
         title_bar_height: int,
     ) -> Tuple[int, int]:
         parent_x, parent_y, parent_w, parent_h = parent_geom
+        try:
+            attached_view.update_idletasks()
+        except Exception:
+            pass
         win_w = attached_view.winfo_width()
         win_h = attached_view.winfo_height()
+        if win_w <= 1:
+            try:
+                win_w = int(getattr(attached_view, "_config").width)
+            except Exception:
+                pass
+        if win_h <= 1:
+            try:
+                win_h = int(getattr(attached_view, "_config").height)
+            except Exception:
+                pass
         pos = attached_view._get_position()  # pyright: ignore[reportPrivateUsage]
 
         if pos == "right":
@@ -162,11 +191,12 @@ class CustomWindowAttachMixin(tk.Tk):
 
         if pos == "top":
             new_x = parent_x + offset
-            new_y = (
-                parent_y - win_h - title_bar_height
-                if platform.system() == "Linux"
-                else self.winfo_y() - win_h
-            )
+            if platform.system() == "Darwin":
+                new_y = (self.winfo_y() - title_bar_height) - win_h
+            elif platform.system() == "Linux":
+                new_y = parent_y - win_h - title_bar_height
+            else:
+                new_y = parent_y - win_h
             return new_x, new_y
 
         if pos == "bottom":
@@ -185,7 +215,6 @@ class CustomWindowAttachMixin(tk.Tk):
         attached_view.geometry(f"+{x}+{y}")
 
     def _bind_update_position(self, attached_view: CustomView) -> None:
-        """Bind the update position function for a specific attached top level."""
         self.bind(
             TkEvents.GEOMETRY_CHANGED,
             lambda event, attached_view_arg=attached_view: self._update_position(

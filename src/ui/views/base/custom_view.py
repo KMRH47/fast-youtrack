@@ -1,5 +1,6 @@
 import logging
 import math
+import platform
 import tkinter as tk
 
 from typing import Literal, Optional, TypeVar
@@ -63,7 +64,9 @@ class CustomView(tk.Toplevel):
 
         geometry = f"{self._config.width}x{self._config.height}"
         self.geometry(geometry)
-        self.overrideredirect(True)  # hides title bar
+
+        should_override_redirect = platform.system() != "Darwin"  # macOS has focus issues with overrideredirect
+        self.overrideredirect(should_override_redirect)  # hides title bar
         self.wm_attributes("-topmost", self._config.topmost)
         self.resizable(self._config.resizable, self._config.resizable)
 
