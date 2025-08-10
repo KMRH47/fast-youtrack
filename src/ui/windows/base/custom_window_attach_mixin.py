@@ -39,15 +39,15 @@ class CustomWindowAttachMixin(tk.Tk):
         """Attach child window as native Cocoa child of parent."""
         from AppKit import NSWindowAbove
 
-        p = self._nswindow_for(parent)
-        c = self._nswindow_for(child)
-        p.addChildWindow_ordered_(c, NSWindowAbove)
+        parent = self._nswindow_for(parent)
+        child = self._nswindow_for(child)
+        parent.addChildWindow_ordered_(child, NSWindowAbove)
 
     def _detach_child_window(self, child: tk.Misc, parent: tk.Misc):
         """Detach child window from parent."""
-        p = self._nswindow_for(parent)
-        c = self._nswindow_for(child)
-        p.removeChildWindow_(c)
+        parent = self._nswindow_for(parent)
+        child = self._nswindow_for(child)
+        parent.removeChildWindow_(child)
 
     def _get_extents_title_bar_height(self, window_id: int) -> Optional[int]:
         try:
@@ -106,10 +106,11 @@ class CustomWindowAttachMixin(tk.Tk):
         return self.__attached_views
 
     def show_all_attached_views(self) -> None:
-        is_macos = platform.system() == "Darwin"
         for attached_view in self.__attached_views:
             attached_view._show(self)  # pyright: ignore[reportPrivateUsage]
-            if is_macos:
+            attached_view.update_idletasks()
+            attached_view.deiconify()
+            if platform.system() == "Darwin":
                 try:
                     self._update_position(attached_view)
                     self._attach_child_window(attached_view, self)
@@ -269,19 +270,6 @@ class CustomWindowAttachMixin(tk.Tk):
             add="+",
         )
 
-    def _on_minimize(self, event: Optional[Any] = None) -> None:
-        for attached_view in self.__attached_views:
-            attached_view.withdraw()
+    def _on_minimize(self, event: Optional[Any] = None) -> None: ...
 
-    def _on_restore(self, event: Optional[Any] = None) -> None:
-        is_macos = platform.system() == "Darwin"
-        for attached_view in self.__attached_views:
-            attached_view.deiconify()
-            if is_macos:
-                try:
-                    self._attach_child_window(attached_view, self)
-                except Exception:
-                    pass
-
-        if hasattr(self, "_on_window_focus"):
-            self._on_window_focus()
+    def _on_restore(self, event: Optional[Any] = None) -> None: ...
