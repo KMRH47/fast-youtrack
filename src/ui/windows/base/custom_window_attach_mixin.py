@@ -282,3 +282,6 @@ class CustomWindowAttachMixin(tk.Tk):
                     self._attach_child_window(attached_view, self)
                 except Exception:
                     pass
+
+        if hasattr(self, "_on_window_focus"):
+            self._on_window_focus()
