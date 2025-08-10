@@ -62,7 +62,6 @@ class CustomWindow(CustomWindowAttachMixin):
         self.update_idletasks()
         self.deiconify()
         self.lift()
-        self.focus_force()
 
         if not hasattr(self, "_mainloop_running"):
             self._mainloop_running = True
@@ -119,7 +118,6 @@ class CustomWindow(CustomWindowAttachMixin):
             self.tray_icon = None
         self.deiconify()
         self.lift()
-        self.focus_force()
 
     def _exit_app(self, icon, item):
         """Exit the application cleanly."""
