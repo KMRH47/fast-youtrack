@@ -25,7 +25,16 @@ def display_error_dialog(message: str) -> None:
 
     text.see("end")  # Scroll to bottom
 
-    close_button = tk.Button(error_window, text="OK", command=error_window.destroy)
+    def _close_all():
+        try:
+            error_window.destroy()
+        finally:
+            try:
+                root.destroy()
+            except Exception:
+                pass
+
+    close_button = tk.Button(error_window, text="OK", command=_close_all)
     close_button.pack(pady=10)
 
     error_window.update_idletasks()
@@ -37,7 +46,13 @@ def display_error_dialog(message: str) -> None:
 
     error_window.focus_set()
     close_button.focus_force()
-    error_window.bind("<Return>", lambda event: error_window.destroy())
-    error_window.bind("<Escape>", lambda event: error_window.destroy())
+    error_window.bind("<Return>", lambda event: _close_all())
+    error_window.bind("<Escape>", lambda event: _close_all())
 
-    root.mainloop()
+    try:
+        root.mainloop()
+    finally:
+        try:
+            root.destroy()
+        except Exception:
+            pass

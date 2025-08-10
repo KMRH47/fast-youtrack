@@ -110,8 +110,9 @@ fi
 ACTIVE_SUBDOMAIN=$(echo "$PICKER_RESULT" | cut -d'|' -f1)
 PASSPHRASE=$(echo "$PICKER_RESULT" | cut -d'|' -f2)
 
-# Create subdomain directory if it doesn't exist
+# Create subdomain directory if it doesn't exist and persist .key for parity with Windows
 mkdir -p "user/$ACTIVE_SUBDOMAIN"
+echo -n "$PASSPHRASE" > "user/$ACTIVE_SUBDOMAIN/.key"
 
 echo -e "${GREEN}Selected subdomain: $ACTIVE_SUBDOMAIN${NC}"
 

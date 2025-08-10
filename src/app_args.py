@@ -19,7 +19,14 @@ class AppArgs(BaseModel):
     @property
     def base_dir(self) -> str:
         if getattr(sys, 'frozen', False):
-            project_root = Path(sys.executable).parent
+            exe_path = Path(sys.executable).resolve()
+            if sys.platform == "darwin":
+                try:
+                    project_root = exe_path.parents[3]
+                except IndexError:
+                    project_root = exe_path.parent
+            else:
+                project_root = exe_path.parent
         else:
             project_root = Path(__file__).parent.parent.absolute()
 
@@ -30,9 +37,15 @@ class AppArgs(BaseModel):
         if len(sys.argv) < 3:
             raise UserError("Passphrase and subdomain are required.\n\n")
 
+        passphrase = sys.argv[1]
+        subdomain = sys.argv[2]
+
+        if not passphrase or not subdomain:
+            raise UserError("Passphrase and subdomain are required and cannot be empty.\n\n")
+
         args = {
-            "passphrase": sys.argv[1],
-            "subdomain": sys.argv[2]
+            "passphrase": passphrase,
+            "subdomain": subdomain
         }
 
         for i in range(3, len(sys.argv)):

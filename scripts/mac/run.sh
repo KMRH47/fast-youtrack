@@ -77,6 +77,26 @@ EOF
     mkdir -p "user/$ACTIVE_SUBDOMAIN"
 fi
 
+# Resolve passphrase: prefer .key, otherwise prompt and persist
+KEY_FILE="user/$ACTIVE_SUBDOMAIN/.key"
+PASSPHRASE=""
+if [ -f "$KEY_FILE" ]; then
+    PASSPHRASE="$(cat "$KEY_FILE")"
+fi
+
+if [ -z "$PASSPHRASE" ]; then
+    PASSPHRASE=$(osascript << 'EOF'
+set dlg to display dialog "Enter passphrase:" default answer "" with hidden answer buttons {"Cancel", "OK"} default button "OK"
+if button returned of dlg is "Cancel" then return ""
+return text returned of dlg
+EOF
+)
+    if [ -z "$PASSPHRASE" ]; then
+        exit 0
+    fi
+    echo -n "$PASSPHRASE" > "$KEY_FILE"
+fi
+
 # Show splash screen
 venv/bin/python -c "
 import tkinter as tk
@@ -108,7 +128,7 @@ def show_splash():
 
 def launch_app():
     time.sleep(0.5)  # Small delay to ensure splash shows first
-    subprocess.Popen(['venv/bin/python', 'src/main.py', '', '$ACTIVE_SUBDOMAIN'])
+    subprocess.Popen(['venv/bin/python', 'src/main.py', '$PASSPHRASE', '$ACTIVE_SUBDOMAIN'])
 
 splash = show_splash()
 app_thread = threading.Thread(target=launch_app, daemon=True)
