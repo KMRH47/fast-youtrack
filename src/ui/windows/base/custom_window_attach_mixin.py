@@ -274,5 +274,11 @@ class CustomWindowAttachMixin(tk.Tk):
             attached_view.withdraw()
 
     def _on_restore(self, event: Optional[Any] = None) -> None:
+        is_macos = platform.system() == "Darwin"
         for attached_view in self.__attached_views:
             attached_view.deiconify()
+            if is_macos:
+                try:
+                    self._attach_child_window(attached_view, self)
+                except Exception:
+                    pass
