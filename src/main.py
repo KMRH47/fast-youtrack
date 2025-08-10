@@ -6,6 +6,7 @@ from dependency_injector.wiring import Provide
 
 from containers import Container
 from errors.user_cancelled_error import UserCancelledError
+from errors.user_error import UserError
 from config import Config
 from app_args import AppArgs
 from ui.windows.add_spent_time.add_spent_time_controller import AddSpentTimeController
@@ -41,6 +42,12 @@ if __name__ == "__main__":
     except UserCancelledError as e:
         logger.info(f"Cancelled by user. {e}")
         sys.exit(0)
+    except UserError as e:
+        try:
+            e.display()
+        except Exception:
+            logger.error(str(e))
+        sys.exit(1)
     except Exception as e:
         error_details = format_error_message(e)
         logger.error(error_details)
