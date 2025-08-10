@@ -97,22 +97,33 @@ class AddSpentTimeController:
         self.__fetch_cancelled = False
 
         def fetch_issue_thread():
-            is_cancelled = False
+            try:
+                self.__window.after(0, lambda: self.__window.set_is_loading(True))
 
-            self.__window.set_is_loading(True)
-            
-            issue = self.__youtrack_service.get_issue(issue_id)
-            work_item_types = []
+                issue = self.__youtrack_service.get_issue(issue_id)
+                work_item_types = []
 
-            if issue and issue.project:
-                work_item_types = self.__youtrack_service.get_project_work_item_types(
-                    issue.project.id
+                if issue and issue.project:
+                    work_item_types = (
+                        self.__youtrack_service.get_project_work_item_types(
+                            issue.project.id
+                        )
+                    )
+
+                is_cancelled = self.__fetch_cancelled
+                if not is_cancelled:
+                    self.__window.after(
+                        0,
+                        lambda: self._update_ui_with_issue(issue, work_item_types),
+                    )
+            except UserError as e:
+                self.__window.after(0, e.display)
+            except Exception as e:
+                logger.exception(
+                    "Unexpected error while fetching issue/types: %s", e
                 )
-                
-            is_cancelled = self.__fetch_cancelled
-            if not is_cancelled:
-                self.__window.after(
-                    0, lambda: self._update_ui_with_issue(issue, work_item_types))
+            finally:
+                self.__window.after(0, lambda: self.__window.set_is_loading(False))
 
         thread = threading.Thread(target=fetch_issue_thread)
         thread.daemon = True
