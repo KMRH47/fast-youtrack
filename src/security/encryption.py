@@ -69,10 +69,10 @@ class EncryptionService:
         except InvalidTag as e:
             raise UserError(
                 "Invalid passphrase. Please delete the associated \
-                  '.key' file and try again."
+                  '.key' file and re-launch the application."
             ) from e
         except binascii.Error as e:
             raise UserError(
                 "Invalid token. Please delete the associated \
-                  '.token' file and try again."
+                  '.token' file and re-launch the application."
             ) from e
