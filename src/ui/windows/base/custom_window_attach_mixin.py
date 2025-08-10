@@ -7,56 +7,6 @@ from ui.views.base.custom_view import CustomView
 from ui.constants.tk_events import TkEvents
 
 
-def _get_extents_title_bar_height(window_id: int) -> Optional[int]:
-    try:
-        result = subprocess.run(
-            ["xprop", "-id", str(window_id), "_NET_FRAME_EXTENTS"],
-            capture_output=True,
-            text=True,
-            timeout=1,
-        )
-        if result.returncode != 0 or "_NET_FRAME_EXTENTS" not in result.stdout:
-            return None
-        extents = result.stdout.split("=")[1].strip().split(",")
-        if len(extents) < 3:
-            return None
-        top_extent = int(extents[2].strip())
-        return top_extent if top_extent > 0 else None
-    except (subprocess.TimeoutExpired, FileNotFoundError, ValueError):
-        return None
-
-
-def _guess_desktop_title_bar_height() -> Optional[int]:
-    try:
-        desktop = subprocess.run(
-            ["echo", "$XDG_CURRENT_DESKTOP"], capture_output=True, text=True, shell=True
-        )
-        desktops = {
-            "cinnamon": 32,
-            "gnome": 38,
-            "kde": 30,
-        }
-        desktop_str = desktop.stdout.lower()
-        for name, height in desktops.items():
-            if name in desktop_str:
-                return height
-    except Exception:
-        pass
-    return None
-
-
-def _macos_title_bar_height(window: tk.Tk) -> Optional[int]:
-    try:
-        probe = tk.Frame(window, width=1, height=1)
-        probe.place(x=0, y=0)
-        window.update_idletasks()
-        offset = probe.winfo_rooty() - window.winfo_rooty()
-        probe.destroy()
-        return int(offset) if offset and offset > 0 else None
-    except Exception:
-        return None
-
-
 class CustomWindowAttachMixin(tk.Tk):
 
     def __init__(
@@ -68,6 +18,87 @@ class CustomWindowAttachMixin(tk.Tk):
             [factory() for factory in attached_views] if attached_views else []
         )
 
+    def _nswindow_for(self, win: tk.Misc):
+        """Get the NSWindow for a Tk window on macOS."""
+        win.update_idletasks()
+        from AppKit import NSApp, NSApplication
+
+        app = NSApp() or NSApplication.sharedApplication()
+        token, old = f"__tk_{id(win)}__", win.wm_title()
+        win.wm_title(token)
+        win.update_idletasks()
+        try:
+            for w in app.windows():
+                if str(getattr(w, "title", lambda: "")()) == token:
+                    return w
+        finally:
+            win.wm_title(old)
+        raise RuntimeError("NSWindow not found for Tk window")
+
+    def _attach_child_window(self, child: tk.Misc, parent: tk.Misc):
+        """Attach child window as native Cocoa child of parent."""
+        from AppKit import NSWindowAbove
+
+        p = self._nswindow_for(parent)
+        c = self._nswindow_for(child)
+        p.addChildWindow_ordered_(c, NSWindowAbove)
+
+    def _detach_child_window(self, child: tk.Misc, parent: tk.Misc):
+        """Detach child window from parent."""
+        p = self._nswindow_for(parent)
+        c = self._nswindow_for(child)
+        p.removeChildWindow_(c)
+
+    def _get_extents_title_bar_height(self, window_id: int) -> Optional[int]:
+        try:
+            result = subprocess.run(
+                ["xprop", "-id", str(window_id), "_NET_FRAME_EXTENTS"],
+                capture_output=True,
+                text=True,
+                timeout=1,
+            )
+            if result.returncode != 0 or "_NET_FRAME_EXTENTS" not in result.stdout:
+                return None
+            extents = result.stdout.split("=")[1].strip().split(",")
+            if len(extents) < 3:
+                return None
+            top_extent = int(extents[2].strip())
+            return top_extent if top_extent > 0 else None
+        except (subprocess.TimeoutExpired, FileNotFoundError, ValueError):
+            return None
+
+    def _guess_desktop_title_bar_height(self) -> Optional[int]:
+        try:
+            desktop = subprocess.run(
+                ["echo", "$XDG_CURRENT_DESKTOP"],
+                capture_output=True,
+                text=True,
+                shell=True,
+            )
+            desktops = {
+                "cinnamon": 32,
+                "gnome": 38,
+                "kde": 30,
+            }
+            desktop_str = desktop.stdout.lower()
+            for name, height in desktops.items():
+                if name in desktop_str:
+                    return height
+        except Exception:
+            pass
+        return None
+
+    def _macos_title_bar_height(self, window: tk.Tk) -> Optional[int]:
+        try:
+            probe = tk.Frame(window, width=1, height=1)
+            probe.place(x=0, y=0)
+            window.update_idletasks()
+            offset = probe.winfo_rooty() - window.winfo_rooty()
+            probe.destroy()
+            return int(offset) if offset and offset > 0 else None
+        except Exception:
+            return None
+
     def attach_views(self, custom_views: List[CustomView]) -> None:
         self.__attached_views = custom_views
 
@@ -75,20 +106,39 @@ class CustomWindowAttachMixin(tk.Tk):
         return self.__attached_views
 
     def show_all_attached_views(self) -> None:
+        is_macos = platform.system() == "Darwin"
         for attached_view in self.__attached_views:
-            self._bind_update_position(attached_view)
             attached_view._show(self)  # pyright: ignore[reportPrivateUsage]
-            try:
-                self.after(0, lambda v=attached_view: self._update_position(v))
-            except Exception:
-                pass
+            if is_macos:
+                try:
+                    self._update_position(attached_view)
+                    self._attach_child_window(attached_view, self)
+                except Exception as e:
+                    print(f"Failed to attach child window: {e}")
+                    self._bind_update_position(attached_view)
+            else:
+                self._bind_update_position(attached_view)
+                try:
+                    self.after(0, lambda v=attached_view: self._update_position(v))
+                except Exception:
+                    pass
 
     def hide_all_attached_views(self) -> None:
         for attached_view in self.__attached_views:
+            if platform.system() == "Darwin":
+                try:
+                    self._detach_child_window(attached_view, self)
+                except Exception:
+                    pass
             attached_view._hide()  # pyright: ignore[reportPrivateUsage]
 
     def destroy_all_attached_views(self) -> None:
         for attached_view in self.__attached_views:
+            if platform.system() == "Darwin":
+                try:
+                    self._detach_child_window(attached_view, self)
+                except Exception:
+                    pass
             attached_view.destroy()
         self.__attached_views.clear()
 
@@ -118,15 +168,15 @@ class CustomWindowAttachMixin(tk.Tk):
                 return delta
 
             if platform.system() == "Darwin":
-                mac_delta = _macos_title_bar_height(self)
+                mac_delta = self._macos_title_bar_height(self)
                 if mac_delta:
                     return mac_delta
 
-            extents = _get_extents_title_bar_height(self.winfo_id())
+            extents = self._get_extents_title_bar_height(self.winfo_id())
             if extents:
                 return extents
 
-            desktop_guess = _guess_desktop_title_bar_height()
+            desktop_guess = self._guess_desktop_title_bar_height()
             if desktop_guess:
                 return desktop_guess
 
