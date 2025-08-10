@@ -14,6 +14,7 @@ from utils.youtrack import time_valid
 from ui.utils.create_labeled_widgets import (
     CustomDateEntryConfig,
     create_labeled_combobox,
+    create_labeled_compound_entry,
     create_labeled_date_entry,
     create_labeled_entry,
 )
@@ -30,17 +31,21 @@ class AddSpentTimeWindow(CustomWindow):
         super().__init__(config=config, **kwargs)
         self.__issue_id_change_callback: Optional[Callable] = None
 
-        self.__issue_id_entry = create_labeled_entry(
+        (
+            self.__project_var,
+            self.__id_var,
+            self.__project_entry,
+            self.__id_entry,
+        ) = create_labeled_compound_entry(
             parent=self,
-            label="Issue ID:",
-            config=CustomEntryConfig(
-                initial_value=f"{config.project}{config.issue_separator}{config.initial_issue_id}"
-                or "",
-                break_chars=["-"],
-                force_focus=True,
-                cursor_end=True,
-                on_change=self._on_issue_id_changed,
-            ),
+            label="Issue:",
+            left_value=config.project or "",
+            right_value=config.initial_issue_id or "",
+            separator="-",
+            left_width=4,
+            left_readonly=True,
+            on_change=self._on_issue_id_changed,
+            focus_right=True,
         )
 
         self.__time_entry = create_labeled_entry(
@@ -48,7 +53,7 @@ class AddSpentTimeWindow(CustomWindow):
             label="Enter Time (e.g., 1h30m):",
             config=CustomEntryConfig(
                 initial_value=config.initial_time or "",
-                break_chars=["w", "d", "h", "m"],   
+                break_chars=["w", "d", "h", "m"],
                 validation_func=lambda time: time_valid(time),
             ),
         )
@@ -82,7 +87,7 @@ class AddSpentTimeWindow(CustomWindow):
 
     def bind_issue_id_change(self, callback):
         self.__issue_id_change_callback = callback
-        if self.__issue_id_entry.get():
+        if self.__project_entry.get() or self.__id_entry.get():
             self._on_issue_id_changed()
 
     def _submit(self, event=None):
@@ -93,12 +98,20 @@ class AddSpentTimeWindow(CustomWindow):
         self._reset()
 
     def _on_issue_id_changed(self, *_):
-        issue_id = self.__issue_id_entry.get().upper()
+        project = (self.__project_entry.get() or "").strip().upper()
+        raw_id = (self.__id_entry.get() or "").strip().upper()
+        sep = "-"
+        issue_id = (
+            f"{project}{sep}{raw_id}" if project and raw_id else (project or raw_id)
+        )
         if self.__issue_id_change_callback:
             self.__issue_id_change_callback(issue_id)
 
     def _get_issue_id(self) -> str:
-        return self.__issue_id_entry.get()
+        project = (self.__project_entry.get() or "").strip().upper()
+        raw_id = (self.__id_entry.get() or "").strip().upper()
+        sep = "-"
+        return f"{project}{sep}{raw_id}" if project and raw_id else (project or raw_id)
 
     def _get_time(self) -> str:
         return self.__time_entry.get()
@@ -130,11 +143,9 @@ class AddSpentTimeWindow(CustomWindow):
         super()._on_window_close(event)
 
     def _reset(self):
-        self.__issue_id_entry.delete(0, tk.END)
-        self.__issue_id_entry.insert(
-            0, f"{self._config.project}{self._config.issue_separator}"
-        )
-        self.__issue_id_entry.focus_set()
+        self.__project_var.set(f"{self._config.project}")
+        self.__id_var.set("")
+        self.__id_entry.focus_set()
         self.__date_entry.reset()
         self.__time_entry.reset()
         self.__description_entry.reset()
