@@ -1,34 +1,34 @@
 # Fast YouTrack
 
-**Fast YouTrack is a simple Python application for adding spent time to YouTrack issues. Built as a personal tool to learn and experiment, it leverages AutoHotkey (AHK) for quick automation on Windows.**
+**Fast YouTrack** — ⚡ add spent time to YouTrack issues fast, cross‑platform.
 
 ## Quick Start
 
-Run `run.bat`
+Run the universal launcher:
 
 📁 `./`
 ```sh
-./run.bat
+python run.py
 ```
 
-*What happens when you run* `./run.bat`?
+What happens when you run `python run.py`?
 
-1. 🔎 Checks if Python is installed
-2. 📦 Sets up everything you need (first time only)
-    - 🐍 Python packages
-    - ⌨️ AutoHotkey v2 portable
-3. ▶️ Starts the app in background
+1. 🔎 Detects your OS and picks the right runner
+2. 📦 First run setup
+   - 🐍 Installs Python packages into `venv/`
+   - 📁 Creates `user/`, `logs/`, `pids/`
+3. ▶️ Starts the app (Tk splash covers initialization)
 
 
 ## Usage
 
-After running `./run.bat`, you can launch the program. The default hotkey is `CTRL+SHIFT+T`.
+After setup you can launch via `python run.py` (all platforms). On Windows, there’s also a hotkey.
 
-### Change default hotkey
+### Change default hotkey (Windows)
 
-📁 `./scripts/run.ahk`
+📁 `./scripts/win/ahk/run.ahk`
 ```ahk
-; CTRL SHIFT T
+; CTRL + SHIFT + T
 ^+t:: {
 ```
 
@@ -36,15 +36,15 @@ These symbols `^+t` mean `CTRL+SHIFT+T`. Refer to the [AutoHotkey documentation]
 
 ### Guide
 
-1. 🔎 After launching, you will be prompted for a **passphrase**
-
-⚠️ **The passphrase is stored in plain text**
-
-*This passphrase acts as a PIN code to encrypt your YouTrack permanent token. This feature is designed to make retrieving the token more cumbersome in environments like offices. Currently, this is not optional.*
-
-2. 🌐 Input your **YouTrack domain**
-3. 🔑 Input your **YouTrack token**
+1. 🔐 After launching, you will be prompted for a **passphrase** (required)
+   - Stored as plain text in `user/<subdomain>/.key`
+   - Used to derive the encryption key for your token
+2. 🌐 Select or enter your **YouTrack subdomain**
+3. 🔑 Enter your **YouTrack Permanent Token**
+   - Encrypted with your passphrase and saved to `user/<subdomain>/.token`
 4. ✨ Enjoy!
+
+If `.key` or `.token` is missing/invalid, a friendly error dialog is shown and the app exits cleanly.
 
 ## About
 
