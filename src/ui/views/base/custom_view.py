@@ -48,8 +48,6 @@ class CustomView(tk.Toplevel):
 
     def _show(self, parent_window: tk.Tk) -> None:
         self._create_view(parent_window)
-        self.after(0, self.deiconify)
-        self.update_idletasks()
         self._on_show()
 
     def _hide(self) -> None:

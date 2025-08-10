@@ -92,6 +92,6 @@ def create_labeled_compound_entry(
         right_entry.bind("<KeyRelease>", on_change)
 
     if focus_right:
-        right_entry.focus_set()
+        parent.after_idle(right_entry.focus_set)
 
     return left_var, right_var, left_entry, right_entry
