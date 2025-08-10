@@ -159,6 +159,9 @@ class CustomWindowAttachMixin(tk.Tk):
         return sum(get_dimension(view) for view in same_position_views[:view_index])
 
     def _calculate_title_bar_height(self) -> int:
+        if platform.system() == "Darwin":
+            return 0
+
         try:
             self.update_idletasks()
             window_y = self.winfo_rooty()
@@ -166,11 +169,6 @@ class CustomWindowAttachMixin(tk.Tk):
             delta = window_y - client_y
             if delta > 0:
                 return delta
-
-            if platform.system() == "Darwin":
-                mac_delta = self._macos_title_bar_height(self)
-                if mac_delta:
-                    return mac_delta
 
             extents = self._get_extents_title_bar_height(self.winfo_id())
             if extents:
@@ -183,8 +181,6 @@ class CustomWindowAttachMixin(tk.Tk):
         except Exception:
             pass
 
-        if platform.system() == "Darwin":
-            return 28
         if platform.system() == "Windows":
             return 30
         return 35
