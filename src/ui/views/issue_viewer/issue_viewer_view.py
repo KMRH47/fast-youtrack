@@ -99,12 +99,20 @@ class IssueViewerView(CustomView):
         frame.grid_columnconfigure(0, weight=1)
 
         scrollbar = ttk.Scrollbar(frame, orient="vertical")
+        text_kwargs = {}
+        if self._config.bg_color:
+            text_kwargs["bg"] = self._config.bg_color
+        if self._config.text_color:
+            text_kwargs["fg"] = self._config.text_color
+            text_kwargs["insertbackground"] = self._config.text_color
+            text_kwargs["disabledforeground"] = self._config.text_color
+
         text_widget = tk.Text(
             frame,
             height=height,
             wrap=tk.WORD,
             font=("Segoe UI", 9),
-            bg="white",
+            **text_kwargs,
         )
         text_widget.insert("1.0", text)
         text_widget.config(state=tk.DISABLED)
@@ -187,15 +195,20 @@ class IssueViewerView(CustomView):
         v_scrollbar = ttk.Scrollbar(text_frame, orient="vertical")
         h_scrollbar = ttk.Scrollbar(text_frame, orient="horizontal")
 
+        text_kwargs = {"state": tk.DISABLED, "xscrollcommand": h_scrollbar.set, "yscrollcommand": v_scrollbar.set}
+        if self._config.bg_color:
+            text_kwargs["bg"] = self._config.bg_color
+        if self._config.text_color:
+            text_kwargs["fg"] = self._config.text_color
+            text_kwargs["insertbackground"] = self._config.text_color
+            text_kwargs["disabledforeground"] = self._config.text_color
+
         text_widget = tk.Text(
             text_frame,
             height=min(6, len(subtask_texts)),
             wrap=tk.NONE,
             font=("Segoe UI", 10),
-            bg="white",
-            state=tk.DISABLED,
-            xscrollcommand=h_scrollbar.set,
-            yscrollcommand=v_scrollbar.set,
+            **text_kwargs,
         )
         text_widget.grid(row=0, column=0, sticky="nsew")
         v_scrollbar.grid(row=0, column=1, sticky="ns")
