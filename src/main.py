@@ -13,6 +13,7 @@ from ui.windows.add_spent_time.add_spent_time_controller import AddSpentTimeCont
 from infrastructure import initialize_infrastructure
 from utils.logging_utils import format_error_message
 from utils.pid_utils import cleanup_pids_folder
+from ui.splash import Splash
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,10 @@ def main(
 
 
 if __name__ == "__main__":
+    splash = None
     try:
+        splash = Splash()
+        splash.show()
         args = AppArgs.from_sys_args()
         base_directory = Path(args.base_dir)
         config = Config.load_config(base_dir=base_directory)
@@ -38,8 +42,12 @@ if __name__ == "__main__":
         container.config.override(config)
         container.init_resources()
         container.wire(modules=[__name__])
+        if splash:
+            splash.close()
         main()
     except UserCancelledError as e:
+        if splash:
+            splash.close()
         logger.info(f"Cancelled by user. {e}")
         sys.exit(0)
     except UserError as e:
@@ -49,6 +57,8 @@ if __name__ == "__main__":
             logger.error(str(e))
         sys.exit(1)
     except Exception as e:
+        if splash:
+            splash.close()
         error_details = format_error_message(e)
         logger.error(error_details)
     finally:

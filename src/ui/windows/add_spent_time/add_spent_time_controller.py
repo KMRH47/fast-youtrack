@@ -8,6 +8,7 @@ from models.general_responses import WorkItem
 from services.youtrack_service import YouTrackService
 from ui.windows.add_spent_time.add_spent_time_window import AddSpentTimeWindow
 from utils.youtrack import convert_time_to_minutes, id_valid
+from errors.user_error import UserError
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +31,26 @@ class AddSpentTimeController:
 
     def add_spent_time(self) -> None:
         self.__window.show()
+        self.__window.after(0, self._prefetch_global_work_item_types)
+
+    def _prefetch_global_work_item_types(self) -> None:
+        def fetch_types_thread():
+            try:
+                self.__window.after(0, lambda: self.__window.set_is_loading(True))
+                work_item_types = self.__youtrack_service.get_work_item_types()
+                self.__window.after(
+                    0, lambda: self.__window._set_issue_types(work_item_types)
+                )
+            except UserError as e:
+                self.__window.after(0, e.display)
+            except Exception as e:
+                logger.exception("Unexpected error while prefetching work item types: %s", e)
+            finally:
+                self.__window.after(0, lambda: self.__window.set_is_loading(False))
+
+        thread = threading.Thread(target=fetch_types_thread)
+        thread.daemon = True
+        thread.start()
 
     def _on_submit(self) -> None:
         issue_id = self.__window._get_issue_id()
