@@ -1,4 +1,5 @@
 import logging
+import time
 from typing import Callable, List, Optional
 
 import tkinter as tk
@@ -30,6 +31,10 @@ class AddSpentTimeWindow(CustomWindow):
     ):
         super().__init__(config=config, **kwargs)
         self.__issue_id_change_callback: Optional[Callable] = None
+
+        # AFK and date auto-update tracking
+        self.__last_activity_time = time.time()
+        self.__date_manually_edited = False
 
         (
             self.__project_var,
@@ -82,8 +87,17 @@ class AddSpentTimeWindow(CustomWindow):
             ),
         )
 
+        # Track manual date edits to pin auto-updates
+        self.__date_entry.bind("<KeyPress>", self._on_date_manual_edit)
+        self.__date_entry.bind("<Button-1>", self._on_date_manual_edit)
+
         ok_button = tk.Button(self, text="OK", command=self._submit, width=10)
         ok_button.pack(pady=5)
+
+        # Bind focus events for AFK date updates
+        self.bind("<FocusIn>", self._on_window_focus)
+        self.bind("<Button-1>", lambda e: self._update_activity_time())
+        self.bind("<Key>", lambda e: self._update_activity_time())
 
     def bind_issue_id_change(self, callback):
         self.__issue_id_change_callback = callback
@@ -151,4 +165,36 @@ class AddSpentTimeWindow(CustomWindow):
         self.__description_entry.reset()
         self.__type_combobox.set("")
 
+        # Reset date pinning on window reset
+        self.__date_manually_edited = False
+        self._update_activity_time()
+
         self._reset_attached_views()
+
+    def _on_date_manual_edit(self, event=None):
+        """Pin date auto-updates when user manually edits."""
+        self.__date_manually_edited = True
+
+    def _update_activity_time(self):
+        """Update last activity timestamp."""
+        self.__last_activity_time = time.time()
+
+    def _is_afk(self, threshold_minutes=5) -> bool:
+        """Check if user has been AFK for threshold minutes."""
+        return (time.time() - self.__last_activity_time) > (threshold_minutes * 60)
+
+    def _maybe_update_date_after_afk(self):
+        """Auto-update date if AFK and not pinned/focused."""
+        if self.__date_manually_edited:
+            return
+
+        if self.focus_get() == self.__date_entry:
+            return
+
+        if self._is_afk():
+            self.__date_entry.reset()
+
+    def _on_window_focus(self, event=None):
+        """Handle window getting focus - check for date update."""
+        self._maybe_update_date_after_afk()
+        self._update_activity_time()
