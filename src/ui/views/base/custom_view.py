@@ -65,8 +65,10 @@ class CustomView(tk.Toplevel):
         geometry = f"{self._config.width}x{self._config.height}"
         self.geometry(geometry)
 
-        should_override_redirect = platform.system() != "Darwin"  # macOS has focus issues with overrideredirect
-        self.overrideredirect(should_override_redirect)  # hides title bar
+        should_override_redirect = (
+            platform.system() != "Darwin"
+        )  # macOS has focus issues with overrideredirect
+        self.overrideredirect(should_override_redirect)
         self.wm_attributes("-topmost", self._config.topmost)
         self.resizable(self._config.resizable, self._config.resizable)
 
@@ -84,6 +86,8 @@ class CustomView(tk.Toplevel):
         container_frame = tk.Frame(self, padx=10, pady=10)
         container_frame.pack(fill="both", expand=True)
         self._populate_widgets(container_frame)
+
+        self._disable_focus_for_all_widgets()
 
         self.update_idletasks()
         if isinstance(self.master, tk.Tk):
@@ -107,6 +111,24 @@ class CustomView(tk.Toplevel):
         """Reset the view to its initial state."""
         pass
 
+    def _disable_focus_for_all_widgets(self) -> None:
+        """Recursively disable focus for all widgets in the view."""
+
+        def disable_widget_focus(widget):
+            try:
+                if hasattr(widget, "config") and "takefocus" in widget.keys():
+                    widget.config(takefocus=False)
+            except Exception as e:
+                logger.debug(f"Could not disable focus for widget {widget}: {e}")
+
+            try:
+                for child in widget.winfo_children():
+                    disable_widget_focus(child)
+            except Exception:
+                pass
+
+        disable_widget_focus(self)
+
     def _flash_update(
         self,
         flash_color: Literal["red", "green", "yellow"] = "yellow",
@@ -122,8 +144,7 @@ class CustomView(tk.Toplevel):
                 "yellow": "#FFFFCC",
             }
 
-            target_color = FLASH_COLOR_MAP.get(
-                flash_color, FLASH_COLOR_MAP["yellow"])
+            target_color = FLASH_COLOR_MAP.get(flash_color, FLASH_COLOR_MAP["yellow"])
             bg_color = self._config.bg_color or self.cget("bg")
 
             if not bg_color.startswith("#"):
@@ -134,10 +155,10 @@ class CustomView(tk.Toplevel):
                 """Interpolate between background and target color."""
                 try:
                     bg_rgb = [
-                        int(bg_color.lstrip("#")[i: i + 2], 16) for i in (0, 2, 4)
+                        int(bg_color.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4)
                     ]
                     target_rgb = [
-                        int(target_color.lstrip("#")[i: i + 2], 16) for i in (0, 2, 4)
+                        int(target_color.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4)
                     ]
                     current_rgb = [
                         int(bg_rgb[i] + (target_rgb[i] - bg_rgb[i]) * ratio)
@@ -200,8 +221,10 @@ class CustomView(tk.Toplevel):
         )
 
         self.__loading_overlay.place(
-            relx=0, rely=0,
-            relwidth=1, relheight=1,
+            relx=0,
+            rely=0,
+            relwidth=1,
+            relheight=1,
         )
 
         label = tk.Label(
