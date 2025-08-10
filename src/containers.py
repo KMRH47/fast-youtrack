@@ -5,7 +5,6 @@ from ui.windows.add_spent_time.add_spent_time_controller import (
 from ui.windows.add_spent_time.add_spent_time_window import AddSpentTimeWindow
 from ui.views.issue_viewer.issue_viewer_view import IssueViewerView
 from ui.views.timer.timer_view import TimerView
-from utils.clipboard import get_number_from_clipboard
 from dependency_injector import containers, providers
 from services.youtrack_service import YouTrackService
 from stores.file_store import FileStore
@@ -67,17 +66,8 @@ class Container(containers.DeclarativeContainer):
     )
 
     add_spent_time_config = providers.Factory(
-        lambda config, youtrack_service: config.add_spent_time_config.copy(
-            update={
-                "work_item_types": config.add_spent_time_config.work_item_types
-                or {
-                    item.name: item.id
-                    for item in youtrack_service.get_work_item_types()
-                },
-            }
-        ),
+        lambda config: config.add_spent_time_config.copy(),
         config,
-        youtrack_service,
     )
 
     add_spent_time_window = providers.Singleton(

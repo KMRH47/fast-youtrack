@@ -97,46 +97,6 @@ EOF
     echo -n "$PASSPHRASE" > "$KEY_FILE"
 fi
 
-# Show splash screen
-venv/bin/python -c "
-import tkinter as tk
-import threading
-import time
-import subprocess
-import sys
-
-def show_splash():
-    splash = tk.Tk()
-    splash.title('Fast YouTrack')
-    splash.geometry('300x100')
-    splash.configure(bg='#2E8B57')  # Sea green like Windows version
-    splash.resizable(False, False)
-    splash.attributes('-topmost', True)
-    
-    # Center the window
-    splash.update_idletasks()
-    x = (splash.winfo_screenwidth() // 2) - (300 // 2)
-    y = (splash.winfo_screenheight() // 2) - (100 // 2)
-    splash.geometry(f'+{x}+{y}')
-    
-    label = tk.Label(splash, text='Starting Fast YouTrack...', 
-                    bg='#2E8B57', fg='#E0FFE0', 
-                    font=('Arial', 13, 'bold'))
-    label.pack(expand=True)
-    
-    return splash
-
-def launch_app():
-    time.sleep(0.5)  # Small delay to ensure splash shows first
-    subprocess.Popen(['venv/bin/python', 'src/main.py', '$PASSPHRASE', '$ACTIVE_SUBDOMAIN'])
-
-splash = show_splash()
-app_thread = threading.Thread(target=launch_app, daemon=True)
-app_thread.start()
-
-# Auto-close splash after 3 seconds or when app likely started
-splash.after(3000, splash.destroy)
-splash.mainloop()
-" &
-
+# Launch app directly (splash is now inside the app)
+venv/bin/python src/main.py "$PASSPHRASE" "$ACTIVE_SUBDOMAIN" &
 echo $! > "$PID_FILE"
