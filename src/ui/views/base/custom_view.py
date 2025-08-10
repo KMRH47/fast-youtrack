@@ -59,17 +59,15 @@ class CustomView(tk.Toplevel):
 
     def _create_view(self, parent_window: tk.Tk) -> None:
         self.master = parent_window
+        self.geometry(f"{self._config.width}x{self._config.height}")
 
-        geometry = f"{self._config.width}x{self._config.height}"
-        self.geometry(geometry)
+        if platform.system() == "Darwin":
+            self._strip_titlebar()
+        else:
+            self.overrideredirect(True)
 
-        should_override_redirect = (
-            platform.system() != "Darwin"
-        )  # macOS has focus issues with overrideredirect
-        self.overrideredirect(should_override_redirect)
         self.wm_attributes("-topmost", self._config.topmost)
         self.resizable(self._config.resizable, self._config.resizable)
-
         self._build_ui()
 
     def _clear_view(self) -> None:
@@ -241,3 +239,17 @@ class CustomView(tk.Toplevel):
         if self.__loading_overlay:
             self.__loading_overlay.destroy()
             self.__loading_overlay = None
+
+    def _strip_titlebar(self):
+        from AppKit import NSApp, NSApplication, NSWindowStyleMaskTitled
+
+        self.update_idletasks()
+        app = NSApp() or NSApplication.sharedApplication()
+        token, old = f"__tk_{id(self)}__", self.wm_title()
+        self.wm_title(token)
+        self.update_idletasks()
+        for w in app.windows():
+            if str(w.title()) == token:
+                w.setStyleMask_(w.styleMask() & ~NSWindowStyleMaskTitled)
+                break
+        self.wm_title(old)
