@@ -32,7 +32,8 @@ class AddSpentTimeWindow(CustomWindow):
         super().__init__(config=config, **kwargs)
         self.__issue_id_change_callback: Optional[Callable] = None
 
-        # AFK and date auto-update tracking
+        self.__work_item_name_to_id = {}
+
         self.__last_activity_time = time.time()
         self.__date_manually_edited = False
 
@@ -136,6 +137,11 @@ class AddSpentTimeWindow(CustomWindow):
     def _get_selected_issue_type(self) -> str:
         return self.__type_combobox.get()
 
+    def _get_selected_issue_type_id(self) -> Optional[str]:
+        """Get the ID of the selected work item type."""
+        selected_name = self.__type_combobox.get()
+        return self.__work_item_name_to_id.get(selected_name)
+
     def _get_date_millis(self) -> Optional[int]:
         return self.__date_entry.get_date_millis()
 
@@ -147,7 +153,9 @@ class AddSpentTimeWindow(CustomWindow):
         if updated_work_item_types == self.__type_combobox["values"]:
             return
 
-        if self._get_selected_issue_type() not in [wt.id for wt in work_item_types]:
+        self.__work_item_name_to_id = {wt.name: wt.id for wt in work_item_types}
+
+        if self._get_selected_issue_type() not in [wt.name for wt in work_item_types]:
             self.__type_combobox.set("")
 
         self.__type_combobox.configure(values=updated_work_item_types)
