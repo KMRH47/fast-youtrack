@@ -270,6 +270,12 @@ class CustomWindowAttachMixin(tk.Tk):
             add="+",
         )
 
-    def _on_minimize(self, event: Optional[Any] = None) -> None: ...
+    def _on_minimize(self, event: Optional[Any] = None) -> None:
+        if platform.system() != "Darwin":
+            for attached_view in self.__attached_views:
+                attached_view.withdraw()
 
-    def _on_restore(self, event: Optional[Any] = None) -> None: ...
+    def _on_restore(self, event: Optional[Any] = None) -> None:
+        if platform.system() != "Darwin":
+            for attached_view in self.__attached_views:
+                attached_view.deiconify()
