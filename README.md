@@ -44,7 +44,7 @@ These symbols `^+t` mean `CTRL+SHIFT+T`. Refer to the [AutoHotkey documentation]
    - Encrypted with your passphrase and saved to `user/<subdomain>/.token`
 4. ✨ Enjoy!
 
-If `.key` or `.token` is missing/invalid, a friendly error dialog is shown and the app exits cleanly.
+If `.key` or `.token` is missing/invalid an error will pop up and guide you.
 
 ## About
 
