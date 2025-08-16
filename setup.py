@@ -32,8 +32,6 @@ def main() -> None:
     print("1. Add your YouTrack subdomain folders to the 'user' directory")
     print("2. Run: python3 run.py")
 
-    if system == "Darwin":
-        print("3. Optional: Run scripts/mac/setup-hotkey.applescript for global hotkey")
 
 
 def setup_directories(project_root: Path) -> None:
