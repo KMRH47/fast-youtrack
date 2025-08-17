@@ -57,18 +57,36 @@ class CustomWindow(CustomWindowAttachMixin):
         self._set_window_geometry()
         self.resizable(self._config.resizable, self._config.resizable)
 
+        # macOS: clicking Dock icon triggers ReopenApplication; restore window
+        if platform.system() == "Darwin":
+            try:
+                self.createcommand("::tk::mac::ReopenApplication", self._on_macos_reopen)
+            except Exception:
+                pass
+
     def show(self):
         self.show_all_attached_views()
         self.update_idletasks()
         self.deiconify()
         self.lift()
-
         if not hasattr(self, "_mainloop_running"):
             self._mainloop_running = True
             self.mainloop()
-
         if self.__cancelled:
             raise UserCancelledError()
+
+    @staticmethod
+    def restore_app_to_front() -> None:
+        """Bring the running app and its root window to the front if possible."""
+        try:
+            import tkinter as tk
+            from utils.window_utils import restore_window_to_front
+
+            root = getattr(tk, "_default_root", None)
+            if root is not None:
+                restore_window_to_front(root)
+        except Exception:
+            pass
 
     def bind_submit(self, handler: Callable) -> None:
         self.__submit_callback = handler
@@ -118,6 +136,18 @@ class CustomWindow(CustomWindowAttachMixin):
             self.tray_icon = None
         self.deiconify()
         self.lift()
+
+    def _on_macos_reopen(self):
+        """Handle Dock icon click (macOS ReopenApplication)."""
+        try:
+            self.deiconify()
+            self.lift()
+            try:
+                self.focus_force()
+            except Exception:
+                pass
+        except Exception:
+            pass
 
     def _exit_app(self, icon, item):
         """Exit the application cleanly."""
