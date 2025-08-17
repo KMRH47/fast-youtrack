@@ -4,7 +4,6 @@ import logging
 from typing import Callable, Optional
 from config import Config
 from app_args import AppArgs
-from macos_hotkey import maybe_register_ctrl_shift_t
 from ui.windows.base.custom_window import CustomWindow
 
 
@@ -12,13 +11,10 @@ _stop_hotkey: Optional[Callable[[], None]] = None
 
 
 def initialize_infrastructure(args: AppArgs, config: Config) -> None:
-    """Initialize application infrastructure components"""
     initialize_logging(args, config)
-    _initialize_hotkeys()
 
 
 def shutdown_infrastructure() -> None:
-    """Cleanly stop infrastructure subsystems (hotkeys, etc.)."""
     global _stop_hotkey
     if _stop_hotkey:
         try:
@@ -30,9 +26,11 @@ def shutdown_infrastructure() -> None:
 
 
 def _initialize_hotkeys() -> None:
-    global _stop_hotkey
-    if _stop_hotkey is None:
-        _stop_hotkey = maybe_register_ctrl_shift_t(CustomWindow.restore_app_to_front)
+    pass
+
+
+def _on_hotkey_callback() -> None:
+    pass
 
 
 def initialize_logging(args: AppArgs, config: Config) -> None:

@@ -9,10 +9,7 @@ import threading
 def register_ctrl_shift_t(
     on_hotkey: Callable[[], None],
 ) -> Optional[Callable[[], None]]:
-    """Register a global Ctrl+Shift+T hotkey. Returns a stopper function or None.
-
-    Requires Accessibility/Input Monitoring permission for the host process.
-    """
+    """Register a global Ctrl+Shift+T hotkey. Returns a stopper function or None."""
     if platform.system() != "Darwin":
         return None
 
@@ -20,7 +17,6 @@ def register_ctrl_shift_t(
         CGEventTapCreate,
         kCGSessionEventTap,
         kCGHeadInsertEventTap,
-        kCGEventTapOptionListenOnly,
         CGEventMaskBit,
         kCGEventKeyDown,
         CGEventTapEnable,
@@ -57,7 +53,11 @@ def register_ctrl_shift_t(
                     )
                     if (flags & CTRL_SHIFT) == CTRL_SHIFT and keycode == KEYCODE_T:
                         logging.debug("Hotkey Ctrl+Shift+T detected")
-                        on_hotkey()
+                        try:
+                            threading.Thread(target=on_hotkey, daemon=True).start()
+                        except Exception:
+                            on_hotkey()
+                        return None
                 except Exception:
                     pass
                 return event
@@ -65,7 +65,7 @@ def register_ctrl_shift_t(
             tap = CGEventTapCreate(
                 kCGSessionEventTap,
                 kCGHeadInsertEventTap,
-                kCGEventTapOptionListenOnly,
+                0,
                 CGEventMaskBit(kCGEventKeyDown),
                 _tap_cb,
                 None,

@@ -17,6 +17,8 @@ logger = logging.getLogger(__name__)
 
 
 class CustomWindow(CustomWindowAttachMixin):
+    _hotkey_stop: Optional[Callable[[], None]] = None
+
     def __init__(
         self,
         config: Optional[CustomWindowConfig] = CustomWindowConfig(),
@@ -60,9 +62,16 @@ class CustomWindow(CustomWindowAttachMixin):
         # macOS: clicking Dock icon triggers ReopenApplication; restore window
         if platform.system() == "Darwin":
             try:
-                self.createcommand("::tk::mac::ReopenApplication", self._on_macos_reopen)
+                self.createcommand(
+                    "::tk::mac::ReopenApplication", self._on_macos_reopen
+                )
             except Exception:
                 pass
+
+        try:
+            CustomWindow._ensure_hotkey_registered()
+        except Exception:
+            pass
 
     def show(self):
         self.show_all_attached_views()
@@ -87,6 +96,38 @@ class CustomWindow(CustomWindowAttachMixin):
                 restore_window_to_front(root)
         except Exception:
             pass
+
+    @classmethod
+    def _ensure_hotkey_registered(cls) -> None:
+        if platform.system() != "Darwin" or cls._hotkey_stop is not None:
+            return
+
+        from macos_hotkey import maybe_register_ctrl_shift_t
+
+        def _schedule_activation(selected_text: str) -> None:
+            import tkinter as tk
+
+            root = getattr(tk, "_default_root", None)
+            if root is None:
+                return
+
+            def _apply() -> None:
+                CustomWindow.restore_app_to_front()
+                if hasattr(root, "handle_hotkey_activation"):
+                    getattr(root, "handle_hotkey_activation")(selected_text)
+
+            try:
+                root.after_idle(_apply)
+            except Exception:
+                _apply()
+
+        def _on_hotkey() -> None:
+            from utils.clipboard import get_selected_text
+
+            selected_text = get_selected_text(initial_delay_s=0.25)
+            _schedule_activation(selected_text)
+
+        cls._hotkey_stop = maybe_register_ctrl_shift_t(_on_hotkey)
 
     def bind_submit(self, handler: Callable) -> None:
         self.__submit_callback = handler
