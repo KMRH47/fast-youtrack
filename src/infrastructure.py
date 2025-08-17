@@ -6,19 +6,19 @@ from config import Config
 from app_args import AppArgs
 from macos_hotkey import maybe_register_ctrl_shift_t
 from ui.windows.base.custom_window import CustomWindow
+from ui.windows.add_spent_time.add_spent_time_window import AddSpentTimeWindow
+from utils.clipboard import get_selected_text
 
 
 _stop_hotkey: Optional[Callable[[], None]] = None
 
 
 def initialize_infrastructure(args: AppArgs, config: Config) -> None:
-    """Initialize application infrastructure components"""
     initialize_logging(args, config)
     _initialize_hotkeys()
 
 
 def shutdown_infrastructure() -> None:
-    """Cleanly stop infrastructure subsystems (hotkeys, etc.)."""
     global _stop_hotkey
     if _stop_hotkey:
         try:
@@ -32,7 +32,31 @@ def shutdown_infrastructure() -> None:
 def _initialize_hotkeys() -> None:
     global _stop_hotkey
     if _stop_hotkey is None:
-        _stop_hotkey = maybe_register_ctrl_shift_t(CustomWindow.restore_app_to_front)
+        _stop_hotkey = maybe_register_ctrl_shift_t(_on_hotkey_callback)
+
+
+def _on_hotkey_callback() -> None:
+    try:
+        import tkinter as tk
+        tk_root = getattr(tk, "_default_root", None)
+        if tk_root is None:
+            return
+        selected_text = get_selected_text(initial_delay_s=0.25)
+
+        def _apply():
+            try:
+                CustomWindow.restore_app_to_front()
+                if isinstance(tk_root, AddSpentTimeWindow):
+                    tk_root.handle_hotkey_activation(selected_text)
+            except Exception:
+                pass
+
+        try:
+            tk_root.after_idle(_apply)
+        except Exception:
+            _apply()
+    except Exception:
+        pass
 
 
 def initialize_logging(args: AppArgs, config: Config) -> None:

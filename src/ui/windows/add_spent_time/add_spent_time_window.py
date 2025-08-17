@@ -54,6 +54,11 @@ class AddSpentTimeWindow(CustomWindow):
             focus_right=True,
         )
 
+        try:
+            self.__id_var.trace_add("write", self._sanitize_id_var)
+        except Exception:
+            pass
+
         self.__time_entry = create_labeled_entry(
             parent=self,
             label="Enter Time (e.g., 1h30m):",
@@ -88,14 +93,12 @@ class AddSpentTimeWindow(CustomWindow):
             ),
         )
 
-        # Track manual date edits to pin auto-updates
         self.__date_entry.bind("<KeyPress>", self._on_date_manual_edit)
         self.__date_entry.bind("<Button-1>", self._on_date_manual_edit)
 
         ok_button = tk.Button(self, text="OK", command=self._submit, width=10)
         ok_button.pack(pady=5)
 
-        # Bind focus events for AFK date updates
         self.bind("<FocusIn>", self._on_window_focus)
         self.bind("<Button-1>", lambda e: self._update_activity_time())
         self.bind("<Key>", lambda e: self._update_activity_time())
@@ -127,6 +130,61 @@ class AddSpentTimeWindow(CustomWindow):
         raw_id = (self.__id_entry.get() or "").strip().upper()
         sep = "-"
         return f"{project}{sep}{raw_id}" if project and raw_id else (project or raw_id)
+
+    def _prefill_issue_id(self, text: str) -> bool:
+        """Prefill the right-side issue id entry from arbitrary text. Returns True if applied."""
+        import re
+
+        cleaned_text: str = (text or "").strip()
+        if not cleaned_text:
+            return False
+
+        uppercase_text: str = cleaned_text.upper()
+        key_match = re.search(r"\b([A-Z]{2,})[- ]?(\d+)\b", uppercase_text)
+        if key_match:
+            project_code: str = key_match.group(1)
+            numeric_issue_id: str = key_match.group(2)
+            self.__project_var.set(project_code)
+            self.__id_var.set(numeric_issue_id)
+            self._on_issue_id_changed()
+            return True
+
+        numeric_tokens = re.findall(r"\d+", cleaned_text)
+        if not numeric_tokens:
+            return False
+
+        numeric_issue_id = max(numeric_tokens, key=len)
+        self.__id_var.set(numeric_issue_id)
+        self._on_issue_id_changed()
+        return True
+
+    def handle_hotkey_activation(self, selected_text: str) -> None:
+        if selected_text and self._prefill_issue_id(selected_text):
+            self._focus_time_field()
+            return
+        self._focus_issue_id_field()
+
+    def _focus_issue_id_field(self) -> None:
+        self.lift()
+        try:
+            self.focus_force()
+        except Exception:
+            pass
+        self.__id_entry.focus_set()
+
+    def _focus_time_field(self) -> None:
+        self.lift()
+        try:
+            self.focus_force()
+        except Exception:
+            pass
+        self.__time_entry.focus_force()
+
+    def _sanitize_id_var(self, *_args: object) -> None:
+        raw_issue_id_text: str = self.__id_var.get()
+        digits_only_text: str = "".join(ch for ch in raw_issue_id_text if ch.isdigit())
+        if digits_only_text != raw_issue_id_text:
+            self.__id_var.set(digits_only_text)
 
     def _get_time(self) -> str:
         return self.__time_entry.get()
@@ -173,7 +231,6 @@ class AddSpentTimeWindow(CustomWindow):
         self.__description_entry.reset()
         self.__type_combobox.set("")
 
-        # Reset date pinning on window reset
         self.__date_manually_edited = False
         self._update_activity_time()
 
