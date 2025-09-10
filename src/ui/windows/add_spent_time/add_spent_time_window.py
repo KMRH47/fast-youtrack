@@ -132,22 +132,14 @@ class AddSpentTimeWindow(CustomWindow):
         return f"{project}{sep}{raw_id}" if project and raw_id else (project or raw_id)
 
     def _prefill_issue_id(self, text: str) -> bool:
-        """Prefill the right-side issue id entry from arbitrary text. Returns True if applied."""
+        """Prefill only the numeric issue ID (right entry) from arbitrary text.
+        Returns True if applied. Project (left entry) is never mutated here. A-3312
+        """
         import re
 
         cleaned_text: str = (text or "").strip()
         if not cleaned_text:
             return False
-
-        uppercase_text: str = cleaned_text.upper()
-        key_match = re.search(r"\b([A-Z]{2,})[- ]?(\d+)\b", uppercase_text)
-        if key_match:
-            project_code: str = key_match.group(1)
-            numeric_issue_id: str = key_match.group(2)
-            self.__project_var.set(project_code)
-            self.__id_var.set(numeric_issue_id)
-            self._on_issue_id_changed()
-            return True
 
         numeric_tokens = re.findall(r"\d+", cleaned_text)
         if not numeric_tokens:
