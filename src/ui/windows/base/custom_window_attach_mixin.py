@@ -279,3 +279,14 @@ class CustomWindowAttachMixin(tk.Tk):
         if platform.system() != "Darwin":
             for attached_view in self.__attached_views:
                 attached_view.deiconify()
+        self.after_idle(self._reflow_views)
+
+    def _reflow_views(self) -> None:
+        if platform.system() == "Darwin":
+            for attached_view in self.__attached_views:
+                try:
+                    self._attach_child_window(attached_view, self)
+                except Exception:
+                    pass
+        for attached_view in self.__attached_views:
+            self._update_position(attached_view)
